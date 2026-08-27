@@ -66,15 +66,19 @@ AquiCantaBolivia/
 │   │   ├── package.json
 │   │   └── tsconfig.json
 │   │
-│   └── web/                          # 🌐 Frontend Web (Next.js 15 App Router)
+│   └── web/                          # 🌐 Frontend Web (Next.js 15 App Router + Tailwind v4)
 │       ├── public/                   # Recursos estáticos
 │       ├── src/
-│       │   ├── app/
-│       │   │   ├── globals.css       # Estilos globales, variables y glassmorphism
-│       │   │   ├── layout.tsx        # Layout raíz con metadata
-│       │   │   └── page.tsx          # Dashboard interactivo con status en vivo
+│       │   ├── app/                  # Rutas — ver sección "Frontend Web" para el mapa completo
+│       │   │   ├── layout.tsx        # Layout raíz: <Navbar /> + <Footer /> para toda la app
+│       │   │   ├── page.tsx          # "/" — dashboard interactivo con status en vivo
+│       │   │   └── globals.css       # Estilos globales + `@import 'tailwindcss'`
+│       │   ├── components/           # Componentes reutilizables (Navbar, Footer, PageHeading...)
+│       │   └── lib/
+│       │       └── routes.ts         # Único lugar con las URLs del sitio
 │       ├── Dockerfile                # Multi-stage Dockerfile con salida standalone
 │       ├── next.config.mjs           # Configuración con outputFileTracingRoot
+│       ├── postcss.config.mjs        # Plugin de Tailwind v4
 │       ├── package.json
 │       └── tsconfig.json
 │
@@ -116,6 +120,7 @@ AquiCantaBolivia/
 | **Package Manager** | [Bun](https://bun.sh/) | `^1.2` | Gestor de paquetes ultrarrápido y runtime |
 | **Backend Framework** | [NestJS](https://nestjs.com/) | `^11.0` | API REST modular, inyección de dependencias y Swagger |
 | **Frontend Framework** | [Next.js](https://nextjs.org/) | `^15.1` | App Router, Server Components y salida standalone |
+| **Estilos** | [Tailwind CSS](https://tailwindcss.com/) | `^4.3` | Utility-first CSS, configurado vía PostCSS sin `tailwind.config.js` |
 | **ORM** | [Prisma](https://www.prisma.io/) | `^6.4` | Tipado estricto, migraciones seguras y query builder |
 | **Base de Datos** | [PostgreSQL](https://www.postgresql.org/) | `16 Alpine` | Base de datos relacional principal |
 | **Containerización** | [Docker](https://www.docker.com/) | `24+` | Contenedores reproducibles y multi-stage builds |
@@ -285,6 +290,133 @@ La API cuenta con soporte nativo de **Swagger (OpenAPI)** generado dinámicament
 - **Endpoints base incluidos:**
   - `GET /health`: Comprueba el estado de la API y efectúa un ping en tiempo real a PostgreSQL.
   - `GET /summary`: Retorna el listado de artistas y canciones registradas.
+
+---
+
+## 🌐 Frontend Web (Next.js 15)
+
+Esta sección es la referencia obligatoria para trabajar en [`apps/web`](apps/web) — tanto para el equipo como para dar contexto a un agente de IA antes de pedirle que toque este código. Define la arquitectura y las convenciones que **todos** deben seguir para que el proyecto crezca ordenado.
+
+### Stack de la capa web
+
+- **Next.js 15** con **App Router** (carpetas dentro de `src/app`, no el viejo `pages/`).
+- **TypeScript** en modo estricto (heredado de `@repo/typescript-config/nextjs.json`).
+- **Tailwind CSS v4** para todos los estilos nuevos. Se configura distinto a versiones anteriores:
+  - No hay `tailwind.config.js`. La v4 no lo requiere para uso básico.
+  - `postcss.config.mjs` solo registra el plugin `@tailwindcss/postcss`.
+  - `src/app/globals.css` activa Tailwind con `@import 'tailwindcss';` (después de cualquier otro `@import`, como el de Google Fonts — CSS exige que los `@import` vayan en orden al inicio del archivo).
+  - Usa clases utilitarias de Tailwind directamente en el JSX (`className="flex gap-4 text-slate-300"`). No se agregan más estilos globales en `globals.css` salvo que sea algo realmente compartido por toda la app.
+
+### Estructura de carpetas de `apps/web/src`
+
+```
+src/
+├── app/                    # Rutas (App Router). Cada carpeta = un segmento de URL.
+│   ├── layout.tsx          # Layout raíz: envuelve TODA la app con <Navbar /> y <Footer />
+│   ├── page.tsx             # "/"
+│   ├── categorias/
+│   │   ├── page.tsx         # "/categorias"        → listado de categorías
+│   │   └── [slug]/page.tsx  # "/categorias/:slug"  → detalle: participantes de esa categoría
+│   ├── cantante/
+│   │   ├── page.tsx         # "/cantante"           → listado de todos los cantantes
+│   │   └── [slug]/page.tsx  # "/cantante/:slug"     → ficha de un cantante
+│   ├── grupo/                # mismo patrón que cantante/
+│   ├── adminpanel/
+│   │   ├── page.tsx          # "/adminpanel"
+│   │   ├── usuarios/page.tsx
+│   │   ├── inscritos/page.tsx
+│   │   ├── categorias/page.tsx
+│   │   └── resultados/page.tsx
+│   └── ... (inscripciones, asientos-reserva, realidad-virtual, votacion-previa,
+│            votacion-vivo, calificacion-jurado, login, registro, perfil)
+├── components/              # Componentes de React reutilizables (no son rutas)
+│   ├── Navbar.tsx
+│   ├── Footer.tsx
+│   └── PageHeading.tsx
+├── lib/
+│   └── routes.ts            # Único lugar con las URLs del sitio (ver más abajo)
+└── globals.css
+```
+
+**Regla de oro:** una carpeta dentro de `app/` con un `page.tsx` es una página real y pública apenas se crea — Next.js la enruta automáticamente. No hace falta registrar rutas en ningún otro lado.
+
+### Patrón listado + detalle (`page.tsx` junto a `[slug]/page.tsx`)
+
+Varias secciones combinan un listado y una ficha de detalle en la misma carpeta padre, y **ambos archivos coexisten sin conflicto**:
+
+```
+app/cantante/page.tsx           →  /cantante          (lista todos los cantantes)
+app/cantante/[slug]/page.tsx    →  /cantante/mi-slug   (ficha de un cantante)
+```
+
+Mismo patrón en `categorias/` y `grupo/`. Al crear una sección nueva que necesite listado + detalle, replica esta estructura en vez de inventar una convención distinta.
+
+### `lib/routes.ts` — nunca hardcodear una URL
+
+Todas las rutas del sitio están centralizadas en un solo objeto:
+
+```ts
+import { ROUTES } from '@/lib/routes';
+
+<Link href={ROUTES.categorias}>Categorías</Link>
+<Link href={ROUTES.admin.usuarios}>Usuarios</Link>
+```
+
+Si necesitas enlazar a una página, **importa de `ROUTES`**, no escribas el string `"/categorias"` a mano en el componente. Si agregas una ruta nueva, agrégala primero a este archivo. Esto evita el típico bug de "cambié la URL en un lado y me olvidé de actualizarla en el menú".
+
+### El alias `@/`
+
+`tsconfig.json` ya mapea `@/*` a `src/*`. Importa siempre así, nunca con rutas relativas largas:
+
+```ts
+// bien
+import { ROUTES } from '@/lib/routes';
+import { Navbar } from '@/components/Navbar';
+
+// evitar
+import { ROUTES } from '../../../lib/routes';
+```
+
+### Componentes: cuándo crear uno y dónde ponerlo
+
+- Si un pedazo de UI se repite en 2 o más páginas (o es evidente que se va a repetir), sácalo a `src/components/` como su propio componente. Hoy solo existen `Navbar`, `Footer` y `PageHeading` — a medida que el equipo construya páginas reales, esta carpeta va a crecer con cosas como tarjetas de participante, formularios, etc. Cuando `components/` empiece a tener muchos archivos sin relación entre sí, es momento de subagruparlos (ej. `components/ui/` para primitivos visuales, `components/features/<seccion>/` para componentes específicos de una sección) — no antes, para no crear carpetas vacías "por si acaso".
+- Un componente por archivo, nombre en PascalCase igual al archivo (`ParticipanteCard.tsx` exporta `ParticipanteCard`).
+- Si un componente necesita datos del backend, ese fetch va en el componente o en un hook dentro de `src/hooks/` (crear esa carpeta cuando exista el primer hook) — nunca dupliques la misma llamada `fetch` en dos componentes distintos.
+
+### Estado actual de las páginas (importante)
+
+Todas las páginas creadas hasta ahora son **placeholders vacíos**: solo renderizan `<PageHeading title="..." />`, que muestra el mensaje "Página X". Esto es intencional — es la base de rutas y arquitectura, no el contenido final. Cuando alguien del equipo tome una página para desarrollarla:
+
+1. Reemplaza el `<PageHeading />` por el contenido real.
+2. Reutiliza componentes de `components/` en vez de copiar/pegar JSX de otra página.
+3. Si la página necesita datos de la API (`apps/api`), usa `process.env.NEXT_PUBLIC_API_URL` como base (mismo patrón que ya usa `app/page.tsx` para llamar a `/health`).
+4. Las secciones `/adminpanel/*`, `/perfil` y `/calificacion-jurado` van a necesitar autenticación y control de acceso por rol (`USER`, `ARTIST`, `JURADO`, `ADMIN`) — eso todavía no está implementado ni en el frontend ni en la API, es trabajo pendiente antes de que esas páginas sean funcionales de verdad.
+
+### Mapa de rutas actual
+
+| Ruta | Descripción |
+| :--- | :--- |
+| `/` | Inicio |
+| `/categorias` | Listado de categorías |
+| `/categorias/:slug` | Participantes de una categoría |
+| `/cantante` | Listado de cantantes |
+| `/cantante/:slug` | Ficha de un cantante |
+| `/grupo` | Listado de grupos |
+| `/grupo/:slug` | Ficha de un grupo |
+| `/inscripciones` | Formulario de inscripción al concurso |
+| `/asientos-reserva` | Reserva de asientos para el evento en vivo |
+| `/realidad-virtual` | Experiencia de recorrido virtual |
+| `/votacion-previa` | Votación previa a la final |
+| `/votacion-vivo` | Votación durante la transmisión en vivo |
+| `/calificacion-jurado` | Panel de calificación (rol jurado) |
+| `/login` | Inicio de sesión |
+| `/registro` | Creación de cuenta |
+| `/perfil` | Panel de la cuenta del usuario |
+| `/adminpanel` | Dashboard del panel de administración |
+| `/adminpanel/usuarios` | Administración de usuarios |
+| `/adminpanel/inscritos` | Administración de inscritos |
+| `/adminpanel/categorias` | Administración de categorías |
+| `/adminpanel/resultados` | Administración de resultados |
 
 ---
 
