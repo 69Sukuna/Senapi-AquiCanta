@@ -1,0 +1,33 @@
+# Docker Compose optimizado para desarrollo con Hot-Reloading dentro del contenedor
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: aquicanta_dev_postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: aquicantabolivia
+    volumes:
+      - dev_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d aquicantabolivia"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  adminer:
+    image: adminer:latest
+    container_name: aquicanta_dev_adminer
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+
+volumes:
+  dev_postgres_data:
+    driver: local
