@@ -34,9 +34,10 @@
 7. [Gestión de Base de Datos y Prisma](#-gestión-de-base-de-datos-y-prisma)
 8. [Documentación de la API (NestJS + Swagger)](#-documentación-de-la-api-nestjs--swagger)
 9. [Frontend Web (Next.js 15)](#-frontend-web-nextjs-15)
-10. [Guía de Despliegue en Railway](#-guía-de-despliegue-en-railway)
-11. [Tabla de Scripts y Comandos](#-tabla-de-scripts-y-comandos)
-12. [Resolución de Problemas Frecuentes](#-resolución-de-problemas-frecuentes)
+10. [Flujo de Trabajo con Git](#-flujo-de-trabajo-con-git)
+11. [Guía de Despliegue en Railway](#-guía-de-despliegue-en-railway)
+12. [Tabla de Scripts y Comandos](#-tabla-de-scripts-y-comandos)
+13. [Resolución de Problemas Frecuentes](#-resolución-de-problemas-frecuentes)
 
 ---
 
@@ -417,6 +418,62 @@ Todas las páginas creadas hasta ahora son **placeholders vacíos**: solo render
 | `/adminpanel/inscritos` | Administración de inscritos |
 | `/adminpanel/categorias` | Administración de categorías |
 | `/adminpanel/resultados` | Administración de resultados |
+
+---
+
+## 🔀 Flujo de Trabajo con Git
+
+Esta es la referencia obligatoria de cómo el equipo mueve código de una laptop a producción. Dos ramas viven para siempre; todo lo demás es una rama corta que nace y muere alrededor de una tarea de Jira.
+
+### Las dos ramas largas
+
+| Rama | Qué es | Quién le pushea directo |
+| :--- | :--- | :--- |
+| `main` | Producción. Lo que ve el público. | Nadie — solo entra por PR desde `dev`. |
+| `dev` | Integración. Donde el equipo junta el trabajo del sprint antes de que esté listo para producción. | Nadie — solo entra por PR desde ramas `feature/*` o `fix/*`. |
+
+No usamos Git Flow completo (con `release/`, `support/`, etc.) — es demasiada ceremonia para un equipo de 3 personas con sprints de 1 semana. Dos ramas largas + ramas cortas por tarea cubre todo lo que necesitamos.
+
+### Ramas cortas (nacen de una tarea, se borran al mergear)
+
+- **`feature/<código>-<slug>`** — una por historia de Jira. Sale de `dev`, vuelve a `dev`. Ej: `feature/VJ-2-votacion-previa`, `feature/CG-1-mock-data`.
+- **`fix/<código>-<slug>`** — mismo flujo, para bugs encontrados durante el sprint.
+- **`hotfix/<slug>`** — la única excepción a "todo pasa por dev": para un bug urgente ya en producción. Sale directo de `main`, se mergea a `main`, y ese mismo cambio se mergea también a `dev` para que no queden desincronizadas.
+
+El prefijo con el código de Jira (`HP-1`, `CG-3`, `VJ-2`, ver el backlog del Sprint 1) no es decorativo: cualquiera identifica qué historia resuelve una rama con solo ver su nombre, y si más adelante se conecta Jira con GitHub, el vínculo entre ticket y PR es automático.
+
+### Flujo del día a día
+
+```bash
+# 1. Siempre arrancar una tarea nueva desde dev actualizado
+git checkout dev
+git pull
+
+# 2. Crear la rama de la tarea
+git checkout -b feature/VJ-2-votacion-previa
+
+# 3. Trabajar y commitear normalmente
+git push -u origin feature/VJ-2-votacion-previa
+
+# 4. Abrir el Pull Request hacia dev (NUNCA hacia main)
+```
+
+**Antes de mergear cualquier PR:**
+- Al menos un compañero de equipo lo revisó y aprobó.
+- El build pasa limpio (`bun run build` y `bun run check-types`).
+- Cumple el resto del Definition of Done de la historia (ver el tablero del sprint).
+
+Al mergear, borra la rama (`feature/*`/`fix/*` no deberían sobrevivir más de unos días).
+
+### Promoción `dev` → `main`
+
+Cuando hay un incremento estable y demostrado al equipo (normalmente al cierre del sprint), se abre un Pull Request de `dev` hacia `main`. Antes de abrirlo:
+
+- El build de todo el monorepo pasa limpio.
+- Lo que se va a promover ya se demostró (ej. en el demo/retro del sprint).
+- No hay bugs conocidos bloqueantes.
+
+Después de mergear a `main`, es buena práctica etiquetar un release (`git tag v0.1.0`) como checkpoint — así siempre se puede volver a un punto exacto si algo sale mal en producción.
 
 ---
 
