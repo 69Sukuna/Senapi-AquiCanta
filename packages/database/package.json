@@ -5,6 +5,9 @@
   "license": "MIT",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "prisma": {
+    "seed": "bun prisma/seed.ts"
+  },
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch --preserveWatchOutput",
@@ -12,6 +15,7 @@
     "db:push": "dotenv -e ../../.env -- prisma db push",
     "db:migrate": "dotenv -e ../../.env -- prisma migrate dev",
     "db:deploy": "dotenv -e ../../.env -- prisma migrate deploy",
+    "db:seed": "dotenv -e ../../.env -- bun prisma/seed.ts",
     "db:studio": "dotenv -e ../../.env -- prisma studio",
     "check-types": "tsc --noEmit"
   },
