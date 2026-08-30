@@ -11,6 +11,7 @@ const links = [
   { label: 'Realidad Virtual', href: ROUTES.realidadVirtual },
   { label: 'Votación Previa', href: ROUTES.votacionPrevia },
   { label: 'Votación en Vivo', href: ROUTES.votacionVivo },
+  { label: 'Jurado', href: ROUTES.calificacionJurado },
   { label: 'Login', href: ROUTES.login },
 ];
 
