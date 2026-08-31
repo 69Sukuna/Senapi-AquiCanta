@@ -109,6 +109,15 @@ a {
   animation: pulseGlow 2s infinite ease-in-out;
 }
 
+/* Tailwind Preflight aplica `video { max-width: 100%; height: auto }` a nivel global
+   (mozdevs/cssremedy) para que imágenes/videos de contenido no se desborden. El <video>
+   de la cámara que `mind-ar` inyecta en `.escena-ar-viewport` necesita ocupar el tamaño
+   exacto en píxeles que la librería calcula (normalmente más grande que el contenedor,
+   a propósito, para poder recortarlo con overflow-hidden) — ese reset lo encogía. */
+.escena-ar-viewport video {
+  max-width: none !important;
+}
+
 .tema-votacion {
   --vt-bg-base: #170406;
   --vt-bg-mid: #3d0a13;
@@ -131,10 +140,9 @@ a {
   min-height: 100vh;
   color: var(--vt-text-primary);
   background:
-    radial-gradient(circle at 10% 6%, rgba(255, 54, 36, 0.22) 0%, transparent 38%),
-    radial-gradient(circle at 90% 16%, rgba(255, 36, 0, 0.3) 0%, transparent 46%),
-    radial-gradient(circle at 50% 105%, rgba(220, 38, 38, 0.18) 0%, transparent 55%),
-    linear-gradient(165deg, #450a0f 0%, #1f0407 62%, #0a0102 100%);
+    radial-gradient(circle at 8% 5%, rgba(224, 165, 39, 0.14) 0%, transparent 40%),
+    radial-gradient(circle at 88% 35%, rgba(255, 77, 94, 0.14) 0%, transparent 42%),
+    linear-gradient(165deg, #3d0a13 0%, #1f0407 55%, #0a0102 100%);
 }
 
 .tema-votacion::before {
