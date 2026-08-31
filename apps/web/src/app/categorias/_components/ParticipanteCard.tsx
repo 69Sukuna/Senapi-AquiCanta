@@ -1,18 +1,20 @@
 import Link from 'next/link';
 import Image from 'next/image';
+import { DepartamentoBadge } from '@/components/DepartamentoBadge';
 
 interface ParticipanteCardProps {
   tipo: 'CANTANTE' | 'GRUPO';
   id: string;
   nombre: string;
   fotoUrl: string | null;
+  departamento?: string | null;
   integrantesCount?: number;
 }
 
 // Tarjeta propia de categorias/ (no se importa de cantante/ ni grupo/, para
 // que cada carpeta siga siendo independiente) — enlaza a /cantante/:id o
 // /grupo/:id según el tipo de participante.
-export function ParticipanteCard({ tipo, id, nombre, fotoUrl, integrantesCount }: ParticipanteCardProps) {
+export function ParticipanteCard({ tipo, id, nombre, fotoUrl, departamento, integrantesCount }: ParticipanteCardProps) {
   const href = tipo === 'CANTANTE' ? `/cantante/${id}` : `/grupo/${id}`;
 
   return (
@@ -27,9 +29,12 @@ export function ParticipanteCard({ tipo, id, nombre, fotoUrl, integrantesCount }
       </div>
 
       <div>
-        <span className="inline-flex! rounded-full border border-[rgba(224,165,39,0.35)] bg-[rgba(224,165,39,0.1)] px-2.5! py-0.5! text-[0.65rem] font-bold uppercase tracking-[0.1em] text-[#f4c94f]">
-          {tipo === 'CANTANTE' ? 'Cantante' : 'Grupo'}
-        </span>
+        <div className="flex flex-wrap items-center gap-1.5">
+          <span className="inline-flex! rounded-full border border-[rgba(224,165,39,0.35)] bg-[rgba(224,165,39,0.1)] px-2.5! py-0.5! text-[0.65rem] font-bold uppercase tracking-[0.1em] text-[#f4c94f]">
+            {tipo === 'CANTANTE' ? 'Cantante' : 'Grupo'}
+          </span>
+          <DepartamentoBadge departamento={departamento} className="px-2.5! py-0.5! text-[0.65rem]" />
+        </div>
         <h3 className="mt-2.5! text-lg leading-snug font-bold text-[#fdf6ec]">{nombre}</h3>
         {tipo === 'GRUPO' && integrantesCount !== undefined && (
           <p className="mt-1! text-sm text-[rgba(253,246,236,0.55)]">

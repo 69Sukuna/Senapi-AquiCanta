@@ -11,6 +11,7 @@ interface Cantante {
   id: string;
   nombre: string;
   fotoUrl: string | null;
+  departamento: string | null;
   categoria: { id: string };
 }
 
@@ -18,6 +19,7 @@ interface Grupo {
   id: string;
   nombre: string;
   fotoUrl: string | null;
+  departamento: string | null;
   categoria: { id: string };
   integrantes: unknown[];
 }
@@ -102,7 +104,14 @@ export default async function CategoriaDetallePage({ params }: CategoriaDetalleP
         {totalParticipantes > 0 ? (
           <div className="mt-10! grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {cantantesDeCategoria.map((cantante) => (
-              <ParticipanteCard key={cantante.id} tipo="CANTANTE" id={cantante.id} nombre={cantante.nombre} fotoUrl={cantante.fotoUrl} />
+              <ParticipanteCard
+                key={cantante.id}
+                tipo="CANTANTE"
+                id={cantante.id}
+                nombre={cantante.nombre}
+                fotoUrl={cantante.fotoUrl}
+                departamento={cantante.departamento}
+              />
             ))}
             {gruposDeCategoria.map((grupo) => (
               <ParticipanteCard
@@ -111,6 +120,7 @@ export default async function CategoriaDetallePage({ params }: CategoriaDetalleP
                 id={grupo.id}
                 nombre={grupo.nombre}
                 fotoUrl={grupo.fotoUrl}
+                departamento={grupo.departamento}
                 integrantesCount={grupo.integrantes.length}
               />
             ))}

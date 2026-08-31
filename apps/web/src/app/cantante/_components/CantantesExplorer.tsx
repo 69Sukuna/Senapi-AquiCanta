@@ -7,6 +7,7 @@ interface Cantante {
   id: string;
   nombre: string;
   fotoUrl: string | null;
+  departamento: string | null;
   categoria: { id: string; nombre: string };
 }
 
@@ -92,6 +93,7 @@ export function CantantesExplorer({ cantantes, categorias }: CantantesExplorerPr
               nombre={cantante.nombre}
               fotoUrl={cantante.fotoUrl}
               categoriaNombre={cantante.categoria.nombre}
+              departamento={cantante.departamento}
             />
           ))}
         </div>

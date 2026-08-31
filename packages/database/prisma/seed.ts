@@ -24,18 +24,74 @@ const CATEGORIAS_BASE = [
   'Especial',
 ];
 
+// Campos según el Anexo 1 (Ficha de Postulación) de la convocatoria.
 const CANTANTES_BASE = [
-  { nombre: 'María Fernanda Choque', categoria: 'Solista vocal' },
-  { nombre: 'Sebastián Rojas', categoria: 'Solista vocal' },
-  { nombre: 'Ana Lucía Mamani', categoria: 'Solista vocal infantil' },
-  { nombre: 'Javier Quispe', categoria: 'Solista instrumental – Armónico' },
-  { nombre: 'Camila Fernández', categoria: 'Ñusta' },
+  {
+    nombre: 'María Fernanda Choque',
+    categoria: 'Solista vocal',
+    departamento: 'LA_PAZ' as const,
+    tituloTema: 'Llorando se fue',
+    autorCompositor: 'Ulises Hermosa',
+    ritmo: 'Huayño',
+    tiempo: '3:45',
+  },
+  {
+    nombre: 'Sebastián Rojas',
+    categoria: 'Solista vocal',
+    departamento: 'COCHABAMBA' as const,
+    tituloTema: 'Cholita paceña',
+    autorCompositor: 'Sebastián Rojas',
+    ritmo: 'Cueca',
+    tiempo: '4:10',
+  },
+  {
+    nombre: 'Ana Lucía Mamani',
+    categoria: 'Solista vocal infantil',
+    departamento: 'ORURO' as const,
+    tituloTema: 'Cóndor de los Andes',
+    autorCompositor: 'Trad.',
+    ritmo: 'Morenada',
+    tiempo: '3:00',
+  },
+  {
+    nombre: 'Javier Quispe',
+    categoria: 'Solista instrumental – Armónico',
+    departamento: 'POTOSI' as const,
+    tituloTema: 'Vuelo de cóndor',
+    autorCompositor: 'Trad.',
+    ritmo: 'Sicuriada',
+    tiempo: '5:00',
+  },
+  {
+    nombre: 'Camila Fernández',
+    categoria: 'Ñusta',
+    departamento: 'SANTA_CRUZ' as const,
+    tituloTema: 'Flor de camba',
+    autorCompositor: 'Camila Fernández',
+    ritmo: 'Taquirari',
+    tiempo: '3:30',
+  },
+  {
+    nombre: 'Roberto Salinas',
+    categoria: 'Composición',
+    departamento: 'CHUQUISACA' as const,
+    pseudonimo: 'El Poeta del Altiplano',
+    tituloTema: 'Canto a mi tierra',
+    autorCompositor: 'Roberto Salinas',
+    ritmo: 'Bailecito',
+    tiempo: '3:20',
+  },
 ];
 
 const GRUPOS_BASE = [
   {
     nombre: 'Los Hermanos del Valle',
     categoria: 'Trio vocal instrumental',
+    departamento: 'TARIJA' as const,
+    tituloTema: 'Chapaco de corazón',
+    autorCompositor: 'Los Hermanos del Valle',
+    ritmo: 'Rueda chapaca',
+    tiempo: '4:00',
     integrantes: [
       { nombre: 'Marco Antonio Vargas', nombreReferencia: 'El Charango', instrumento: 'Charango' },
       { nombre: 'Luis Alberto Condori', nombreReferencia: null, instrumento: 'Guitarra' },
@@ -45,6 +101,11 @@ const GRUPOS_BASE = [
   {
     nombre: 'Estudiantina Oruro',
     categoria: 'Estudiantina',
+    departamento: 'ORURO' as const,
+    tituloTema: 'Diablada eterna',
+    autorCompositor: 'Trad.',
+    ritmo: 'Diablada',
+    tiempo: '5:30',
     integrantes: [
       { nombre: 'Patricia Flores', nombreReferencia: null, instrumento: 'Mandolina' },
       { nombre: 'Jorge Luis Mamani', nombreReferencia: null, instrumento: 'Bombo' },
@@ -55,6 +116,11 @@ const GRUPOS_BASE = [
   {
     nombre: 'Dúo Kantuta',
     categoria: 'Dúo vocal instrumental',
+    departamento: 'BENI' as const,
+    tituloTema: 'Río de mi Beni',
+    autorCompositor: 'Dúo Kantuta',
+    ritmo: 'Taquirari',
+    tiempo: '3:50',
     integrantes: [
       { nombre: 'Rosa Yujra', nombreReferencia: null, instrumento: 'Voz' },
       { nombre: 'Pedro Callisaya', nombreReferencia: null, instrumento: 'Guitarra' },
@@ -87,15 +153,15 @@ async function main() {
   // evita duplicar filas cada vez que se corre el seed en desarrollo.
   const cantantesExistentes = await prisma.cantante.count();
   if (cantantesExistentes === 0) {
-    for (const { nombre, categoria } of CANTANTES_BASE) {
+    for (const { categoria, ...datos } of CANTANTES_BASE) {
       const categoriaId = categoriasPorNombre.get(categoria);
       if (!categoriaId) continue;
 
       await prisma.cantante.create({
         data: {
-          nombre,
+          ...datos,
           categoriaId,
-          fotoUrl: fotoPlaceholder(nombre, 'e0a527'),
+          fotoUrl: fotoPlaceholder(datos.nombre, 'e0a527'),
         },
       });
     }
@@ -108,15 +174,15 @@ async function main() {
   // si la tabla está vacía.
   const gruposExistentes = await prisma.grupo.count();
   if (gruposExistentes === 0) {
-    for (const { nombre, categoria, integrantes } of GRUPOS_BASE) {
+    for (const { categoria, integrantes, ...datos } of GRUPOS_BASE) {
       const categoriaId = categoriasPorNombre.get(categoria);
       if (!categoriaId) continue;
 
       await prisma.grupo.create({
         data: {
-          nombre,
+          ...datos,
           categoriaId,
-          fotoUrl: fotoPlaceholder(nombre, '7f0f1e'),
+          fotoUrl: fotoPlaceholder(datos.nombre, '7f0f1e'),
           integrantes: {
             create: integrantes.map((integrante) => ({
               ...integrante,
