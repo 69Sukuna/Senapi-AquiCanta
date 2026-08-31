@@ -1,18 +1,20 @@
 import Link from 'next/link';
 import Image from 'next/image';
+import { DepartamentoBadge } from '@/components/DepartamentoBadge';
 
 interface CantanteCardProps {
   id: string;
   nombre: string;
   fotoUrl: string | null;
   categoriaNombre: string;
+  departamento: string | null;
 }
 
 // Mismas convenciones que categorias/_components/CategoriaCard.tsx: paleta
 // carmesí/mostaza vía valores arbitrarios, y `!` en margin/padding/color de
 // <a> por la regla vieja sin @layer en globals.css (ver ese archivo para el
 // detalle completo de por qué).
-export function CantanteCard({ id, nombre, fotoUrl, categoriaNombre }: CantanteCardProps) {
+export function CantanteCard({ id, nombre, fotoUrl, categoriaNombre, departamento }: CantanteCardProps) {
   return (
     <Link
       href={`/cantante/${id}`}
@@ -25,9 +27,12 @@ export function CantanteCard({ id, nombre, fotoUrl, categoriaNombre }: CantanteC
       </div>
 
       <div>
-        <span className="inline-flex! rounded-full border border-[rgba(224,165,39,0.35)] bg-[rgba(224,165,39,0.1)] px-2.5! py-0.5! text-[0.65rem] font-bold uppercase tracking-[0.1em] text-[#f4c94f]">
-          {categoriaNombre}
-        </span>
+        <div className="flex flex-wrap items-center gap-1.5">
+          <span className="inline-flex! rounded-full border border-[rgba(224,165,39,0.35)] bg-[rgba(224,165,39,0.1)] px-2.5! py-0.5! text-[0.65rem] font-bold uppercase tracking-[0.1em] text-[#f4c94f]">
+            {categoriaNombre}
+          </span>
+          <DepartamentoBadge departamento={departamento} className="px-2.5! py-0.5! text-[0.65rem]" />
+        </div>
         <h3 className="mt-2.5! text-lg leading-snug font-bold text-[#fdf6ec]">{nombre}</h3>
       </div>
     </Link>

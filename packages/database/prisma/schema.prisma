@@ -42,6 +42,18 @@ model ArtistProfile {
   @@map("artist_profiles")
 }
 
+enum Departamento {
+  LA_PAZ
+  COCHABAMBA
+  SANTA_CRUZ
+  ORURO
+  POTOSI
+  CHUQUISACA
+  TARIJA
+  BENI
+  PANDO
+}
+
 model Categoria {
   id     String @id @default(uuid())
   nombre String @unique
@@ -53,22 +65,35 @@ model Categoria {
 }
 
 model Cantante {
-  id          String    @id @default(uuid())
-  nombre      String
-  fotoUrl     String?
-  categoriaId String
-  categoria   Categoria @relation(fields: [categoriaId], references: [id])
+  id              String        @id @default(uuid())
+  nombre          String
+  // Del Anexo 1 (Ficha de Postulación) — datos principales del postulante.
+  pseudonimo      String? // solo aplica a la categoría "Composición"
+  tituloTema      String?
+  autorCompositor String?
+  ritmo           String?
+  tiempo          String? // duración de la interpretación, en minutos (ej. "3:30")
+  departamento    Departamento?
+  fotoUrl         String?
+  categoriaId     String
+  categoria       Categoria     @relation(fields: [categoriaId], references: [id])
 
   @@map("cantantes")
 }
 
 model Grupo {
-  id          String            @id @default(uuid())
-  nombre      String
-  fotoUrl     String?
-  categoriaId String
-  categoria   Categoria         @relation(fields: [categoriaId], references: [id])
-  integrantes GrupoIntegrante[]
+  id              String            @id @default(uuid())
+  nombre          String
+  pseudonimo      String?
+  tituloTema      String?
+  autorCompositor String?
+  ritmo           String?
+  tiempo          String?
+  departamento    Departamento?
+  fotoUrl         String?
+  categoriaId     String
+  categoria       Categoria         @relation(fields: [categoriaId], references: [id])
+  integrantes     GrupoIntegrante[]
 
   @@map("grupos")
 }

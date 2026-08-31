@@ -7,6 +7,7 @@ interface Grupo {
   id: string;
   nombre: string;
   fotoUrl: string | null;
+  departamento: string | null;
   categoria: { id: string; nombre: string };
   integrantes: unknown[];
 }
@@ -93,6 +94,7 @@ export function GruposExplorer({ grupos, categorias }: GruposExplorerProps) {
               nombre={grupo.nombre}
               fotoUrl={grupo.fotoUrl}
               categoriaNombre={grupo.categoria.nombre}
+              departamento={grupo.departamento}
               integrantesCount={grupo.integrantes.length}
             />
           ))}
