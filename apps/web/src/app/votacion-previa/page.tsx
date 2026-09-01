@@ -46,7 +46,7 @@ export default function VotacionPreviaPage() {
           </div>
 
           <div
-            className="vt-card flex min-w-[300px] flex-col items-center gap-2 px-10 py-8 text-right"
+            className="vt-card flex w-full flex-col items-center gap-2 px-10 py-8 text-right sm:min-w-[300px] sm:w-auto"
             style={{ borderColor: 'var(--vt-border)' }}
           >
             <span className="vt-eyebrow flex items-center gap-2">
