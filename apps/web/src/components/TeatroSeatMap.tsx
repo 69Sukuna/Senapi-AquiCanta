@@ -187,23 +187,32 @@ export function TeatroSeatMap({ butacas, zonas, seleccionadas, onToggle }: Teatr
       tx: transform.current.x,
       ty: transform.current.y,
     };
-    e.currentTarget.setPointerCapture(e.pointerId);
+    // OJO: la captura del puntero se pide recién en handlePointerMove, al
+    // confirmar que hay arrastre real (superó el umbral). Pedirla acá, en el
+    // pointerdown, retargetea también el click nativo hacia el <svg> — y con
+    // eso el click nunca le llega a la butaca/zona bajo el cursor, rompiendo
+    // la selección con un simple click/tap sin arrastre.
   };
 
   const handlePointerMove = (e: React.PointerEvent<SVGSVGElement>) => {
     if (!arrastrando.current) return;
     const svgEl = svgRef.current;
     if (!svgEl) return;
+
+    if (!huboArrastre.current) {
+      const distancia = Math.hypot(
+        e.clientX - inicioPuntero.current.x,
+        e.clientY - inicioPuntero.current.y
+      );
+      if (distancia <= 4) return;
+      huboArrastre.current = true;
+      svgEl.setPointerCapture(e.pointerId);
+    }
+
     const rect = svgEl.getBoundingClientRect();
     const escalaRender = Math.min(rect.width / VIEWBOX.width, rect.height / VIEWBOX.height) || 1;
     const deltaX = (e.clientX - inicioPuntero.current.x) / escalaRender;
     const deltaY = (e.clientY - inicioPuntero.current.y) / escalaRender;
-    if (
-      !huboArrastre.current &&
-      Math.hypot(e.clientX - inicioPuntero.current.x, e.clientY - inicioPuntero.current.y) > 4
-    ) {
-      huboArrastre.current = true;
-    }
     const { x, y } = limitarPan(
       inicioPuntero.current.tx + deltaX,
       inicioPuntero.current.ty + deltaY,

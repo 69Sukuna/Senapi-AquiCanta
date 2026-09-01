@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { ChevronLeft, Radio, Sparkles, Vote } from 'lucide-react';
-import { SectorCategoria, TarjetaParticipanteVotacion } from '@/components/features/votacion';
+import { TarjetaCategoria, TarjetaParticipanteVotacion } from '@/components/features/votacion';
 import { useNumberTicker, useVotacionSesion } from '@/hooks';
 import { CONTEO_INICIAL_VOTACION_PREVIA, CONTEO_INICIAL_VOTACION_VIVO, PARTICIPANTES_CALIFICACION } from '@/mocks';
 
@@ -15,7 +15,7 @@ const MODALIDADES: { id: Modalidad; label: string }[] = [
 
 export default function VotacionesPage() {
   const [modalidad, setModalidad] = useState<Modalidad>('previa');
-  const [sectorActivo, setSectorActivo] = useState<string | null>(null);
+  const [categoriaActiva, setCategoriaActiva] = useState<string | null>(null);
 
   // Dos sesiones independientes (una por modalidad) para no mezclar los
   // conteos ni las restricciones de voto de la fase previa con las del vivo.
@@ -29,10 +29,8 @@ export default function VotacionesPage() {
   });
   const sesion = modalidad === 'previa' ? sesionPrevia : sesionVivo;
 
-  // Cada categoría es un "sector" del teatro: primero se elige el sector,
-  // después se ven y votan sus butacas (mismo patrón de navegación que
-  // TeatroSeatMap en /butacas).
-  const sectores = useMemo(() => {
+  // Primero se elige una categoría, después se ven y votan sus participantes.
+  const categorias = useMemo(() => {
     const mapa = new Map<string, typeof PARTICIPANTES_CALIFICACION>();
     for (const participante of PARTICIPANTES_CALIFICACION) {
       const lista = mapa.get(participante.categoria) ?? [];
@@ -47,10 +45,10 @@ export default function VotacionesPage() {
 
   const cambiarModalidad = (nueva: Modalidad) => {
     setModalidad(nueva);
-    setSectorActivo(null);
+    setCategoriaActiva(null);
   };
 
-  const sectorSeleccionado = sectores.find((s) => s.categoria === sectorActivo) ?? null;
+  const categoriaSeleccionada = categorias.find((c) => c.categoria === categoriaActiva) ?? null;
 
   return (
     <main className="tema-votacion">
@@ -74,9 +72,9 @@ export default function VotacionesPage() {
             <h1 className="mt-3 text-4xl font-extrabold leading-tight sm:text-5xl">
               {modalidad === 'previa' ? (
                 <>
-                  Elegí butaca por butaca
+                  Elegí tus favoritos de 
                   <br />
-                  <span style={{ color: 'var(--vt-mustard-light)' }}>quién nos representa.</span>
+                  <span style={{ color: 'var(--vt-mustard-light)' }}>cada categoria.</span>
                 </>
               ) : (
                 <>
@@ -87,7 +85,7 @@ export default function VotacionesPage() {
               )}
             </h1>
             <p className="mt-4 leading-relaxed text-[var(--vt-text-secondary)]">
-              Cada categoría es un sector del teatro: entrá, recorré sus butacas y emití un único voto por sector.
+             Elige el tipo de votación previa o en vivo el día del evento
             </p>
             <span className={`vt-badge mt-5 inline-flex ${modalidad === 'vivo' ? 'vt-badge-live' : ''}`}>
               {modalidad === 'vivo' && <span className="vt-pulse-dot" />}
@@ -129,14 +127,14 @@ export default function VotacionesPage() {
           ))}
         </div>
 
-        {sectorActivo === null ? (
+        {categoriaActiva === null ? (
           <>
             <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
               <div>
                 <span className="vt-eyebrow flex items-center gap-2">
-                  <Sparkles size={12} aria-hidden="true" /> Sectores de votación
+                  <Sparkles size={12} aria-hidden="true" /> Categorias de votación
                 </span>
-                <h2 className="mt-2 text-2xl font-extrabold">Elegí un sector para votar</h2>
+                <h2 className="mt-2 text-2xl font-extrabold">Elegí una categoria para votar</h2>
               </div>
               <div className="flex items-center gap-2 text-xs text-[var(--vt-text-muted)]">
                 Un voto por categoría · No se puede cambiar una vez emitido
@@ -144,13 +142,13 @@ export default function VotacionesPage() {
             </div>
 
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {sectores.map(({ categoria, participantes }) => (
-                <SectorCategoria
+              {categorias.map(({ categoria, participantes }) => (
+                <TarjetaCategoria
                   key={categoria}
                   categoria={categoria}
                   cantidadOpciones={participantes.length}
                   votada={sesion.yaVotoEnCategoria(categoria)}
-                  onSeleccionar={() => setSectorActivo(categoria)}
+                  onSeleccionar={() => setCategoriaActiva(categoria)}
                 />
               ))}
             </div>
@@ -159,27 +157,27 @@ export default function VotacionesPage() {
           <>
             <button
               type="button"
-              onClick={() => setSectorActivo(null)}
+              onClick={() => setCategoriaActiva(null)}
               className="mb-5 inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-sm font-semibold text-[var(--vt-mustard-light)] transition-colors"
               style={{ borderColor: 'var(--vt-border)' }}
             >
-              <ChevronLeft size={16} aria-hidden="true" /> Volver a sectores
+              <ChevronLeft size={16} aria-hidden="true" /> Volver a categorías
             </button>
 
             <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
               <div>
-                <span className="vt-eyebrow">Sector</span>
-                <h2 className="mt-1 text-2xl font-extrabold">{sectorActivo}</h2>
+                <span className="vt-eyebrow">Categoria</span>
+                <h2 className="mt-1 text-2xl font-extrabold">{categoriaActiva}</h2>
               </div>
-              {sesion.yaVotoEnCategoria(sectorActivo) && (
+              {sesion.yaVotoEnCategoria(categoriaActiva) && (
                 <p className="text-sm font-semibold" style={{ color: 'var(--vt-mustard-light)' }} role="status">
-                  Ya registraste tu voto en este sector. ¡Gracias por participar!
+                  Ya registraste tu voto en esta categoría. ¡Gracias por participar!
                 </p>
               )}
             </div>
 
             <div className="grid grid-cols-1 items-stretch gap-6 md:grid-cols-2 xl:grid-cols-3">
-              {sectorSeleccionado?.participantes.map((participante, indice) => {
+              {categoriaSeleccionada?.participantes.map((participante, indice) => {
                 const votos = sesion.conteoVotos[participante.id] ?? 0;
                 const porcentaje = totalVotos > 0 ? (votos / totalVotos) * 100 : 0;
                 const votoDeLaCategoria = sesion.votosPorCategoria[participante.categoria];
