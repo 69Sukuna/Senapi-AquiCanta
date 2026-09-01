@@ -15,6 +15,8 @@ const nextConfig = {
       // Fotos de ejemplo del seed (packages/database/prisma/seed.ts).
       // Quitar cuando las fotos reales vengan de un storage propio.
       { protocol: 'https', hostname: 'ui-avatars.com' },
+      // Miniatura de previsualización del video de YouTube en la ficha del participante.
+      { protocol: 'https', hostname: 'img.youtube.com' },
     ],
   },
   env: {

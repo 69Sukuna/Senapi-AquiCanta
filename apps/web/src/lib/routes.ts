@@ -3,7 +3,7 @@
 export const ROUTES = {
   home: '/',
   categorias: '/categorias',
-  cantante: '/cantante',
+  participante: '/participante',
   inscripciones: '/inscripciones',
   butacas: '/butacas',
   realidadVirtual: '/realidad-virtual',
