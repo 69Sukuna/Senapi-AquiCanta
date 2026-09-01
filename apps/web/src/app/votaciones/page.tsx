@@ -96,7 +96,7 @@ export default function VotacionesPage() {
           </div>
 
           <div
-            className="vt-card flex w-full flex-col items-center gap-2 px-10 py-8 text-center sm:min-w-[300px] sm:w-auto"
+            className="vt-card flex w-full flex-col items-center gap-2 px-6 py-8 text-center sm:min-w-[300px] sm:w-auto sm:px-10"
             style={{ borderColor: 'var(--vt-border)' }}
           >
             <span className="vt-eyebrow flex items-center gap-2">

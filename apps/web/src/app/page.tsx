@@ -179,7 +179,7 @@ export default function Home() {
       </header>
 
       {/* Categorías destacadas */}
-      <section className="py-16! md:py-20! border-t border-[#e0a527]/10">
+      <section className="overflow-x-hidden py-16! md:py-20! border-t border-[#e0a527]/10">
         <div className="flex flex-wrap items-end justify-between gap-4 mb-8!">
           <div>
             <p className="text-sm font-semibold tracking-[0.2em] text-white/60 uppercase mb-2!">
