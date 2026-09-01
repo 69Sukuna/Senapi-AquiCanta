@@ -1,16 +1,15 @@
 import { ArrowRight, CheckCircle2 } from 'lucide-react';
 
-interface SectorCategoriaProps {
+interface TarjetaCategoriaProps {
   categoria: string;
   cantidadOpciones: number;
   votada: boolean;
   onSeleccionar: () => void;
 }
 
-// Tarjeta de "sector": cada categoría de votación se presenta como un sector
-// del teatro (igual que en /butacas, donde primero se elige un sector y
-// después sus butacas). Clickearla entra al detalle de esa categoría.
-export function SectorCategoria({ categoria, cantidadOpciones, votada, onSeleccionar }: SectorCategoriaProps) {
+// Tarjeta de categoría de votación. Clickearla entra al detalle de esa
+// categoría, donde se listan sus participantes para votar.
+export function TarjetaCategoria({ categoria, cantidadOpciones, votada, onSeleccionar }: TarjetaCategoriaProps) {
   return (
     <button
       type="button"
@@ -20,7 +19,7 @@ export function SectorCategoria({ categoria, cantidadOpciones, votada, onSelecci
       }`}
     >
       <div className="flex items-center justify-between gap-2">
-        <span className="vt-eyebrow">Sector</span>
+        <span className="vt-eyebrow">Categoría</span>
         {votada && (
           <span className="vt-badge inline-flex items-center gap-1.5">
             <CheckCircle2 size={12} aria-hidden="true" /> Voto emitido
@@ -31,11 +30,11 @@ export function SectorCategoria({ categoria, cantidadOpciones, votada, onSelecci
       <h3 className="text-lg leading-snug font-extrabold text-[var(--vt-text-primary)]">{categoria}</h3>
 
       <p className="text-sm text-[var(--vt-text-muted)]">
-        {cantidadOpciones} {cantidadOpciones === 1 ? 'butaca disponible' : 'butacas disponibles'}
+        {cantidadOpciones} {cantidadOpciones === 1 ? 'participante' : 'participantes'}
       </p>
 
       <span className="mt-auto inline-flex items-center gap-1.5 text-sm font-semibold text-[var(--vt-mustard-light)]">
-        {votada ? 'Ver mi butaca' : 'Entrar al sector'}
+        {votada ? 'Ver mi voto' : 'Entrar a la categoría'}
         <ArrowRight size={14} className="transition-transform duration-300 group-hover:translate-x-1" aria-hidden="true" />
       </span>
     </button>

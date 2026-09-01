@@ -1,3 +1,3 @@
 export * from './AvatarParticipante';
 export * from './TarjetaParticipanteVotacion';
-export * from './SectorCategoria';
+export * from './TarjetaCategoria';
