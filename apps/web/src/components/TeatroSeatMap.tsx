@@ -31,6 +31,22 @@ const ANCHO_BUTACA = 3.8;
 const ALTO_BUTACA = 4.4;
 const DURACION_ANIMACION = 450; // ms, al enfocar/salir de una zona
 
+// Cuánto del viewBox original debe seguir visible como mínimo al desplazar o
+// hacer zoom, para que el mapa se pueda recorrer libremente sin "perderse"
+// fuera de cuadro (nunca se desborda del contenedor: la clave de esto es el
+// clamp, no el overflow-hidden del contenedor que ya lo recorta visualmente).
+const MARGEN_VISIBLE_PAN = 120;
+const clamp = (valor: number, min: number, max: number) => Math.min(max, Math.max(min, valor));
+
+function limitarPan(x: number, y: number, scale: number) {
+  const anchoContenido = VIEWBOX.width * scale;
+  const altoContenido = VIEWBOX.height * scale;
+  return {
+    x: clamp(x, MARGEN_VISIBLE_PAN - anchoContenido, VIEWBOX.width - MARGEN_VISIBLE_PAN),
+    y: clamp(y, MARGEN_VISIBLE_PAN - altoContenido, VIEWBOX.height - MARGEN_VISIBLE_PAN),
+  };
+}
+
 export function TeatroSeatMap({ butacas, zonas, seleccionadas, onToggle }: TeatroSeatMapProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const groupRef = useRef<SVGGElement>(null);
@@ -43,6 +59,13 @@ export function TeatroSeatMap({ butacas, zonas, seleccionadas, onToggle }: Teatr
   // El transform del <g> se muta directo por DOM (sin pasar por React) para
   // que animar el foco de zona no re-renderice las ~3600 butacas en cada frame.
   const transform = useRef({ x: 0, y: 0, scale: 1 });
+
+  // Estado del arrastre (pan). Va en refs, no en useState, por la misma razón
+  // que `transform`: mutar el DOM directo en cada frame de mousemove/touchmove
+  // sin re-renderizar las ~3600 butacas.
+  const arrastrando = useRef(false);
+  const huboArrastre = useRef(false);
+  const inicioPuntero = useRef({ x: 0, y: 0, tx: 0, ty: 0 });
 
   const aplicarTransform = () => {
     const { x, y, scale } = transform.current;
@@ -60,7 +83,8 @@ export function TeatroSeatMap({ butacas, zonas, seleccionadas, onToggle }: Teatr
     if (groupRef.current) {
       groupRef.current.style.transition = `transform ${DURACION_ANIMACION}ms cubic-bezier(0.22, 1, 0.36, 1)`;
     }
-    transform.current = destino;
+    const { x, y } = limitarPan(destino.x, destino.y, destino.scale);
+    transform.current = { x, y, scale: destino.scale };
     aplicarTransform();
     window.setTimeout(detenerAnimacion, DURACION_ANIMACION);
   };
@@ -98,8 +122,9 @@ export function TeatroSeatMap({ butacas, zonas, seleccionadas, onToggle }: Teatr
     if (nuevaEscala === t.scale) return;
     const contenidoX = (pivotX - t.x) / t.scale;
     const contenidoY = (pivotY - t.y) / t.scale;
-    t.x = pivotX - contenidoX * nuevaEscala;
-    t.y = pivotY - contenidoY * nuevaEscala;
+    const { x, y } = limitarPan(pivotX - contenidoX * nuevaEscala, pivotY - contenidoY * nuevaEscala, nuevaEscala);
+    t.x = x;
+    t.y = y;
     t.scale = nuevaEscala;
     aplicarTransform();
   };
@@ -130,11 +155,13 @@ export function TeatroSeatMap({ butacas, zonas, seleccionadas, onToggle }: Teatr
 
   const handleSeatClick = (e: React.MouseEvent, b: Butaca) => {
     e.stopPropagation();
+    if (huboArrastre.current) return;
     if (!b.ocupada) onToggle(b);
   };
 
   const handleZonaClick = (e: React.MouseEvent, zona: Zona) => {
     e.stopPropagation();
+    if (huboArrastre.current) return;
     enfocarZona(zona);
   };
 
@@ -142,7 +169,56 @@ export function TeatroSeatMap({ butacas, zonas, seleccionadas, onToggle }: Teatr
   // zonas atenuadas, el escenario) mientras estás dentro de una zona: vuelve
   // a la vista de sectores, para no depender solo del botón "Volver".
   const handleFondoClick = () => {
+    if (huboArrastre.current) return;
     if (modo === 'asientos') volverAZonas();
+  };
+
+  // Arrastre con mouse/touch para desplazar el mapa. Pointer Events unifica
+  // mouse y touch en un solo set de handlers; el pan muta el transform por
+  // DOM (igual que el zoom) para no re-renderizar las butacas en cada frame.
+  const handlePointerDown = (e: React.PointerEvent<SVGSVGElement>) => {
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    detenerAnimacion();
+    arrastrando.current = true;
+    huboArrastre.current = false;
+    inicioPuntero.current = {
+      x: e.clientX,
+      y: e.clientY,
+      tx: transform.current.x,
+      ty: transform.current.y,
+    };
+    e.currentTarget.setPointerCapture(e.pointerId);
+  };
+
+  const handlePointerMove = (e: React.PointerEvent<SVGSVGElement>) => {
+    if (!arrastrando.current) return;
+    const svgEl = svgRef.current;
+    if (!svgEl) return;
+    const rect = svgEl.getBoundingClientRect();
+    const escalaRender = Math.min(rect.width / VIEWBOX.width, rect.height / VIEWBOX.height) || 1;
+    const deltaX = (e.clientX - inicioPuntero.current.x) / escalaRender;
+    const deltaY = (e.clientY - inicioPuntero.current.y) / escalaRender;
+    if (
+      !huboArrastre.current &&
+      Math.hypot(e.clientX - inicioPuntero.current.x, e.clientY - inicioPuntero.current.y) > 4
+    ) {
+      huboArrastre.current = true;
+    }
+    const { x, y } = limitarPan(
+      inicioPuntero.current.tx + deltaX,
+      inicioPuntero.current.ty + deltaY,
+      transform.current.scale
+    );
+    transform.current.x = x;
+    transform.current.y = y;
+    aplicarTransform();
+  };
+
+  const handlePointerUp = (e: React.PointerEvent<SVGSVGElement>) => {
+    arrastrando.current = false;
+    if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+      e.currentTarget.releasePointerCapture(e.pointerId);
+    }
   };
 
   const zonaActiva = zonas.find((z) => z.id === sectorActivo) ?? null;
@@ -189,8 +265,12 @@ export function TeatroSeatMap({ butacas, zonas, seleccionadas, onToggle }: Teatr
         ref={svgRef}
         viewBox={`0 0 ${VIEWBOX.width} ${VIEWBOX.height}`}
         preserveAspectRatio="xMidYMid meet"
-        className="block h-full w-full touch-none select-none"
+        className="block h-full w-full cursor-grab touch-none select-none active:cursor-grabbing"
         onClick={handleFondoClick}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerUp}
       >
         <defs>
           <radialGradient id="pisoTeatro" cx="50%" cy="82%" r="85%">
