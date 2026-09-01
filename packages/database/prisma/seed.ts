@@ -26,7 +26,19 @@ const CATEGORIAS_BASE = [
   { nombre: 'Especial', esGrupal: false },
 ];
 
-// Campos según el Anexo 1 (Ficha de Postulación) de la convocatoria.
+// Fotos de ejemplo: retratos reales de personas (Wikimedia Commons, CC),
+// elegidos por afinidad de género/edad/ritmo con cada ejemplo — no son fotos
+// de los propios postulantes ficticios, sino un "standin" fotográfico para
+// que el catálogo no se vea con avatares de iniciales. Se sirven como
+// archivos locales en apps/web/public/images/participantes/ (en vez de
+// hotlinkear a Wikimedia) porque su CDN aplica rate-limit agresivo a fetches
+// repetidos como los del optimizador de imágenes de Next.js.
+
+// Campos según el Anexo 1 (Ficha de Postulación) de la convocatoria. El
+// videoUrl de cada ejemplo es un video real de YouTube: para "Llorando se
+// fue" es la interpretación original de Los Kjarkas (autor: Ulises Hermosa);
+// para el resto de ejemplos, cuyo autor/compositor es ficticio, se usó un
+// video real representativo del mismo ritmo folklórico.
 const CANTANTES_BASE = [
   {
     nombre: 'María Fernanda Choque',
@@ -36,6 +48,8 @@ const CANTANTES_BASE = [
     autorCompositor: 'Ulises Hermosa',
     ritmo: 'Huayño',
     tiempo: '3:45',
+    fotoUrl: '/images/participantes/maria-fernanda-choque.jpg',
+    videoUrl: 'https://www.youtube.com/watch?v=q8SQpgtIsBE',
   },
   {
     nombre: 'Sebastián Rojas',
@@ -45,6 +59,8 @@ const CANTANTES_BASE = [
     autorCompositor: 'Sebastián Rojas',
     ritmo: 'Cueca',
     tiempo: '4:10',
+    fotoUrl: '/images/participantes/sebastian-rojas.jpg',
+    videoUrl: 'https://www.youtube.com/watch?v=Opzivoyb8hQ',
   },
   {
     nombre: 'Ana Lucía Mamani',
@@ -54,6 +70,8 @@ const CANTANTES_BASE = [
     autorCompositor: 'Trad.',
     ritmo: 'Morenada',
     tiempo: '3:00',
+    fotoUrl: '/images/participantes/ana-lucia-mamani.jpg',
+    videoUrl: 'https://www.youtube.com/watch?v=gEh8W1L4cog',
   },
   {
     nombre: 'Javier Quispe',
@@ -63,6 +81,8 @@ const CANTANTES_BASE = [
     autorCompositor: 'Trad.',
     ritmo: 'Sicuriada',
     tiempo: '5:00',
+    fotoUrl: '/images/participantes/javier-quispe.jpg',
+    videoUrl: 'https://www.youtube.com/watch?v=VQPUJdOmcuM',
   },
   {
     nombre: 'Camila Fernández',
@@ -72,6 +92,8 @@ const CANTANTES_BASE = [
     autorCompositor: 'Camila Fernández',
     ritmo: 'Taquirari',
     tiempo: '3:30',
+    fotoUrl: '/images/participantes/camila-fernandez.jpg',
+    videoUrl: 'https://www.youtube.com/watch?v=L2O2Jrqyljg',
   },
   {
     nombre: 'Roberto Salinas',
@@ -82,6 +104,8 @@ const CANTANTES_BASE = [
     autorCompositor: 'Roberto Salinas',
     ritmo: 'Bailecito',
     tiempo: '3:20',
+    fotoUrl: '/images/participantes/roberto-salinas.jpg',
+    videoUrl: 'https://www.youtube.com/watch?v=NDDFLIPgThE',
   },
 ];
 
@@ -94,6 +118,8 @@ const GRUPOS_BASE = [
     autorCompositor: 'Los Hermanos del Valle',
     ritmo: 'Rueda chapaca',
     tiempo: '4:00',
+    fotoUrl: '/images/participantes/los-hermanos-del-valle.jpg',
+    videoUrl: 'https://www.youtube.com/watch?v=fXWsCjf2EQ4',
     integrantes: [
       { nombre: 'Marco Antonio Vargas', nombreReferencia: 'El Charango', instrumento: 'Charango' },
       { nombre: 'Luis Alberto Condori', nombreReferencia: null, instrumento: 'Guitarra' },
@@ -108,6 +134,8 @@ const GRUPOS_BASE = [
     autorCompositor: 'Trad.',
     ritmo: 'Diablada',
     tiempo: '5:30',
+    fotoUrl: '/images/participantes/estudiantina-oruro.jpg',
+    videoUrl: 'https://www.youtube.com/watch?v=FgDZnjPKoDE',
     integrantes: [
       { nombre: 'Patricia Flores', nombreReferencia: null, instrumento: 'Mandolina' },
       { nombre: 'Jorge Luis Mamani', nombreReferencia: null, instrumento: 'Bombo' },
@@ -123,6 +151,8 @@ const GRUPOS_BASE = [
     autorCompositor: 'Dúo Kantuta',
     ritmo: 'Taquirari',
     tiempo: '3:50',
+    fotoUrl: '/images/participantes/duo-kantuta.jpg',
+    videoUrl: 'https://www.youtube.com/watch?v=awLznMIPuMw',
     integrantes: [
       { nombre: 'Rosa Yujra', nombreReferencia: null, instrumento: 'Voz' },
       { nombre: 'Pedro Callisaya', nombreReferencia: null, instrumento: 'Guitarra' },
@@ -163,7 +193,6 @@ async function main() {
         data: {
           ...datos,
           categoriaId,
-          fotoUrl: fotoPlaceholder(datos.nombre, 'e0a527'),
           // Datos de ejemplo para mostrar en el sitio, no postulaciones
           // reales pendientes de revisión.
           estado: 'APROBADO',
@@ -187,7 +216,6 @@ async function main() {
         data: {
           ...datos,
           categoriaId,
-          fotoUrl: fotoPlaceholder(datos.nombre, '7f0f1e'),
           // Datos de ejemplo para mostrar en el sitio, no postulaciones
           // reales pendientes de revisión.
           estado: 'APROBADO',

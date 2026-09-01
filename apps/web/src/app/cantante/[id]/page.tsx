@@ -1,8 +1,8 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { PlayCircle } from 'lucide-react';
 import { DepartamentoBadge } from '@/components/DepartamentoBadge';
+import { VideoInterpretacion } from '@/components/VideoInterpretacion';
 
 interface Cantante {
   id: string;
@@ -87,7 +87,7 @@ export default async function CantantePage({ params }: CantantePageProps) {
 
       <div className="relative mx-auto! max-w-5xl px-6! py-16! sm:px-10! lg:py-20!">
         <Link
-          href="/cantante"
+          href="/participante"
           className="flex! w-fit items-center gap-1.5 text-sm font-semibold text-[#f4c94f]! transition-transform duration-200 hover:translate-x-[-2px] hover:underline!"
         >
           <span aria-hidden="true">←</span> Todos los participantes
@@ -144,16 +144,7 @@ export default async function CantantePage({ params }: CantantePageProps) {
                 {cantante.ritmo && <DatoTema label="Ritmo" value={cantante.ritmo} />}
                 {cantante.tiempo && <DatoTema label="Tiempo" value={`${cantante.tiempo} min`} />}
               </div>
-              {cantante.videoUrl && (
-                <a
-                  href={cantante.videoUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-6! inline-flex! items-center gap-2 rounded-lg border border-[rgba(224,165,39,0.35)] bg-[rgba(224,165,39,0.1)] px-4! py-2.5! text-sm font-semibold text-[#f4c94f]! transition-colors duration-200 hover:border-[rgba(224,165,39,0.6)] hover:bg-[rgba(224,165,39,0.18)]"
-                >
-                  <PlayCircle size={16} /> Ver video de la interpretación
-                </a>
-              )}
+              {cantante.videoUrl && <VideoInterpretacion videoUrl={cantante.videoUrl} />}
             </div>
           </div>
         )}

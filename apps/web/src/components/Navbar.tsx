@@ -19,7 +19,7 @@ import {
 const links = [
   { label: 'Inicio', href: ROUTES.home, icon: Home },
   { label: 'Categorías', href: ROUTES.categorias, icon: LayoutGrid },
-  { label: 'Participantes', href: ROUTES.cantante, icon: Mic },
+  { label: 'Participantes', href: ROUTES.participante, icon: Mic },
   { label: 'Inscripciones', href: ROUTES.inscripciones, icon: FileText },
   { label: 'Butacas', href: ROUTES.butacas, icon: Armchair },
   { label: 'Realidad Virtual', href: ROUTES.realidadVirtual, icon: Glasses },
