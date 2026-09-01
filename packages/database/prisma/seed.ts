@@ -8,20 +8,22 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
+// Igual a GRUPOS_CATEGORIA en apps/web/src/app/inscripciones/page.tsx — las
+// 4 categorías grupales marcan esGrupal: true.
 const CATEGORIAS_BASE = [
-  'Ñusta',
-  'Solista vocal',
-  'Solista instrumental – Armónico',
-  'Solista instrumental – Melódico',
-  'Dúo vocal instrumental',
-  'Trio vocal instrumental',
-  'Grupo vocal instrumental',
-  'Estudiantina',
-  'Autóctono',
-  'Composición',
-  'Solista vocal infantil',
-  'Solista instrumental infantil',
-  'Especial',
+  { nombre: 'Ñusta', esGrupal: false },
+  { nombre: 'Solista vocal', esGrupal: false },
+  { nombre: 'Solista instrumental – Armónico', esGrupal: false },
+  { nombre: 'Solista instrumental – Melódico', esGrupal: false },
+  { nombre: 'Dúo vocal instrumental', esGrupal: true },
+  { nombre: 'Trío vocal instrumental', esGrupal: true },
+  { nombre: 'Grupo vocal instrumental', esGrupal: true },
+  { nombre: 'Estudiantina', esGrupal: true },
+  { nombre: 'Autóctono', esGrupal: false },
+  { nombre: 'Composición', esGrupal: false },
+  { nombre: 'Solista vocal infantil', esGrupal: false },
+  { nombre: 'Solista instrumental infantil', esGrupal: false },
+  { nombre: 'Especial', esGrupal: false },
 ];
 
 // Campos según el Anexo 1 (Ficha de Postulación) de la convocatoria.
@@ -86,7 +88,7 @@ const CANTANTES_BASE = [
 const GRUPOS_BASE = [
   {
     nombre: 'Los Hermanos del Valle',
-    categoria: 'Trio vocal instrumental',
+    categoria: 'Trío vocal instrumental',
     departamento: 'TARIJA' as const,
     tituloTema: 'Chapaco de corazón',
     autorCompositor: 'Los Hermanos del Valle',
@@ -137,11 +139,11 @@ function fotoPlaceholder(nombre: string, colorFondo: string) {
 async function main() {
   const categoriasPorNombre = new Map<string, string>();
 
-  for (const nombre of CATEGORIAS_BASE) {
+  for (const { nombre, esGrupal } of CATEGORIAS_BASE) {
     const categoria = await prisma.categoria.upsert({
       where: { nombre },
-      update: {},
-      create: { nombre },
+      update: { esGrupal },
+      create: { nombre, esGrupal },
     });
     categoriasPorNombre.set(nombre, categoria.id);
   }
@@ -162,6 +164,9 @@ async function main() {
           ...datos,
           categoriaId,
           fotoUrl: fotoPlaceholder(datos.nombre, 'e0a527'),
+          // Datos de ejemplo para mostrar en el sitio, no postulaciones
+          // reales pendientes de revisión.
+          estado: 'APROBADO',
         },
       });
     }
@@ -183,6 +188,9 @@ async function main() {
           ...datos,
           categoriaId,
           fotoUrl: fotoPlaceholder(datos.nombre, '7f0f1e'),
+          // Datos de ejemplo para mostrar en el sitio, no postulaciones
+          // reales pendientes de revisión.
+          estado: 'APROBADO',
           integrantes: {
             create: integrantes.map((integrante) => ({
               ...integrante,

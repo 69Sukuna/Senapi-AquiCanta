@@ -176,7 +176,8 @@ export function TeatroSeatMap({ butacas, zonas, seleccionadas, onToggle }: Teatr
     window.addEventListener('pointercancel', onUp);
   };
 
-  const handleSeatClick = (b: Butaca) => {
+  const handleSeatClick = (e: React.MouseEvent, b: Butaca) => {
+    e.stopPropagation();
     if (fueArrastre.current) {
       fueArrastre.current = false;
       return;
@@ -184,12 +185,24 @@ export function TeatroSeatMap({ butacas, zonas, seleccionadas, onToggle }: Teatr
     if (!b.ocupada) onToggle(b);
   };
 
-  const handleZonaClick = (zona: Zona) => {
+  const handleZonaClick = (e: React.MouseEvent, zona: Zona) => {
+    e.stopPropagation();
     if (fueArrastre.current) {
       fueArrastre.current = false;
       return;
     }
     enfocarZona(zona);
+  };
+
+  // Click en cualquier parte del mapa que no sea una butaca (fondo, otras
+  // zonas atenuadas, el escenario) mientras estás dentro de una zona: vuelve
+  // a la vista de sectores, para no depender solo del botón "Volver".
+  const handleFondoClick = () => {
+    if (fueArrastre.current) {
+      fueArrastre.current = false;
+      return;
+    }
+    if (modo === 'asientos') volverAZonas();
   };
 
   const zonaActiva = zonas.find((z) => z.id === sectorActivo) ?? null;
@@ -238,7 +251,17 @@ export function TeatroSeatMap({ butacas, zonas, seleccionadas, onToggle }: Teatr
         preserveAspectRatio="xMidYMid meet"
         className="block h-full w-full cursor-grab touch-none select-none active:cursor-grabbing"
         onPointerDown={handlePointerDown}
+        onClick={handleFondoClick}
       >
+        <defs>
+          <radialGradient id="pisoTeatro" cx="50%" cy="82%" r="85%">
+            <stop offset="0%" stopColor="#3a0d14" />
+            <stop offset="55%" stopColor="#22060a" />
+            <stop offset="100%" stopColor="#0c0203" />
+          </radialGradient>
+        </defs>
+        <rect x={0} y={0} width={VIEWBOX.width} height={VIEWBOX.height} fill="url(#pisoTeatro)" />
+
         <g ref={groupRef}>
           {ESCENARIO_PATHS.map((d, i) => (
             <path
@@ -265,7 +288,7 @@ export function TeatroSeatMap({ butacas, zonas, seleccionadas, onToggle }: Teatr
             zonas.map((z) => (
               <g
                 key={z.id}
-                onClick={() => handleZonaClick(z)}
+                onClick={(e) => handleZonaClick(e, z)}
                 className="cursor-pointer transition-opacity hover:opacity-80"
               >
                 <path
@@ -298,7 +321,10 @@ export function TeatroSeatMap({ butacas, zonas, seleccionadas, onToggle }: Teatr
                 ))}
 
               {zonaActiva && (
-                <>
+                // Todo el interior de la zona activa frena el click acá: no
+                // debe "salir" al panorama general salvo que el click caiga
+                // realmente afuera de este contorno.
+                <g onClick={(e) => e.stopPropagation()}>
                   <path
                     d={zonaActiva.path}
                     fill={colorZona(zonaActiva)}
@@ -330,7 +356,7 @@ export function TeatroSeatMap({ butacas, zonas, seleccionadas, onToggle }: Teatr
                       Butacas de este sector: próximamente
                     </text>
                   )}
-                </>
+                </g>
               )}
 
               {(() => {
@@ -341,7 +367,7 @@ export function TeatroSeatMap({ butacas, zonas, seleccionadas, onToggle }: Teatr
                   if (!actual || b.x < actual.x) primeraPorFila.set(b.fila, b);
                 }
                 return (
-                  <>
+                  <g onClick={(e) => e.stopPropagation()}>
                     {[...primeraPorFila.values()].map((b) => (
                       <text
                         key={`fila-${b.fila}`}
@@ -369,7 +395,7 @@ export function TeatroSeatMap({ butacas, zonas, seleccionadas, onToggle }: Teatr
                           key={b.id}
                           transform={`rotate(${b.angulo} ${b.x} ${b.y})`}
                           className={b.ocupada ? 'cursor-not-allowed' : 'cursor-pointer'}
-                          onClick={() => handleSeatClick(b)}
+                          onClick={(e) => handleSeatClick(e, b)}
                         >
                           <rect
                             x={b.x - ANCHO_BUTACA / 2}
@@ -401,7 +427,7 @@ export function TeatroSeatMap({ butacas, zonas, seleccionadas, onToggle }: Teatr
                         </g>
                       );
                     })}
-                  </>
+                  </g>
                 );
               })()}
             </>

@@ -1,4 +1,7 @@
 import type { SVGProps } from 'react';
+import Image from 'next/image';
+import Link from 'next/link';
+import { ROUTES } from '@/lib/routes';
 
 function FacebookIcon(props: SVGProps<SVGSVGElement>) {
   return (
@@ -58,10 +61,47 @@ const SOCIAL_LINKS = [
 
 const WHATSAPP_NUMBERS = ['59164775274', '59171856225', '59176153717'];
 
+// Mini mapa del sitio — mismas rutas que el Navbar, para que footer y menú
+// naveguen de forma consistente entre páginas.
+
+
 export function Footer() {
   return (
-    <footer className="border-t border-[#e0a527]/18 px-6 py-10 text-sm text-[#fdf6ec]/50">
-      <div className="mx-auto flex max-w-5xl flex-col items-center gap-6">
+    <footer className="relative bg-[linear-gradient(180deg,rgba(23,4,6,0.55)_0%,rgba(23,4,6,0.92)_100%)] px-6! pt-10! pb-10! text-sm text-[#fdf6ec]/50">
+      {/* Línea de "candilejas": el mismo borde dorado-carmesí que enmarca el Navbar, cerrando el escenario por abajo */}
+      <span className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-linear-to-r from-[#f4c94f] via-[#e11d2e] to-[#f4c94f] opacity-70" />
+
+      <div className="mx-auto flex max-w-5xl flex-col items-center gap-8">
+        {/* Evento + organizador */}
+        <div className="flex flex-col items-center gap-6 sm:flex-row sm:gap-10">
+          <Image
+            src="/images/logo_aquicanta.png"
+            alt="Aquí Canta Bolivia"
+            width={1204}
+            height={880}
+            className="h-16 w-auto"
+          />
+
+          <span className="hidden h-12 w-px bg-[#e0a527]/15 sm:block" />
+
+          <div className="flex items-center gap-3">
+            <Image
+              src="/images/secretaria_logo.png"
+              alt="Secretaría Departamental de Cultura y Turismo de Oruro"
+              width={1200}
+              height={1200}
+              className="h-14 w-14 shrink-0 rounded-full object-contain"
+            />
+            <div className="flex flex-col">
+              <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#fdf6ec]/40">Organiza</span>
+              <span className="text-sm font-semibold text-[#fdf6ec]/70">Secretaría de Cultura y Turismo — Oruro</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="h-px w-full max-w-md bg-[#e0a527]/10" />
+
+
         <span className="text-xs font-semibold tracking-[0.2em] text-[#fdf6ec]/50 uppercase">
           Más Información
         </span>
@@ -97,7 +137,9 @@ export function Footer() {
           ))}
         </div>
 
-        <p className="text-center text-[#fdf6ec]/40">© {new Date().getFullYear()} Aqui Canta Bolivia</p>
+        <p className="text-center text-[#fdf6ec]/40">
+          © {new Date().getFullYear()} Aqui Canta Bolivia — Festival Nacional de la Canción Boliviana
+        </p>
       </div>
     </footer>
   );

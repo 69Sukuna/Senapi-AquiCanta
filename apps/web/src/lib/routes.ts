@@ -6,7 +6,7 @@ export const ROUTES = {
   cantante: '/cantante',
   grupo: '/grupo',
   inscripciones: '/inscripciones',
-  asientosReserva: '/asientos-reserva',
+  butacas: '/butacas',
   realidadVirtual: '/realidad-virtual',
   votacionPrevia: '/votacion-previa',
   votacionVivo: '/votacion-vivo',

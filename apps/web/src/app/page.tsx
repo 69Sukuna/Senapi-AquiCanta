@@ -6,17 +6,11 @@ import Link from 'next/link';
 import { ROUTES } from '@/lib/routes';
 import { CategoriasCarousel } from '@/components/CategoriasCarousel';
 import {
-  Server,
-  Database,
-  Layers,
-  Cpu,
-  Terminal,
-  CheckCircle2,
-  AlertCircle,
+  ArrowRight,
+  CheckSquare,
   ExternalLink,
-  RefreshCw,
-  Box,
-  CloudUpload,
+  FileText,
+  MapPin,
   Mic,
   Mic2,
   Users,
@@ -121,18 +115,18 @@ export default function Home() {
   return (
     <main className="container">
       {/* Header */}
-      <header className="py-10">
-        <div className="grid md:grid-cols-2 gap-10 items-stretch">
+      <header className="pt-10! pb-16! md:pt-14! md:pb-24!">
+        <div className="grid md:grid-cols-2 gap-10 lg:gap-16 items-center">
           {/* Columna de texto */}
           <div className="flex flex-col gap-6">
             <div>
-              <span className="badge badge-gold w-fit mb-4">
+              <span className="badge badge-gold w-fit mb-4!">
                 <span className="pulse-dot" /> XXXIII Edición
               </span>
-              <h1 className="text-sm md:text-base font-semibold tracking-[0.2em] text-white/60 uppercase mb-2">
+              <p className="text-sm md:text-base font-semibold tracking-[0.2em] text-white/60 uppercase mb-2!">
                 Festival Nacional de la Canción Boliviana
-              </h1>
-              <h1 className="text-5xl md:text-6xl lg:text-7xl font-extrabold leading-[1.05] bg-linear-to-br from-white via-[#f4c94f] to-[#e0a527] bg-clip-text text-transparent">
+              </p>
+              <h1 className="text-5xl md:text-6xl lg:text-7xl font-extrabold leading-[1.05] bg-linear-to-br from-[#fdf6ec] via-[#f4c94f] to-[#ff4d5e] bg-clip-text text-transparent">
                 “Aquí… Canta Bolivia”
               </h1>
             </div>
@@ -144,54 +138,30 @@ export default function Home() {
               selección en las diferentes categorías.
             </p>
 
-            <div className="flex flex-wrap gap-4 mt-2">
-              <button
-                className="
-                  px-6 py-3 rounded-lg font-semibold
-                  text-white
-                  bg-[#D52B1E]
-                  shadow-md shadow-black/30
-                  transition-all duration-300
-                  hover:brightness-110
-                  hover:-translate-y-0.5
-                  hover:shadow-lg hover:shadow-black/40
-                  cursor-pointer
-                "
-              >
-                Votaciones
-              </button>
-
-              <button
-                className="
-                  px-6 py-3 rounded-lg font-semibold
-                  text-[#3D2B00]
-                  bg-[#F9E300]
-                  shadow-md shadow-black/30
-                  transition-all duration-300
-                  hover:brightness-110
-                  hover:-translate-y-0.5
-                  hover:shadow-lg hover:shadow-black/40
-                  cursor-pointer
-                "
-              >
-                Lee la Convocatoria
-              </button>
-
-              <button
-                className="
-                  px-6 py-3 rounded-lg font-semibold
-                  text-white
-                  bg-[#007A33]
-                  shadow-md shadow-black/30
-                  transition-all duration-300
-                  hover:brightness-110
-                  hover:-translate-y-0.5
-                  hover:shadow-lg hover:shadow-black/40
-                  cursor-pointer
-                "
+            <div className="flex flex-wrap items-center gap-4">
+              <Link
+                href={ROUTES.inscripciones}
+                className="group inline-flex items-center gap-2 px-7! py-3.5! rounded-lg font-semibold text-[#200308] bg-linear-to-br from-[#f4c94f] to-[#e11d2e] shadow-lg shadow-[#e11d2e]/25 transition-all duration-300 hover:brightness-110 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-[#e11d2e]/35"
               >
                 Inscríbete
-              </button>
+                <ArrowRight size={16} className="transition-transform duration-300 group-hover:translate-x-1" />
+              </Link>
+
+              <Link
+                href={ROUTES.votacionPrevia}
+                className="inline-flex items-center gap-2 px-6! py-3! rounded-lg font-semibold text-[#f4c94f] border border-[#e0a527]/40 bg-[#e0a527]/10 transition-all duration-300 hover:border-[#e0a527]/70 hover:bg-[#e0a527]/20 hover:-translate-y-0.5"
+              >
+                <CheckSquare size={16} /> Votaciones
+              </Link>
+
+              <a
+                href="https://drive.google.com/file/d/1ggcf9PPSnQ-7jc0mTFxQqr27Q5ExGJSZ/view?usp=drive_link"
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-2 py-3! font-semibold text-white/70 underline-offset-4 transition-colors duration-300 hover:text-[#fdf6ec] hover:underline"
+              >
+                <FileText size={16} /> Lee la Convocatoria
+              </a>
             </div>
           </div>
 
@@ -206,23 +176,22 @@ export default function Home() {
             />
           </div>
         </div>
-
       </header>
 
       {/* Categorías destacadas */}
-      <section className="py-10">
-        <div className="flex flex-wrap items-end justify-between gap-4 mb-8">
+      <section className="py-16! md:py-20! border-t border-[#e0a527]/10">
+        <div className="flex flex-wrap items-end justify-between gap-4 mb-8!">
           <div>
-            <h2 className="text-sm font-semibold tracking-[0.2em] text-white/60 uppercase mb-2">
+            <p className="text-sm font-semibold tracking-[0.2em] text-white/60 uppercase mb-2!">
               Convocatoria
-            </h2>
-            <h2 className="text-3xl md:text-4xl font-extrabold text-white">
+            </p>
+            <h2 className="text-3xl md:text-4xl font-extrabold bg-linear-to-r from-[#fdf6ec] via-[#f4c94f] to-[#ff4d5e] bg-clip-text text-transparent">
               Categorías Destacadas
             </h2>
           </div>
           <Link
             href={ROUTES.categorias}
-            className="inline-flex items-center gap-2 rounded-lg border border-[#e0a527]/30 bg-[#e0a527]/10 px-5 py-2.5 text-sm font-semibold text-[#f4c94f] transition-all duration-300 hover:gap-3 hover:border-[#e0a527]/60 hover:bg-[#e0a527]/20 hover:-translate-y-0.5"
+            className="inline-flex items-center gap-2 rounded-lg border border-[#e0a527]/30 bg-[#e0a527]/10 px-5! py-2.5! text-sm font-semibold text-[#f4c94f] transition-all duration-300 hover:gap-3 hover:border-[#e0a527]/60 hover:bg-[#e0a527]/20 hover:-translate-y-0.5"
           >
             Ver todas las categorías <ExternalLink size={14} />
           </Link>
@@ -232,12 +201,12 @@ export default function Home() {
       </section>
 
       {/* Sede del festival */}
-      <section className="py-10">
-        <div className="mb-8">
-          <h2 className="text-sm font-semibold tracking-[0.2em] text-white/60 uppercase mb-2">
+      <section className="py-16! md:py-20! border-t border-[#e0a527]/10">
+        <div className="mb-8!">
+          <p className="text-sm font-semibold tracking-[0.2em] text-white/60 uppercase mb-2!">
             Sede del Festival
-          </h2>
-          <h2 className="text-3xl md:text-4xl font-extrabold text-white mb-3">
+          </p>
+          <h2 className="text-3xl md:text-4xl font-extrabold bg-linear-to-r from-[#fdf6ec] via-[#f4c94f] to-[#ff4d5e] bg-clip-text text-transparent mb-3!">
             Teatro Internacional de Oruro
           </h2>
           <p className="text-white/70 text-base leading-relaxed max-w-2xl">
@@ -246,36 +215,44 @@ export default function Home() {
         </div>
 
         <div className="grid md:grid-cols-2 gap-6">
-          <div className="relative w-full h-80 md:h-96 rounded-2xl overflow-hidden glass-panel">
+          <div className="group relative w-full h-80 md:h-96 rounded-2xl overflow-hidden glass-panel">
             <Image
               src="/images/palco.jpg"
               alt="Teatro Internacional de Oruro"
               fill
-              className="object-cover"
+              className="object-cover transition-transform duration-500 group-hover:scale-105"
             />
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-linear-to-t from-black/75 via-black/10 to-transparent px-5! pb-4! pt-10!">
+              <span className="text-sm font-semibold text-white">Interior del teatro</span>
+            </div>
           </div>
 
-          <div className="relative w-full h-80 md:h-96 rounded-2xl overflow-hidden glass-panel">
-            <iframe
-              src="https://www.google.com/maps?q=Teatro+Internacional+de+Oruro,+Bolivia&output=embed"
-              className="absolute inset-0 w-full h-full border-0 grayscale invert-92 contrast-90"
-              loading="lazy"
-              referrerPolicy="no-referrer-when-downgrade"
-              title="Ubicación del Teatro Internacional de Oruro"
-            />
+          <div className="flex flex-col gap-3">
+            <div className="isolate relative w-full h-80 md:h-96 rounded-2xl overflow-hidden glass-panel">
+              <iframe
+                src="https://www.google.com/maps?q=Teatro+Internacional+de+Oruro,+Bolivia&output=embed"
+                className="absolute inset-0 h-full w-full border-0 grayscale invert-92 contrast-90"
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                title="Ubicación del Teatro Internacional de Oruro"
+              />
+              <div className="pointer-events-none absolute inset-0 bg-[#3d0a13] mix-blend-color" />
+              <span className="pointer-events-none absolute left-4! top-4! inline-flex items-center gap-1.5 rounded-full border border-[#e0a527]/40 bg-[#170406]/90 px-3! py-1.5! text-xs font-bold text-[#f4c94f] backdrop-blur-md">
+                <MapPin size={12} /> Oruro, Bolivia
+              </span>
+            </div>
+
+            <a
+              href="https://www.google.com/maps/dir/?api=1&destination=Teatro+Internacional+de+Oruro,+Bolivia"
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex w-fit items-center gap-2 self-end rounded-lg border border-[#e0a527]/30 bg-[#e0a527]/10 px-5! py-2.5! text-sm font-semibold text-[#f4c94f] transition-all duration-300 hover:gap-3 hover:border-[#e0a527]/60 hover:bg-[#e0a527]/20 hover:-translate-y-0.5"
+            >
+              Cómo llegar <ExternalLink size={14} />
+            </a>
           </div>
         </div>
-
-        <a
-          href="https://www.google.com/maps/dir/?api=1&destination=Teatro+Internacional+de+Oruro,+Bolivia"
-          target="_blank"
-          rel="noreferrer"
-          className="mt-6 inline-flex items-center gap-2 rounded-lg border border-[#e0a527]/30 bg-[#e0a527]/10 px-5 py-2.5 text-sm font-semibold text-[#f4c94f] transition-all duration-300 hover:gap-3 hover:border-[#e0a527]/60 hover:bg-[#e0a527]/20 hover:-translate-y-0.5"
-        >
-          Cómo llegar <ExternalLink size={14} />
-        </a>
       </section>
-
     </main>
   );
 }
