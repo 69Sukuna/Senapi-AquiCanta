@@ -12,19 +12,19 @@ export function TablaResultadosJurado({ resultados }: TablaResultadosJuradoProps
       <table className="w-full min-w-[560px] text-left text-sm">
         <thead>
           <tr style={{ borderBottom: '1px solid var(--vt-border)' }}>
-            <th className="pb-3 pr-4 text-[0.65rem] font-bold uppercase tracking-wider text-[var(--vt-text-muted)]">
+            <th className="pb-4 pr-4 text-[0.65rem] font-bold uppercase tracking-wider text-[var(--vt-text-muted)]">
               Puesto
             </th>
-            <th className="pb-3 pr-4 text-[0.65rem] font-bold uppercase tracking-wider text-[var(--vt-text-muted)]">
+            <th className="pb-4 pr-4 text-[0.65rem] font-bold uppercase tracking-wider text-[var(--vt-text-muted)]">
               Participante
             </th>
-            <th className="pb-3 pr-4 text-[0.65rem] font-bold uppercase tracking-wider text-[var(--vt-text-muted)]">
+            <th className="pb-4 pr-4 text-[0.65rem] font-bold uppercase tracking-wider text-[var(--vt-text-muted)]">
               Categoría
             </th>
-            <th className="pb-3 pr-4 text-[0.65rem] font-bold uppercase tracking-wider text-[var(--vt-text-muted)]">
+            <th className="pb-4 pr-4 text-[0.65rem] font-bold uppercase tracking-wider text-[var(--vt-text-muted)]">
               Jueces
             </th>
-            <th className="pb-3 text-[0.65rem] font-bold uppercase tracking-wider text-[var(--vt-text-muted)]">
+            <th className="pb-4 text-[0.65rem] font-bold uppercase tracking-wider text-[var(--vt-text-muted)]">
               Promedio
             </th>
           </tr>
@@ -32,18 +32,18 @@ export function TablaResultadosJurado({ resultados }: TablaResultadosJuradoProps
         <tbody>
           {resultados.map((resultado) => (
             <tr key={resultado.participanteId} style={{ borderBottom: '1px solid var(--vt-border)' }}>
-              <td className="py-3 pr-4 font-bold text-[var(--vt-mustard-light)]">
+              <td className="py-4 pr-4 font-bold text-[var(--vt-mustard-light)]">
                 <span className="inline-flex items-center gap-1">
                   {resultado.puesto !== null && resultado.puesto <= 3 && <Trophy size={14} aria-hidden="true" />}
                   {resultado.puesto ?? '—'}
                 </span>
               </td>
-              <td className="py-3 pr-4 text-[var(--vt-text-primary)]">{resultado.nombreArtistico}</td>
-              <td className="py-3 pr-4 text-[var(--vt-text-secondary)]">{resultado.categoria}</td>
-              <td className="py-3 pr-4 tabular-nums text-[var(--vt-text-secondary)]">
+              <td className="py-4 pr-4 text-[var(--vt-text-primary)]">{resultado.nombreArtistico}</td>
+              <td className="py-4 pr-4 text-[var(--vt-text-secondary)]">{resultado.categoria}</td>
+              <td className="py-4 pr-4 tabular-nums text-[var(--vt-text-secondary)]">
                 {resultado.juecesQueCalificaron}/{resultado.totalJueces}
               </td>
-              <td className="py-3">
+              <td className="py-4">
                 {resultado.promedio !== null ? (
                   <span className="font-bold tabular-nums text-[var(--vt-text-primary)]">
                     {resultado.promedio.toFixed(1)}

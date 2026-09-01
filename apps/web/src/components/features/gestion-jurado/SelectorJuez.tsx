@@ -13,7 +13,7 @@ interface SelectorJuezProps {
 
 export function SelectorJuez({ jueces, juezActivoId, onSeleccionar, progreso, totalParticipantes }: SelectorJuezProps) {
   return (
-    <div className="grid grid-cols-1 items-stretch gap-3 sm:grid-cols-2 lg:grid-cols-5" role="radiogroup" aria-label="Seleccionar jurado activo">
+    <div className="grid grid-cols-1 items-stretch gap-4 sm:grid-cols-2 lg:grid-cols-5" role="radiogroup" aria-label="Seleccionar jurado activo">
       {jueces.map((juez) => {
         const completados = progreso(juez.id);
         const activo = juez.id === juezActivoId;
@@ -25,7 +25,7 @@ export function SelectorJuez({ jueces, juezActivoId, onSeleccionar, progreso, to
             role="radio"
             aria-checked={activo}
             onClick={() => onSeleccionar(juez.id)}
-            className="vt-card flex flex-col items-center gap-2 px-4 py-5 text-center transition-colors"
+            className="vt-card flex flex-col items-center gap-2.5 px-4 py-6 text-center transition-colors"
             style={
               activo
                 ? { borderColor: 'var(--vt-border-active)', background: 'var(--bg-card-hover)' }
@@ -36,8 +36,8 @@ export function SelectorJuez({ jueces, juezActivoId, onSeleccionar, progreso, to
               <Mic2 size={14} aria-hidden="true" /> {juez.nombre}
             </span>
             {juez.esPortavoz && <span className="vt-badge text-[0.6rem]">Portavoz</span>}
-            <p className="text-xs text-[var(--vt-text-secondary)]">{juez.especialidad}</p>
-            <div className="mt-1 flex w-full items-center gap-2">
+            <p className="text-xs leading-snug text-[var(--vt-text-secondary)]">{juez.especialidad}</p>
+            <div className="mt-1.5 flex w-full items-center gap-2">
               <div className="vt-progress-track h-1.5 flex-1 overflow-hidden rounded-full">
                 <div
                   className="vt-progress-fill h-full rounded-full transition-[width] duration-300"

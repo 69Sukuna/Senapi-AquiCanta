@@ -86,7 +86,7 @@ export default function VotacionesPage() {
                 </>
               )}
             </h1>
-            <p className="mt-4 text-[var(--vt-text-secondary)]">
+            <p className="mt-4 leading-relaxed text-[var(--vt-text-secondary)]">
               Cada categoría es un sector del teatro: entrá, recorré sus butacas y emití un único voto por sector.
             </p>
             <span className={`vt-badge mt-5 inline-flex ${modalidad === 'vivo' ? 'vt-badge-live' : ''}`}>
@@ -143,7 +143,7 @@ export default function VotacionesPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {sectores.map(({ categoria, participantes }) => (
                 <SectorCategoria
                   key={categoria}

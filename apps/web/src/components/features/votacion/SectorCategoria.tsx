@@ -15,7 +15,7 @@ export function SectorCategoria({ categoria, cantidadOpciones, votada, onSelecci
     <button
       type="button"
       onClick={onSeleccionar}
-      className={`vt-card group flex h-full flex-col gap-3 p-6 text-left transition-all duration-300 ${
+      className={`vt-card group flex h-full flex-col gap-4 p-6 text-left transition-all duration-300 ${
         votada ? 'vt-card-lider' : ''
       }`}
     >

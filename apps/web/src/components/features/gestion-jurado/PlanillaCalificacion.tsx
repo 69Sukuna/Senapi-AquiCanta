@@ -1,6 +1,7 @@
 'use client';
 
 import type { ChangeEvent } from 'react';
+import Image from 'next/image';
 import { ArrowRight, Lock, ShieldCheck } from 'lucide-react';
 import { CRITERIOS_EVALUACION_JURADO, PUNTAJE_MAXIMO_TOTAL } from '@/mocks';
 import type { ClaveCriterioEvaluacion, ParticipanteCalificacion, PuntajesCriterios } from '@/types';
@@ -16,15 +17,6 @@ interface PlanillaCalificacionProps {
   emitido: boolean;
   onCambiarCriterio: (clave: ClaveCriterioEvaluacion, valor: number) => void;
   onEmitir: () => void;
-}
-
-function iniciales(nombre: string): string {
-  return nombre
-    .split(' ')
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((palabra) => palabra[0]?.toUpperCase())
-    .join('');
 }
 
 export function PlanillaCalificacion({
@@ -67,17 +59,22 @@ export function PlanillaCalificacion({
           </div>
         </div>
 
-        <div className="vt-card flex flex-col items-center gap-3 px-6 py-8 text-center">
+        <div className="vt-card flex flex-col items-center gap-4 px-6 py-8 text-center">
           <div
-            className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full text-lg font-extrabold"
-            style={{ background: 'var(--vt-gradient-brand)', color: '#200308' }}
-            aria-hidden="true"
+            className="relative h-20 w-20 shrink-0 overflow-hidden rounded-full"
+            style={{ background: 'var(--vt-gradient-brand)' }}
           >
-            {iniciales(participante.nombreArtistico)}
+            <Image
+              src={participante.imagen}
+              alt={participante.nombreArtistico}
+              fill
+              sizes="80px"
+              className="object-cover"
+            />
           </div>
           <span className="vt-eyebrow">En competencia</span>
           <h3 className="text-lg font-extrabold text-[var(--vt-text-primary)]">{participante.nombreArtistico}</h3>
-          <p className="max-w-md text-xs text-[var(--vt-text-secondary)]">
+          <p className="max-w-md text-xs leading-relaxed text-[var(--vt-text-secondary)]">
             Origen: <span className="text-[var(--vt-text-primary)]">{participante.departamento}</span> · Tema:{' '}
             <span className="text-[var(--vt-text-primary)]">&ldquo;{participante.obra.titulo}&rdquo;</span>
           </p>
@@ -95,7 +92,7 @@ export function PlanillaCalificacion({
             </span>
           </div>
 
-          <div className="mt-4 flex flex-col gap-3">
+          <div className="mt-4 flex flex-col gap-4">
             {CRITERIOS_EVALUACION_JURADO.map((criterio, indice) => {
               const valor = puntajes[criterio.clave] ?? 0;
               const inputId = `${participante.id}-${criterio.clave}`;
@@ -118,7 +115,9 @@ export function PlanillaCalificacion({
                         <label htmlFor={inputId} className="text-sm font-bold text-[var(--vt-text-primary)]">
                           {criterio.etiqueta}
                         </label>
-                        <p className="mt-0.5 text-xs text-[var(--vt-text-muted)]">{criterio.descripcion}</p>
+                        <p className="mt-1.5 text-xs leading-relaxed text-[var(--vt-text-muted)]">
+                          {criterio.descripcion}
+                        </p>
                       </div>
                     </div>
                     <span className="vt-badge shrink-0 text-[0.6rem]">{porcentaje}%</span>

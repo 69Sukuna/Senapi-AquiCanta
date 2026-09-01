@@ -16,7 +16,7 @@ export function SelectorCategoria({
   cantidadEnCategoria,
 }: SelectorCategoriaProps) {
   return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4" role="radiogroup" aria-label="Elegir categoría">
+    <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4" role="radiogroup" aria-label="Elegir categoría">
       {categorias.map((categoria) => {
         const activa = categoria === categoriaActiva;
         const cantidad = cantidadEnCategoria(categoria);
@@ -28,13 +28,13 @@ export function SelectorCategoria({
             role="radio"
             aria-checked={activa}
             onClick={() => onSeleccionar(categoria)}
-            className="vt-card flex flex-col items-center justify-center gap-1 px-4 py-5 text-center"
+            className="vt-card flex flex-col items-center justify-center gap-2 px-4 py-6 text-center"
             style={
               activa ? { borderColor: 'var(--vt-border-active)', background: 'rgba(224, 165, 39, 0.1)' } : undefined
             }
           >
             <span
-              className={`text-sm font-extrabold ${
+              className={`text-sm leading-snug font-extrabold ${
                 activa ? 'text-[var(--vt-mustard-light)]' : 'text-[var(--vt-text-primary)]'
               }`}
             >
