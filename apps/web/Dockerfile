@@ -18,6 +18,13 @@ RUN bun install --frozen-lockfile || bun install
 # Build the Next.js app
 COPY --from=pruner /app/out/full/ .
 ENV NEXT_TELEMETRY_DISABLED=1
+
+# Railway injects service variables as build args for Dockerfile builds, but
+# only vars declared here with ARG actually reach the build — and Next.js
+# inlines NEXT_PUBLIC_* at build time, so it must be present before `build`.
+ARG NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+
 RUN bun run build --filter=@repo/web...
 
 # Production runner stage (Minimal Alpine image)
