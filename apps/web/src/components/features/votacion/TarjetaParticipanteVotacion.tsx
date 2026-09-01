@@ -60,7 +60,7 @@ export function TarjetaParticipanteVotacion({
         />
       </div>
 
-      <div className="flex flex-1 flex-col gap-4 p-6">
+      <div className="flex flex-1 flex-col gap-5 p-6">
         <div className="flex min-h-[2.75rem] items-start justify-between gap-3">
           <span className="text-xs font-semibold uppercase tracking-wider text-[var(--vt-text-muted)]">
             {participante.departamento}
@@ -72,17 +72,17 @@ export function TarjetaParticipanteVotacion({
           <h3 id={tituloId} className="text-xl font-extrabold text-[var(--vt-text-primary)]">
             {participante.nombreArtistico}
           </h3>
-          <p className="mt-1 text-sm text-[var(--vt-text-secondary)]">
+          <p className="mt-2 text-sm leading-relaxed text-[var(--vt-text-secondary)]">
             Tema: <span className="font-semibold text-[var(--vt-text-primary)]">&ldquo;{participante.obra.titulo}&rdquo;</span>
           </p>
-          <p className="text-xs text-[var(--vt-text-muted)]">
+          <p className="mt-1.5 text-xs leading-relaxed text-[var(--vt-text-muted)]">
             Ritmo: {participante.obra.ritmo} · Autoría: {participante.obra.autor} · Duración:{' '}
             {formatearDuracion(participante.obra.duracionSegundos)}
           </p>
         </div>
 
         <div>
-          <h4 className="mb-2 text-[0.65rem] font-bold uppercase tracking-wider text-[var(--vt-text-muted)]">
+          <h4 className="mb-2.5 text-[0.65rem] font-bold uppercase tracking-wider text-[var(--vt-text-muted)]">
             Instrumentos ejecutados
           </h4>
           <ul className="flex flex-wrap gap-2" aria-label="Instrumentos ejecutados">
@@ -95,7 +95,7 @@ export function TarjetaParticipanteVotacion({
         </div>
 
         <dl
-          className="grid grid-cols-2 gap-x-4 gap-y-2 border-y py-4 text-xs"
+          className="grid grid-cols-2 gap-x-4 gap-y-3 border-y py-5 text-xs"
           style={{ borderColor: 'var(--vt-border)' }}
         >
           <ParametroEvaluacionItem etiqueta="Técnica vocal" puntaje={participante.parametros.tecnicaVocal} />

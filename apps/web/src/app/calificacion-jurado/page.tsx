@@ -53,11 +53,11 @@ export default function CalificacionJuradoPage() {
   return (
     <main className="tema-votacion">
       <div className="container">
-        <header className="mb-8 flex flex-wrap items-center justify-between gap-3">
+        <header className="mb-10 flex flex-wrap items-center justify-between gap-3">
           <div>
             <span className="vt-badge">Sesión de jurado</span>
             <h1 className="mt-4 text-3xl font-extrabold text-[var(--vt-text-primary)]">Gestión del Jurado Calificador</h1>
-            <p className="mt-2 max-w-2xl text-[var(--vt-text-secondary)]">
+            <p className="mt-2 max-w-2xl leading-relaxed text-[var(--vt-text-secondary)]">
               Cada jurado califica a un participante a la vez, bajo los mismos criterios técnicos y en una escala
               de 1 a 100 puntos. Una vez emitido el voto, la calificación queda bloqueada.
             </p>
@@ -65,9 +65,9 @@ export default function CalificacionJuradoPage() {
           <span className="vt-badge">{juezActivo?.nombre ?? '—'}</span>
         </header>
 
-        <section className="mb-8">
+        <section className="mb-10">
           <span className="vt-eyebrow">Jurado calificador</span>
-          <div className="mt-3">
+          <div className="mt-4">
             <SelectorJuez
               jueces={JURADO_TITULARES}
               juezActivoId={juezActivoId}
@@ -78,9 +78,9 @@ export default function CalificacionJuradoPage() {
           </div>
         </section>
 
-        <section className="mb-8">
+        <section className="mb-10">
           <span className="vt-eyebrow">1. Elegir categoría</span>
-          <div className="mt-3">
+          <div className="mt-4">
             <SelectorCategoria
               categorias={categorias}
               categoriaActiva={categoriaSeleccionada}
@@ -94,7 +94,7 @@ export default function CalificacionJuradoPage() {
 
         <section className="mb-10">
           <span className="vt-eyebrow">2. Elegir participante a calificar</span>
-          <div className="mt-3">
+          <div className="mt-4">
             {categoriaSeleccionada ? (
               <SelectorParticipante
                 participantes={participantesDeCategoria}
@@ -128,7 +128,7 @@ export default function CalificacionJuradoPage() {
         )}
 
         <section>
-          <h2 className="mb-4 text-xl font-extrabold text-[var(--vt-text-primary)]">Resultados Consolidados</h2>
+          <h2 className="mb-5 text-xl font-extrabold text-[var(--vt-text-primary)]">Resultados Consolidados</h2>
           <TablaResultadosJurado resultados={resultados} />
         </section>
       </div>
