@@ -34,6 +34,7 @@ export interface DatosInscripcion {
   autorCompositor: string;
   ritmo: string;
   tiempo: string;
+  videoUrl: string;
   departamento: string;
   celular1: string;
   celular2: string;
@@ -282,6 +283,7 @@ function construirAnexo1(datos: DatosInscripcion): (Paragraph | Table)[] {
   );
   contenido.push(campoConTab('TÍTULO DEL TEMA', datos.tituloTema, 'AUTOR / COMPOSITOR', datos.autorCompositor));
   contenido.push(campoConTab('RITMO', datos.ritmo, 'TIEMPO', datos.tiempo ? `${datos.tiempo} minutos` : '—'));
+  contenido.push(campoConTab('VIDEO', datos.videoUrl || '—'));
   contenido.push(new Paragraph({ spacing: { after: 120 } }));
 
   contenido.push(

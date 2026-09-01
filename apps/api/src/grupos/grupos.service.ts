@@ -13,6 +13,7 @@ const SELECT_PUBLICO = {
   autorCompositor: true,
   ritmo: true,
   tiempo: true,
+  videoUrl: true,
   departamento: true,
   fotoUrl: true,
   categoriaId: true,

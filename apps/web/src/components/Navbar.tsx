@@ -12,22 +12,19 @@ import {
   FileText,
   Armchair,
   Glasses,
-  CheckSquare,
-  Radio,
+  Vote,
   LogIn,
 } from 'lucide-react';
 
 const links = [
   { label: 'Inicio', href: ROUTES.home, icon: Home },
   { label: 'Categorías', href: ROUTES.categorias, icon: LayoutGrid },
-  { label: 'Cantantes', href: ROUTES.cantante, icon: Mic },
-  { label: 'Grupos', href: ROUTES.grupo, icon: Users },
+  { label: 'Participantes', href: ROUTES.cantante, icon: Mic },
   { label: 'Inscripciones', href: ROUTES.inscripciones, icon: FileText },
   { label: 'Butacas', href: ROUTES.butacas, icon: Armchair },
   { label: 'Realidad Virtual', href: ROUTES.realidadVirtual, icon: Glasses },
-  { label: 'Votación Previa', href: ROUTES.votacionPrevia, icon: CheckSquare },
+  { label: 'Votaciones', href: ROUTES.votaciones, icon: Vote },
   { label: 'Jurado', href: ROUTES.calificacionJurado, icon: Users },
-  { label: 'Votación en Vivo', href: ROUTES.votacionVivo, icon: Radio },
 ];
 
 export function Navbar() {

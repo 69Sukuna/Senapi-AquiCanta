@@ -148,7 +148,7 @@ export default function Home() {
               </Link>
 
               <Link
-                href={ROUTES.votacionPrevia}
+                href={ROUTES.votaciones}
                 className="inline-flex items-center gap-2 px-6! py-3! rounded-lg font-semibold text-[#f4c94f] border border-[#e0a527]/40 bg-[#e0a527]/10 transition-all duration-300 hover:border-[#e0a527]/70 hover:bg-[#e0a527]/20 hover:-translate-y-0.5"
               >
                 <CheckSquare size={16} /> Votaciones

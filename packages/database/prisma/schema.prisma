@@ -83,6 +83,9 @@ model Cantante {
   tiempo          String? // duración de la interpretación, en minutos (ej. "3:30")
   departamento    Departamento?
   fotoUrl         String?
+  // Enlace (YouTube, Drive, etc.) al video de la interpretación, subido por
+  // el postulante en el formulario de inscripciones.
+  videoUrl        String?
   categoriaId     String
   categoria       Categoria     @relation(fields: [categoriaId], references: [id])
 
@@ -114,6 +117,9 @@ model Grupo {
   tiempo          String?
   departamento    Departamento?
   fotoUrl         String?
+  // Enlace (YouTube, Drive, etc.) al video de la interpretación, subido por
+  // el postulante en el formulario de inscripciones.
+  videoUrl        String?
   categoriaId     String
   categoria       Categoria         @relation(fields: [categoriaId], references: [id])
   integrantes     GrupoIntegrante[]

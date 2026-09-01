@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { ParticipanteCard } from '../_components/ParticipanteCard';
+import { ParticipanteCard } from '@/components/ParticipanteCard';
 
 interface Categoria {
   id: string;

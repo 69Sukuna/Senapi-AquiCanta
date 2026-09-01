@@ -16,6 +16,7 @@ import {
   Send,
   Sparkles,
   Download,
+  Link as LinkIcon,
 } from 'lucide-react';
 import { generarInscripcionDocx } from '@/lib/generarInscripcionDocx';
 import { GRUPOS_CATEGORIAS, esCategoriaGrupal } from '@/lib/categorias';
@@ -73,6 +74,16 @@ const soloAlfanumerico = (valor: string) => valor.replace(/[^a-zA-Z0-9]/g, '').t
 // Los nombres no admiten símbolos (@, ?, etc.) y se guardan en mayúsculas.
 const soloNombre = (valor: string) => valor.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]/g, '').toUpperCase();
 
+// El enlace al video debe ser una URL http(s) válida (YouTube, Drive, etc.).
+function esUrlValida(valor: string): boolean {
+  try {
+    const url = new URL(valor);
+    return url.protocol === 'http:' || url.protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
+
 // "Panel de telón": fondo aterciopelado (degradado vino) a juego con el resto
 // del sitio, en vez de una tarjeta clara — el festival se monta en un teatro,
 // así que el panel del formulario reutiliza esa estética (franja dorada
@@ -128,6 +139,7 @@ export default function InscripcionesPage() {
   const [autorCompositor, setAutorCompositor] = useState('');
   const [ritmo, setRitmo] = useState('');
   const [tiempo, setTiempo] = useState('');
+  const [videoUrl, setVideoUrl] = useState('');
   const [departamento, setDepartamento] = useState('');
   const [celular1, setCelular1] = useState('');
   const [celular2, setCelular2] = useState('');
@@ -154,6 +166,7 @@ export default function InscripcionesPage() {
       autorCompositor.trim() !== '' &&
       ritmo.trim() !== '' &&
       tiempo.trim() !== '' &&
+      esUrlValida(videoUrl) &&
       (!esComposicion || pseudonimo.trim() !== ''),
     departamento !== '' && celular1.trim() !== '',
     integrantes.length > 0 &&
@@ -217,6 +230,7 @@ export default function InscripcionesPage() {
           autorCompositor,
           ritmo,
           tiempo,
+          videoUrl,
           departamento: codigoDepartamento(departamento),
           celular1,
           celular2: celular2 || undefined,
@@ -256,6 +270,7 @@ export default function InscripcionesPage() {
       autorCompositor,
       ritmo,
       tiempo,
+      videoUrl,
       departamento,
       celular1,
       celular2,
@@ -491,6 +506,27 @@ export default function InscripcionesPage() {
                       placeholder="Ej: 3.5"
                     />
                   </Campo>
+                  <div className="md:col-span-2">
+                    <Campo
+                      label="Enlace al video"
+                      required
+                      hint="Subí tu video a YouTube, Google Drive u otro servicio y pegá acá el enlace público."
+                    >
+                      <div className="relative">
+                        <LinkIcon
+                          size={16}
+                          className="pointer-events-none absolute top-1/2 left-3! -translate-y-1/2 text-white/30"
+                        />
+                        <input
+                          type="url"
+                          className={`${inputClass} pl-9!`}
+                          value={videoUrl}
+                          onChange={(e) => setVideoUrl(e.target.value)}
+                          placeholder="https://youtube.com/watch?v=..."
+                        />
+                      </div>
+                    </Campo>
+                  </div>
                 </div>
               </div>
             )}
@@ -742,6 +778,10 @@ export default function InscripcionesPage() {
                     <div className="flex justify-between gap-4 sm:block">
                       <dt className="text-white/40">Tema</dt>
                       <dd className="text-white/85 font-medium">{tituloTema || '—'}</dd>
+                    </div>
+                    <div className="flex justify-between gap-4 sm:block">
+                      <dt className="text-white/40">Video</dt>
+                      <dd className="text-white/85 font-medium truncate max-w-50">{videoUrl || '—'}</dd>
                     </div>
                     <div className="flex justify-between gap-4 sm:block">
                       <dt className="text-white/40">Departamento</dt>

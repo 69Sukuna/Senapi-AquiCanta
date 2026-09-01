@@ -21,6 +21,7 @@ export class InscripcionesService {
       autorCompositor: dto.autorCompositor,
       ritmo: dto.ritmo,
       tiempo: dto.tiempo,
+      videoUrl: dto.videoUrl,
       departamento: dto.departamento,
       categoriaId: categoria.id,
       celular1: dto.celular1,

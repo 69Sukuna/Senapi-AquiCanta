@@ -22,7 +22,7 @@ export default function CantanteNotFound() {
           href="/cantante"
           className="mt-8! inline-flex! items-center gap-2 rounded-full bg-gradient-to-r from-[#f4c94f] to-[#e0a527] px-6! py-2.5! text-sm font-bold text-[#170406]! transition-transform duration-200 hover:-translate-y-0.5"
         >
-          ← Ver todos los cantantes
+          ← Ver todos los participantes
         </Link>
       </div>
     </main>

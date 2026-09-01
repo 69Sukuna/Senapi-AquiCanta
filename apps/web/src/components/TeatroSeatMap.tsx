@@ -29,7 +29,6 @@ const MIN_SCALE = 0.6;
 const MAX_SCALE = 10;
 const ANCHO_BUTACA = 3.8;
 const ALTO_BUTACA = 4.4;
-const UMBRAL_ARRASTRE = 6; // px de movimiento antes de considerarlo "paneo" y no un click
 const DURACION_ANIMACION = 450; // ms, al enfocar/salir de una zona
 
 export function TeatroSeatMap({ butacas, zonas, seleccionadas, onToggle }: TeatroSeatMapProps) {
@@ -42,12 +41,8 @@ export function TeatroSeatMap({ butacas, zonas, seleccionadas, onToggle }: Teatr
   const [sectorActivo, setSectorActivo] = useState<string | null>(null);
 
   // El transform del <g> se muta directo por DOM (sin pasar por React) para
-  // que arrastrar el mapa no re-renderice las ~3600 butacas en cada frame.
+  // que animar el foco de zona no re-renderice las ~3600 butacas en cada frame.
   const transform = useRef({ x: 0, y: 0, scale: 1 });
-  const arrastre = useRef<{ pointerId: number; lastX: number; lastY: number; movido: number; escala: number } | null>(
-    null
-  );
-  const fueArrastre = useRef(false);
 
   const aplicarTransform = () => {
     const { x, y, scale } = transform.current;
@@ -59,8 +54,8 @@ export function TeatroSeatMap({ butacas, zonas, seleccionadas, onToggle }: Teatr
   };
 
   // Anima el transform hacia un destino (usado al enfocar una zona o volver
-  // a la vista general). El paneo/zoom manual no pasa por acá — por eso se
-  // apaga la transición apenas el usuario vuelve a interactuar.
+  // a la vista general). El zoom manual no pasa por acá — por eso se apaga
+  // la transición apenas el usuario vuelve a interactuar.
   const animarTransformA = (destino: { x: number; y: number; scale: number }) => {
     if (groupRef.current) {
       groupRef.current.style.transition = `transform ${DURACION_ANIMACION}ms cubic-bezier(0.22, 1, 0.36, 1)`;
@@ -133,64 +128,13 @@ export function TeatroSeatMap({ butacas, zonas, seleccionadas, onToggle }: Teatr
     return () => svgEl.removeEventListener('wheel', onWheel);
   }, []);
 
-  // Ojo: no usar setPointerCapture acá. Un pointer capturado por el <svg>
-  // redirige el evento "click" de compatibilidad al elemento que capturó
-  // (el svg), no a la butaca/zona bajo el cursor — así que el click dejaría
-  // de funcionar. Por eso el arrastre se sigue con listeners en window en
-  // vez de capturar el puntero.
-  const handlePointerDown = (e: React.PointerEvent<SVGSVGElement>) => {
-    if (arrastre.current) return;
-    detenerAnimacion();
-    const rect = svgRef.current!.getBoundingClientRect();
-    const escala = Math.min(rect.width / VIEWBOX.width, rect.height / VIEWBOX.height) || 1;
-    const pointerId = e.pointerId;
-    arrastre.current = { pointerId, lastX: e.clientX, lastY: e.clientY, movido: 0, escala };
-
-    const onMove = (ev: PointerEvent) => {
-      const d = arrastre.current;
-      if (!d || d.pointerId !== ev.pointerId) return;
-      const dx = ev.clientX - d.lastX;
-      const dy = ev.clientY - d.lastY;
-      d.lastX = ev.clientX;
-      d.lastY = ev.clientY;
-      d.movido += Math.abs(dx) + Math.abs(dy);
-      const t = transform.current;
-      t.x += dx / d.escala;
-      t.y += dy / d.escala;
-      aplicarTransform();
-    };
-
-    const onUp = (ev: PointerEvent) => {
-      const d = arrastre.current;
-      if (d && d.pointerId === ev.pointerId) {
-        fueArrastre.current = d.movido > UMBRAL_ARRASTRE;
-      }
-      arrastre.current = null;
-      window.removeEventListener('pointermove', onMove);
-      window.removeEventListener('pointerup', onUp);
-      window.removeEventListener('pointercancel', onUp);
-    };
-
-    window.addEventListener('pointermove', onMove);
-    window.addEventListener('pointerup', onUp);
-    window.addEventListener('pointercancel', onUp);
-  };
-
   const handleSeatClick = (e: React.MouseEvent, b: Butaca) => {
     e.stopPropagation();
-    if (fueArrastre.current) {
-      fueArrastre.current = false;
-      return;
-    }
     if (!b.ocupada) onToggle(b);
   };
 
   const handleZonaClick = (e: React.MouseEvent, zona: Zona) => {
     e.stopPropagation();
-    if (fueArrastre.current) {
-      fueArrastre.current = false;
-      return;
-    }
     enfocarZona(zona);
   };
 
@@ -198,10 +142,6 @@ export function TeatroSeatMap({ butacas, zonas, seleccionadas, onToggle }: Teatr
   // zonas atenuadas, el escenario) mientras estás dentro de una zona: vuelve
   // a la vista de sectores, para no depender solo del botón "Volver".
   const handleFondoClick = () => {
-    if (fueArrastre.current) {
-      fueArrastre.current = false;
-      return;
-    }
     if (modo === 'asientos') volverAZonas();
   };
 
@@ -249,8 +189,7 @@ export function TeatroSeatMap({ butacas, zonas, seleccionadas, onToggle }: Teatr
         ref={svgRef}
         viewBox={`0 0 ${VIEWBOX.width} ${VIEWBOX.height}`}
         preserveAspectRatio="xMidYMid meet"
-        className="block h-full w-full cursor-grab touch-none select-none active:cursor-grabbing"
-        onPointerDown={handlePointerDown}
+        className="block h-full w-full touch-none select-none"
         onClick={handleFondoClick}
       >
         <defs>

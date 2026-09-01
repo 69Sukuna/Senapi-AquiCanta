@@ -5,6 +5,7 @@
     "": {
       "name": "aqui-canta-bolivia",
       "devDependencies": {
+        "@turbo/windows-64": "^2.10.12",
         "prettier": "^3.5.2",
         "turbo": "^2.4.4",
       },

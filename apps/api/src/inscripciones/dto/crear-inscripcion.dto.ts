@@ -6,6 +6,7 @@ import {
   IsEnum,
   IsOptional,
   IsString,
+  IsUrl,
   ValidateNested,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
@@ -74,6 +75,11 @@ export class CrearInscripcionDto {
   @ApiProperty()
   @IsString()
   tiempo!: string;
+
+  @ApiPropertyOptional({ description: 'Enlace al video de la interpretación (YouTube, Drive, etc.)' })
+  @IsOptional()
+  @IsUrl()
+  videoUrl?: string;
 
   @ApiProperty({ enum: Departamento })
   @IsEnum(Departamento)

@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
+import { PlayCircle } from 'lucide-react';
 import { DepartamentoBadge } from '@/components/DepartamentoBadge';
 
 interface Integrante {
@@ -19,6 +20,7 @@ interface Grupo {
   autorCompositor: string | null;
   ritmo: string | null;
   tiempo: string | null;
+  videoUrl: string | null;
   departamento: string | null;
   fotoUrl: string | null;
   categoria: { id: string; nombre: string };
@@ -116,10 +118,10 @@ export default async function GrupoPage({ params }: GrupoPageProps) {
 
       <div className="relative mx-auto! max-w-5xl px-6! py-16! sm:px-10! lg:py-20!">
         <Link
-          href="/grupo"
+          href="/cantante"
           className="flex! w-fit items-center gap-1.5 text-sm font-semibold text-[#f4c94f]! transition-transform duration-200 hover:translate-x-[-2px] hover:underline!"
         >
-          <span aria-hidden="true">←</span> Todos los grupos
+          <span aria-hidden="true">←</span> Todos los participantes
         </Link>
 
         <div className="mt-12! grid grid-cols-1 items-center gap-6 sm:mt-16! sm:grid-cols-[1fr_auto_1fr] sm:gap-8">
@@ -171,6 +173,16 @@ export default async function GrupoPage({ params }: GrupoPageProps) {
                 {grupo.ritmo && <DatoTema label="Ritmo" value={grupo.ritmo} />}
                 {grupo.tiempo && <DatoTema label="Tiempo" value={`${grupo.tiempo} min`} />}
               </div>
+              {grupo.videoUrl && (
+                <a
+                  href={grupo.videoUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-6! inline-flex! items-center gap-2 rounded-lg border border-[rgba(224,165,39,0.35)] bg-[rgba(224,165,39,0.1)] px-4! py-2.5! text-sm font-semibold text-[#f4c94f]! transition-colors duration-200 hover:border-[rgba(224,165,39,0.6)] hover:bg-[rgba(224,165,39,0.18)]"
+                >
+                  <PlayCircle size={16} /> Ver video de la interpretación
+                </a>
+              )}
             </div>
           </div>
         )}
