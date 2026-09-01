@@ -4,6 +4,7 @@ interface Grupo {
   id: string;
   nombre: string;
   fotoUrl: string | null;
+  departamento: string | null;
   categoria: { id: string; nombre: string };
   integrantes: unknown[];
 }

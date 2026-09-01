@@ -42,9 +42,29 @@ model ArtistProfile {
   @@map("artist_profiles")
 }
 
+enum Departamento {
+  LA_PAZ
+  COCHABAMBA
+  SANTA_CRUZ
+  ORURO
+  POTOSI
+  CHUQUISACA
+  TARIJA
+  BENI
+  PANDO
+}
+
+enum EstadoInscripcion {
+  PENDIENTE
+  APROBADO
+  RECHAZADO
+}
+
 model Categoria {
-  id     String @id @default(uuid())
-  nombre String @unique
+  id       String  @id @default(uuid())
+  nombre   String  @unique
+  // Determina si una postulación a esta categoría crea un Cantante o un Grupo.
+  esGrupal Boolean @default(false)
 
   cantantes Cantante[]
   grupos    Grupo[]
@@ -53,22 +73,60 @@ model Categoria {
 }
 
 model Cantante {
-  id          String    @id @default(uuid())
-  nombre      String
-  fotoUrl     String?
-  categoriaId String
-  categoria   Categoria @relation(fields: [categoriaId], references: [id])
+  id              String        @id @default(uuid())
+  nombre          String
+  // Del Anexo 1 (Ficha de Postulación) — datos principales del postulante.
+  pseudonimo      String? // solo aplica a la categoría "Composición"
+  tituloTema      String?
+  autorCompositor String?
+  ritmo           String?
+  tiempo          String? // duración de la interpretación, en minutos (ej. "3:30")
+  departamento    Departamento?
+  fotoUrl         String?
+  categoriaId     String
+  categoria       Categoria     @relation(fields: [categoriaId], references: [id])
+
+  // Datos personales/de contacto — privados, nunca se exponen en endpoints
+  // públicos. Del Anexo 1 (tabla de firmas) y Anexo 2 (carta de presentación).
+  ciNumero              String?
+  ciExtension           String?
+  edad                  String?
+  whatsapp              String?
+  direccion             String?
+  celular1              String?
+  celular2              String?
+  aceptaBases           Boolean           @default(false)
+  declaracionVoluntaria Boolean           @default(false)
+  estado                EstadoInscripcion @default(PENDIENTE)
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @default(now()) @updatedAt
 
   @@map("cantantes")
 }
 
 model Grupo {
-  id          String            @id @default(uuid())
-  nombre      String
-  fotoUrl     String?
-  categoriaId String
-  categoria   Categoria         @relation(fields: [categoriaId], references: [id])
-  integrantes GrupoIntegrante[]
+  id              String            @id @default(uuid())
+  nombre          String
+  pseudonimo      String?
+  tituloTema      String?
+  autorCompositor String?
+  ritmo           String?
+  tiempo          String?
+  departamento    Departamento?
+  fotoUrl         String?
+  categoriaId     String
+  categoria       Categoria         @relation(fields: [categoriaId], references: [id])
+  integrantes     GrupoIntegrante[]
+
+  // Datos de contacto del postulante — privados, nunca se exponen en
+  // endpoints públicos.
+  celular1              String?
+  celular2              String?
+  aceptaBases           Boolean           @default(false)
+  declaracionVoluntaria Boolean           @default(false)
+  estado                EstadoInscripcion @default(PENDIENTE)
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @default(now()) @updatedAt
 
   @@map("grupos")
 }
@@ -81,6 +139,13 @@ model GrupoIntegrante {
   nombreReferencia String?
   instrumento      String?
   fotoUrl          String?
+
+  // Datos personales — privados, nunca se exponen en endpoints públicos.
+  ciNumero    String?
+  ciExtension String?
+  edad        String?
+  whatsapp    String?
+  direccion   String?
 
   @@map("grupo_integrantes")
 }

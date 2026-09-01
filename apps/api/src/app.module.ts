@@ -6,6 +6,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { CategoriasModule } from './categorias/categorias.module';
 import { CantantesModule } from './cantantes/cantantes.module';
 import { GruposModule } from './grupos/grupos.module';
+import { InscripcionesModule } from './inscripciones/inscripciones.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { GruposModule } from './grupos/grupos.module';
     CategoriasModule,
     CantantesModule,
     GruposModule,
+    InscripcionesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

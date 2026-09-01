@@ -7,6 +7,17 @@ import { AppService } from './app.service';
 export class AppController {
   constructor(private readonly appService: AppService) {}
 
+  @Get()
+  @ApiOperation({ summary: 'Información general de la API' })
+  getRoot() {
+    return {
+      name: 'Aqui Canta Bolivia API',
+      status: 'online',
+      docs: '/docs',
+      health: '/health',
+    };
+  }
+
   @Get('health')
   @ApiOperation({ summary: 'Verificar el estado del API y conexión a base de datos' })
   @ApiResponse({ status: 200, description: 'Estado general del sistema' })

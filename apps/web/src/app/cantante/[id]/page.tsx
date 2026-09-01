@@ -1,10 +1,17 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
+import { DepartamentoBadge } from '@/components/DepartamentoBadge';
 
 interface Cantante {
   id: string;
   nombre: string;
+  pseudonimo: string | null;
+  tituloTema: string | null;
+  autorCompositor: string | null;
+  ritmo: string | null;
+  tiempo: string | null;
+  departamento: string | null;
   fotoUrl: string | null;
   categoria: { id: string; nombre: string };
 }
@@ -51,6 +58,16 @@ function StatCard({ label, value, href }: { label: string; value: string; href?:
   return <div className={classes}>{content}</div>;
 }
 
+// Un dato de la ficha del tema (Ritmo, Tiempo, Autor/Compositor...).
+function DatoTema({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <span className="block text-[0.65rem] font-bold uppercase tracking-[0.14em] text-[#f4c94f]">{label}</span>
+      <span className="mt-1! block font-semibold text-[#fdf6ec]">{value}</span>
+    </div>
+  );
+}
+
 export default async function CantantePage({ params }: CantantePageProps) {
   const { id } = await params;
   const cantante = await getCantante(id);
@@ -58,6 +75,8 @@ export default async function CantantePage({ params }: CantantePageProps) {
   if (!cantante) {
     notFound();
   }
+
+  const tieneFicha = cantante.tituloTema || cantante.autorCompositor || cantante.ritmo || cantante.tiempo;
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-[linear-gradient(165deg,#3d0a13_0%,#1f0407_55%,#0a0102_100%)]">
@@ -92,15 +111,40 @@ export default async function CantantePage({ params }: CantantePageProps) {
             <h1 className="mt-6! text-[clamp(2rem,4.5vw,3.25rem)] leading-[1.2] font-extrabold tracking-tight bg-gradient-to-r from-[#fdf6ec] via-[#f4c94f] to-[#ff4d5e] bg-clip-text text-transparent">
               {cantante.nombre}
             </h1>
+            {cantante.pseudonimo && (
+              <p className="mt-1! text-[rgba(253,246,236,0.6)]">&quot;{cantante.pseudonimo}&quot;</p>
+            )}
             <p className="mt-1.5! text-sm font-semibold uppercase tracking-[0.1em] text-[rgba(253,246,236,0.6)]">
               Cantante solista
             </p>
+
+            {cantante.departamento && (
+              <div className="mt-3!">
+                <DepartamentoBadge departamento={cantante.departamento} />
+              </div>
+            )}
           </div>
 
           <div className="order-3">
             <StatCard label="Edición" value="Aqui Canta Bolivia 2026" />
           </div>
         </div>
+
+        {tieneFicha && (
+          <div className="mt-16!">
+            <h2 className="text-center text-xl font-bold text-[#fdf6ec] sm:text-left">Tema a interpretar</h2>
+            <div className="mt-6! rounded-3xl border border-[rgba(224,165,39,0.18)] bg-[rgba(40,10,15,0.55)] p-6! backdrop-blur-md">
+              {cantante.tituloTema && (
+                <h3 className="mb-5! text-lg font-bold text-[#f4c94f]">{cantante.tituloTema}</h3>
+              )}
+              <div className="grid grid-cols-2 gap-x-6 gap-y-5 sm:grid-cols-3">
+                {cantante.autorCompositor && <DatoTema label="Autor / Compositor" value={cantante.autorCompositor} />}
+                {cantante.ritmo && <DatoTema label="Ritmo" value={cantante.ritmo} />}
+                {cantante.tiempo && <DatoTema label="Tiempo" value={`${cantante.tiempo} min`} />}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </main>
   );
