@@ -60,12 +60,16 @@ export function TeatroSeatMap({ butacas, zonas, seleccionadas, onToggle }: Teatr
   // que animar el foco de zona no re-renderice las ~3600 butacas en cada frame.
   const transform = useRef({ x: 0, y: 0, scale: 1 });
 
-  // Estado del arrastre (pan). Va en refs, no en useState, por la misma razón
-  // que `transform`: mutar el DOM directo en cada frame de mousemove/touchmove
-  // sin re-renderizar las ~3600 butacas.
+  // Estado del arrastre (pan) y del pinch-zoom (2 dedos). Todo en refs, no
+  // useState, por la misma razón que `transform`: mutar el DOM directo en
+  // cada frame de mousemove/touchmove sin re-renderizar las ~3600 butacas.
   const arrastrando = useRef(false);
   const huboArrastre = useRef(false);
   const inicioPuntero = useRef({ x: 0, y: 0, tx: 0, ty: 0 });
+  // Todos los dedos activos ahora mismo (por pointerId) — con 2 se arma un
+  // pinch; al soltar uno durante un pinch, el que queda retoma el paneo.
+  const punteros = useRef<Map<number, { x: number; y: number }>>(new Map());
+  const pinch = useRef<{ distancia: number; escala: number } | null>(null);
 
   const aplicarTransform = () => {
     const { x, y, scale } = transform.current;
@@ -173,12 +177,40 @@ export function TeatroSeatMap({ butacas, zonas, seleccionadas, onToggle }: Teatr
     if (modo === 'asientos') volverAZonas();
   };
 
-  // Arrastre con mouse/touch para desplazar el mapa. Pointer Events unifica
-  // mouse y touch en un solo set de handlers; el pan muta el transform por
-  // DOM (igual que el zoom) para no re-renderizar las butacas en cada frame.
+  const distanciaEntre = (a: { x: number; y: number }, b: { x: number; y: number }) =>
+    Math.hypot(a.x - b.x, a.y - b.y);
+
+  // Convierte coordenadas de pantalla (clientX/Y) a coordenadas del viewBox
+  // interior — lo mismo que hace el wheel-zoom para pivotear sobre el cursor,
+  // acá se usa para pivotear el pinch sobre el punto medio entre los 2 dedos.
+  const puntoDelViewport = (clientX: number, clientY: number) => {
+    const rect = svgRef.current!.getBoundingClientRect();
+    const escalaRender = Math.min(rect.width / VIEWBOX.width, rect.height / VIEWBOX.height) || 1;
+    const offsetX = (rect.width - VIEWBOX.width * escalaRender) / 2;
+    const offsetY = (rect.height - VIEWBOX.height * escalaRender) / 2;
+    return { x: (clientX - rect.left - offsetX) / escalaRender, y: (clientY - rect.top - offsetY) / escalaRender };
+  };
+
+  // Arrastre (1 dedo/mouse) y pinch-zoom (2 dedos) para desplazar y acercar
+  // el mapa en touch. Pointer Events unifica mouse y touch en un solo set de
+  // handlers; todo muta el transform por DOM (igual que el wheel-zoom) para
+  // no re-renderizar las butacas en cada frame.
   const handlePointerDown = (e: React.PointerEvent<SVGSVGElement>) => {
     if (e.pointerType === 'mouse' && e.button !== 0) return;
     detenerAnimacion();
+    punteros.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+    if (punteros.current.size === 2) {
+      arrastrando.current = false;
+      huboArrastre.current = true; // 2 dedos nunca es un click/tap simple
+      const [p1, p2] = [...punteros.current.values()];
+      pinch.current = { distancia: distanciaEntre(p1, p2), escala: transform.current.scale };
+      for (const id of punteros.current.keys()) e.currentTarget.setPointerCapture(id);
+      return;
+    }
+
+    if (punteros.current.size > 2) return; // un tercer dedo no hace nada
+
     arrastrando.current = true;
     huboArrastre.current = false;
     inicioPuntero.current = {
@@ -195,6 +227,26 @@ export function TeatroSeatMap({ butacas, zonas, seleccionadas, onToggle }: Teatr
   };
 
   const handlePointerMove = (e: React.PointerEvent<SVGSVGElement>) => {
+    if (!punteros.current.has(e.pointerId)) return;
+    punteros.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+    if (pinch.current && punteros.current.size >= 2) {
+      const [p1, p2] = [...punteros.current.values()];
+      const factor = distanciaEntre(p1, p2) / pinch.current.distancia;
+      const nuevaEscala = Math.min(MAX_SCALE, Math.max(MIN_SCALE, pinch.current.escala * factor));
+      const centro = { x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2 };
+      const pivot = puntoDelViewport(centro.x, centro.y);
+      const t = transform.current;
+      const contenidoX = (pivot.x - t.x) / t.scale;
+      const contenidoY = (pivot.y - t.y) / t.scale;
+      const { x, y } = limitarPan(pivot.x - contenidoX * nuevaEscala, pivot.y - contenidoY * nuevaEscala, nuevaEscala);
+      t.x = x;
+      t.y = y;
+      t.scale = nuevaEscala;
+      aplicarTransform();
+      return;
+    }
+
     if (!arrastrando.current) return;
     const svgEl = svgRef.current;
     if (!svgEl) return;
@@ -224,9 +276,21 @@ export function TeatroSeatMap({ butacas, zonas, seleccionadas, onToggle }: Teatr
   };
 
   const handlePointerUp = (e: React.PointerEvent<SVGSVGElement>) => {
+    punteros.current.delete(e.pointerId);
     arrastrando.current = false;
     if (e.currentTarget.hasPointerCapture(e.pointerId)) {
       e.currentTarget.releasePointerCapture(e.pointerId);
+    }
+
+    if (punteros.current.size < 2) pinch.current = null;
+
+    if (punteros.current.size === 1) {
+      // Queda un dedo tras terminar un pinch: retoma el paneo desde ahí en
+      // vez de esperar un pointerdown nuevo, para que no haya un salto.
+      const [[, pos]] = [...punteros.current.entries()];
+      arrastrando.current = true;
+      huboArrastre.current = true;
+      inicioPuntero.current = { x: pos.x, y: pos.y, tx: transform.current.x, ty: transform.current.y };
     }
   };
 
