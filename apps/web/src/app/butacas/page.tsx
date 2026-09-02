@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
 import {
   Armchair,
@@ -88,7 +88,9 @@ export default function ButacasPage() {
 
   const [seleccionadas, setSeleccionadas] = useState<Set<string>>(new Set());
   const [aviso, setAviso] = useState<string | null>(null);
-  const [carritoAbierto, setCarritoAbierto] = useState(true);
+  // Arranca minimizado (sobre todo pensando en mobile, donde tapa mapa) —
+  // se abre solo cuando hay algo que mostrar (ver efecto más abajo).
+  const [carritoAbierto, setCarritoAbierto] = useState(false);
   const [modalAbierto, setModalAbierto] = useState(false);
 
   const toggleButaca = (butaca: Butaca) => {
@@ -116,6 +118,18 @@ export default function ButacasPage() {
         .sort((a, b) => a.sectorLabel.localeCompare(b.sectorLabel) || a.fila - b.fila || a.numero - b.numero),
     [seleccionadas, butacasPorId]
   );
+
+  // Alerta visible: apenas se elige el primer asiento (0 → 1+), el carrito
+  // se abre solo para que la selección no pase desapercibida si estaba
+  // minimizado. Después el usuario lo puede volver a cerrar sin que se
+  // vuelva a abrir por cada asiento nuevo que agregue.
+  const cantidadPrevia = useRef(0);
+  useEffect(() => {
+    if (cantidadPrevia.current === 0 && seleccionList.length > 0) {
+      setCarritoAbierto(true);
+    }
+    cantidadPrevia.current = seleccionList.length;
+  }, [seleccionList.length]);
 
   const conteoPorNivel = seleccionList.reduce(
     (acc, b) => {
@@ -202,16 +216,27 @@ export default function ButacasPage() {
         <div className="relative mx-2 mb-2 min-h-0 flex-1 overflow-hidden rounded-2xl border border-(--border) bg-(--bg-card) sm:mx-4 sm:mb-4">
           <TeatroSeatMap butacas={butacas} zonas={zonas} seleccionadas={seleccionadas} onToggle={toggleButaca} />
 
-          {/* Carrito flotante: no ocupa columna propia para no achicar el mapa */}
-          <div className="absolute bottom-3 left-3 right-3 z-10 flex max-h-[75%] flex-col overflow-hidden rounded-2xl border border-[#e0a527]/25 bg-[#170406]/95 shadow-xl shadow-black/40 backdrop-blur-xl sm:bottom-4 sm:left-auto sm:right-4 sm:w-96">
+          {/* Carrito flotante: no ocupa columna propia para no achicar el mapa. Cuando
+              está minimizado con algo elegido, se resalta con un anillo rojo — y la
+              medallita del ícono pulsa — para que la selección no pase desapercibida. */}
+          <div
+            className={`absolute bottom-3 left-3 right-3 z-10 flex max-h-[75%] flex-col overflow-hidden rounded-2xl border border-[#e0a527]/25 bg-[#170406]/95 shadow-xl shadow-black/40 backdrop-blur-xl transition-shadow duration-300 sm:bottom-4 sm:left-auto sm:right-4 sm:w-96 ${
+              !carritoAbierto && seleccionList.length > 0 ? 'ring-2 ring-[#ff4d5e]/70' : ''
+            }`}
+          >
             <button
               type="button"
               onClick={() => setCarritoAbierto((v) => !v)}
               className="flex w-full shrink-0 items-center justify-between gap-3 px-4 py-3"
             >
               <span className="flex items-center gap-2.5">
-                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#e0a527]/15 text-[#f4c94f]">
+                <span className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#e0a527]/15 text-[#f4c94f]">
                   <Armchair size={17} />
+                  {!carritoAbierto && seleccionList.length > 0 && (
+                    <span className="absolute -right-1 -top-1 flex h-4 w-4 animate-pulse items-center justify-center rounded-full bg-[#ff4d5e] text-[10px] font-bold text-white">
+                      {seleccionList.length}
+                    </span>
+                  )}
                 </span>
                 <span className="flex flex-col items-start leading-tight">
                   <span className="text-sm font-bold text-white">Tu selección</span>
