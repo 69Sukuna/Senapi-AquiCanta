@@ -50,7 +50,7 @@ export function PlanillaCalificacion({
               {numero}
               <span className="text-sm font-semibold text-[var(--vt-text-muted)]"> / {totalParticipantes}</span>
             </span>
-            <div className="h-1 w-24 overflow-hidden rounded-full" style={{ background: 'rgba(253,246,236,0.1)' }}>
+            <div className="h-1 w-24 overflow-hidden rounded-full" style={{ background: 'rgba(27,42,74,0.08)' }}>
               <div
                 className="h-full rounded-full"
                 style={{ width: `${(numero / totalParticipantes) * 100}%`, background: 'var(--vt-gradient-brand)' }}
@@ -87,7 +87,7 @@ export function PlanillaCalificacion({
               <h3 className="text-lg font-extrabold text-[var(--vt-text-primary)]">Rúbrica de calificación</h3>
               <p className="text-xs text-[var(--vt-text-secondary)]">Asigne un puntaje dentro del rango de cada criterio.</p>
             </div>
-            <span className="text-xs font-bold tabular-nums text-[var(--vt-mustard-light)]">
+            <span className="text-xs font-bold tabular-nums text-[var(--vt-mustard-deep)]">
               {criteriosRespondidos} de {CRITERIOS_EVALUACION_JURADO.length} respondidos
             </span>
           </div>
@@ -151,7 +151,7 @@ export function PlanillaCalificacion({
       <div className="vt-card static lg:sticky lg:top-6 flex flex-col gap-5 p-6">
         <div className="text-center">
           <span className="vt-eyebrow">Puntaje final</span>
-          <p className="mt-2 font-mono text-5xl font-extrabold tabular-nums text-[var(--vt-mustard-light)]">
+          <p className="mt-2 font-mono text-5xl font-extrabold tabular-nums text-[var(--vt-mustard-deep)]">
             {total.toFixed(1)}
             <span className="text-lg font-semibold text-[var(--vt-text-muted)]">/{PUNTAJE_MAXIMO_TOTAL}</span>
           </p>
@@ -173,9 +173,9 @@ export function PlanillaCalificacion({
 
         <div
           className="flex items-start gap-2 rounded-xl p-3 text-xs"
-          style={{ background: 'rgba(224,165,39,0.08)', border: '1px solid var(--vt-border)' }}
+          style={{ background: 'rgba(224,143,31,0.1)', border: '1px solid var(--vt-border)' }}
         >
-          <ShieldCheck size={16} className="mt-0.5 shrink-0" style={{ color: 'var(--vt-mustard-light)' }} aria-hidden="true" />
+          <ShieldCheck size={16} className="mt-0.5 shrink-0" style={{ color: 'var(--vt-mustard-deep)' }} aria-hidden="true" />
           <div>
             <p className="font-bold text-[var(--vt-text-primary)]">Su calificación es confidencial</p>
             <p className="mt-0.5 text-[var(--vt-text-muted)]">Una vez emitida, no podrá modificarse.</p>
@@ -185,7 +185,7 @@ export function PlanillaCalificacion({
         {emitido ? (
           <div
             className="flex items-center justify-center gap-2 rounded-xl px-5 py-4 text-sm font-bold uppercase tracking-wide"
-            style={{ background: 'rgba(224,165,39,0.16)', color: 'var(--vt-mustard-light)', border: '1px solid var(--vt-border-active)' }}
+            style={{ background: 'rgba(224,143,31,0.14)', color: 'var(--vt-mustard-deep)', border: '1px solid var(--vt-border-active)' }}
           >
             <Lock size={16} aria-hidden="true" /> Calificación emitida
           </div>

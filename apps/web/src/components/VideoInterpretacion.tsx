@@ -19,7 +19,7 @@ export function VideoInterpretacion({ videoUrl }: { videoUrl: string }) {
           href={videoUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="group relative block w-full max-w-[220px] shrink-0 overflow-hidden rounded-xl border border-[rgba(224,165,39,0.25)] bg-[rgba(0,0,0,0.3)]"
+          className="group relative block w-full max-w-[220px] shrink-0 overflow-hidden rounded-xl border border-(--border) bg-[#1b2a4a]/5"
         >
           <Image
             src={`https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg`}
@@ -38,7 +38,7 @@ export function VideoInterpretacion({ videoUrl }: { videoUrl: string }) {
         href={videoUrl}
         target="_blank"
         rel="noopener noreferrer"
-        className="inline-flex! items-center gap-2 rounded-lg border border-[rgba(224,165,39,0.35)] bg-[rgba(224,165,39,0.1)] px-4! py-2.5! text-sm font-semibold text-[#f4c94f]! transition-colors duration-200 hover:border-[rgba(224,165,39,0.6)] hover:bg-[rgba(224,165,39,0.18)]"
+        className="inline-flex! items-center gap-2 rounded-lg border border-[#1e63b8]/25 bg-[#1e63b8]/8 px-4! py-2.5! text-sm font-semibold text-[#164a8c]! transition-colors duration-200 hover:border-[#1e63b8]/50 hover:bg-[#1e63b8]/15"
       >
         <PlayCircle size={16} /> Ver video de la interpretación
       </a>

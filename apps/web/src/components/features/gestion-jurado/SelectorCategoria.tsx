@@ -30,12 +30,12 @@ export function SelectorCategoria({
             onClick={() => onSeleccionar(categoria)}
             className="vt-card flex flex-col items-center justify-center gap-2 px-4 py-6 text-center"
             style={
-              activa ? { borderColor: 'var(--vt-border-active)', background: 'rgba(224, 165, 39, 0.1)' } : undefined
+              activa ? { borderColor: 'var(--vt-border-active)', background: 'rgba(224, 143, 31, 0.12)' } : undefined
             }
           >
             <span
               className={`text-sm leading-snug font-extrabold ${
-                activa ? 'text-[var(--vt-mustard-light)]' : 'text-[var(--vt-text-primary)]'
+                activa ? 'text-[var(--vt-mustard-deep)]' : 'text-[var(--vt-text-primary)]'
               }`}
             >
               {categoria}

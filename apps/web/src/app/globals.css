@@ -2,22 +2,25 @@
 @import 'tailwindcss';
 
 :root {
-  --bg-primary: #170406;
-  --bg-secondary: #3d0a13;
-  --bg-card: rgba(40, 10, 15, 0.6);
-  --bg-card-hover: rgba(61, 10, 19, 0.85);
-  --border: rgba(224, 165, 39, 0.18);
-  --border-active: rgba(224, 165, 39, 0.6);
-  --text-primary: #fdf6ec;
-  --text-secondary: rgba(253, 246, 236, 0.74);
-  --text-muted: rgba(253, 246, 236, 0.5);
-  --accent-gold: #e0a527;
-  --accent-gold-light: #f4c94f;
-  --accent-gold-gradient: linear-gradient(135deg, #f4c94f 0%, #e11d2e 100%);
-  --accent-crimson: #e11d2e;
-  --accent-crimson-light: #ff4d5e;
-  --accent-blue: #38bdf8;
-  --accent-green: #10b981;
+  /* Tema claro "Bolivia en Blanco" — papel cálido + tinta índigo, con los
+     acentos del logo (azul, sol, rojo/verde de la bandera). Reemplaza el
+     tema oscuro de terciopelo que tenía el sitio antes. */
+  --bg-primary: #fbf8f3;
+  --bg-secondary: #ffffff;
+  --bg-card: #ffffff;
+  --bg-card-hover: #f7f2e7;
+  --border: rgba(27, 42, 74, 0.12);
+  --border-active: rgba(30, 99, 184, 0.45);
+  --text-primary: #1b2a4a;
+  --text-secondary: rgba(27, 42, 74, 0.68);
+  --text-muted: rgba(27, 42, 74, 0.48);
+  --accent-gold: #8a5a12;
+  --accent-gold-light: #f0a83e;
+  --accent-gold-gradient: linear-gradient(135deg, #d52b1e 0%, #e08f1f 50%, #2e7d46 100%);
+  --accent-crimson: #d52b1e;
+  --accent-crimson-light: #e6483a;
+  --accent-blue: #1e63b8;
+  --accent-green: #2e7d46;
   --accent-purple: #a855f7;
   --font-main: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
 }
@@ -41,13 +44,14 @@ body {
   min-height: 100vh;
   line-height: 1.6;
   overflow-x: hidden;
-  background-image: linear-gradient(165deg, #3d0a13 0%, #1f0407 55%, #0a0102 100%);
+  background-image: none;
 }
 
 /* Mismos blobs decorativos que usan las páginas "explorer" (categorías,
    grupo, cantante...), pero fijos a nivel body para que el resto de rutas
    (home, inscripciones, butacas...) comparta el mismo fondo sin
-   duplicar el gradiente en cada page.tsx. */
+   duplicar el gradiente en cada page.tsx. En el tema claro son mucho más
+   tenues — son un toque de color sobre el papel, no un resplandor nocturno. */
 body::before,
 body::after {
   content: '';
@@ -55,7 +59,7 @@ body::after {
   z-index: -1;
   pointer-events: none;
   border-radius: 9999px;
-  filter: blur(64px);
+  filter: blur(80px);
 }
 
 body::before {
@@ -63,8 +67,8 @@ body::before {
   left: -8rem;
   width: 28rem;
   height: 28rem;
-  background: #e0a527;
-  opacity: 0.14;
+  background: #f0a83e;
+  opacity: 0.16;
 }
 
 body::after {
@@ -72,8 +76,8 @@ body::after {
   right: -10rem;
   width: 32rem;
   height: 32rem;
-  background: #ff4d5e;
-  opacity: 0.14;
+  background: #1e63b8;
+  opacity: 0.1;
 }
 
 @media (max-width: 1023px) {
@@ -93,20 +97,21 @@ a {
   padding: 2.5rem 1.5rem;
 }
 
-/* Glassmorphism */
+/* Tarjeta de "papel": antes era vidrio esmerilado sobre fondo oscuro; en el
+   tema claro es una tarjeta blanca con sombra suave, como un recorte de
+   papel sobre la pared clara. */
 .glass-panel {
   background: var(--bg-card);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--border);
   border-radius: 16px;
+  box-shadow: 0 1px 2px rgba(27, 42, 74, 0.06), 0 10px 24px -12px rgba(27, 42, 74, 0.14);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .glass-panel:hover {
   border-color: var(--border-active);
   transform: translateY(-2px);
-  box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 2px 4px rgba(27, 42, 74, 0.08), 0 18px 36px -14px rgba(27, 42, 74, 0.2);
 }
 
 /* Badge */
@@ -123,21 +128,21 @@ a {
 }
 
 .badge-gold {
-  background: rgba(224, 165, 39, 0.15);
-  color: var(--accent-gold-light);
-  border: 1px solid rgba(224, 165, 39, 0.3);
+  background: rgba(224, 143, 31, 0.12);
+  color: var(--accent-gold);
+  border: 1px solid rgba(224, 143, 31, 0.3);
 }
 
 .badge-green {
-  background: rgba(16, 185, 129, 0.15);
-  color: #34d399;
-  border: 1px solid rgba(16, 185, 129, 0.3);
+  background: rgba(46, 125, 70, 0.12);
+  color: var(--accent-green);
+  border: 1px solid rgba(46, 125, 70, 0.3);
 }
 
 .badge-blue {
-  background: rgba(56, 189, 248, 0.15);
-  color: #38bdf8;
-  border: 1px solid rgba(56, 189, 248, 0.3);
+  background: rgba(30, 99, 184, 0.1);
+  color: var(--accent-blue);
+  border: 1px solid rgba(30, 99, 184, 0.3);
 }
 
 /* Animations */
@@ -164,20 +169,27 @@ a {
 }
 
 .tema-votacion {
-  --vt-bg-base: #170406;
-  --vt-bg-mid: #3d0a13;
-  --vt-crimson: #e11d2e;
-  --vt-crimson-light: #ff4d5e;
-  --vt-crimson-deep: #7f0f1e;
-  --vt-mustard: #e0a527;
-  --vt-mustard-light: #f4c94f;
+  --vt-bg-base: #fbf8f3;
+  --vt-bg-mid: #ffffff;
+  --vt-crimson: #d52b1e;
+  --vt-crimson-light: #e6483a;
+  --vt-crimson-deep: #8f1710;
+  --vt-mustard: #e08f1f;
+  --vt-mustard-light: #f0a83e;
+  /* Variante oscura para texto: --vt-mustard/-light tienen buen contraste
+     sobre fondos oscuros (botón de voto, íconos) pero son ilegibles como
+     texto sobre el papel claro de la página — de ahí este tono más rico. */
+  --vt-mustard-deep: #8a5a12;
+  /* Se mantiene clara a propósito: es el color de texto sobre botones/chips
+     con fondo oscuro o de color fuerte (ver .vt-btn-vote), no del texto de
+     la página — esos usan --vt-text-*, que sí son oscuros en este tema. */
   --vt-cream: #fdf6ec;
-  --vt-text-primary: #fdf6ec;
-  --vt-text-secondary: rgba(253, 246, 236, 0.74);
-  --vt-text-muted: rgba(253, 246, 236, 0.5);
-  --vt-border: rgba(224, 165, 39, 0.18);
-  --vt-border-active: rgba(224, 165, 39, 0.6);
-  --vt-card-bg: rgba(40, 10, 15, 0.6);
+  --vt-text-primary: #1b2a4a;
+  --vt-text-secondary: rgba(27, 42, 74, 0.68);
+  --vt-text-muted: rgba(27, 42, 74, 0.48);
+  --vt-border: rgba(27, 42, 74, 0.12);
+  --vt-border-active: rgba(30, 99, 184, 0.4);
+  --vt-card-bg: #ffffff;
   --vt-gradient-brand: linear-gradient(135deg, var(--vt-mustard-light) 0%, var(--vt-crimson) 100%);
 
   position: relative;
@@ -185,9 +197,9 @@ a {
   min-height: 100vh;
   color: var(--vt-text-primary);
   background:
-    radial-gradient(circle at 8% 5%, rgba(224, 165, 39, 0.14) 0%, transparent 40%),
-    radial-gradient(circle at 88% 35%, rgba(255, 77, 94, 0.14) 0%, transparent 42%),
-    linear-gradient(165deg, #3d0a13 0%, #1f0407 55%, #0a0102 100%);
+    radial-gradient(circle at 8% 5%, rgba(240, 168, 62, 0.16) 0%, transparent 40%),
+    radial-gradient(circle at 88% 35%, rgba(213, 43, 30, 0.1) 0%, transparent 42%),
+    var(--vt-bg-base);
 }
 
 .tema-votacion::before {
@@ -204,7 +216,7 @@ a {
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--vt-mustard-light);
+  color: var(--vt-mustard-deep);
 }
 
 .vt-badge {
@@ -218,8 +230,8 @@ a {
   text-transform: uppercase;
   letter-spacing: 0.08em;
   border: 1px solid var(--vt-border-active);
-  background: rgba(224, 165, 39, 0.12);
-  color: var(--vt-mustard-light);
+  background: rgba(224, 143, 31, 0.12);
+  color: var(--vt-mustard-deep);
 }
 
 .vt-badge-live {
@@ -272,7 +284,7 @@ a {
 }
 
 .vt-progress-track {
-  background: rgba(253, 246, 236, 0.1);
+  background: rgba(27, 42, 74, 0.08);
 }
 
 .vt-progress-fill {
@@ -280,7 +292,7 @@ a {
 }
 
 .vt-resultados {
-  background: rgba(253, 246, 236, 0.04);
+  background: rgba(27, 42, 74, 0.03);
   border: 1px solid var(--vt-border);
 }
 
@@ -322,8 +334,11 @@ a {
 }
 
 .vt-btn-vote {
-  background: linear-gradient(180deg, rgba(224, 165, 39, 0.3) 0%, rgba(127, 15, 30, 0.92) 45%, rgba(23, 4, 6, 0.98) 100%);
-  border: 1px solid rgba(244, 201, 79, 0.55);
+  /* Botón "de escenario" a propósito: queda oscuro/con brillo aunque el
+     resto de la página sea clara — es el único acento dramático que se
+     mantiene, como un reflector sobre un botón de terciopelo. */
+  background: linear-gradient(180deg, rgba(240, 168, 62, 0.3) 0%, rgba(143, 23, 16, 0.92) 45%, rgba(30, 8, 6, 0.98) 100%);
+  border: 1px solid rgba(240, 168, 62, 0.55);
   color: var(--vt-cream);
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
   box-shadow:
@@ -342,13 +357,13 @@ a {
 }
 
 .vt-btn-voted {
-  background: rgba(224, 165, 39, 0.16);
-  color: var(--vt-mustard-light);
+  background: rgba(224, 143, 31, 0.16);
+  color: var(--vt-mustard-deep);
   border: 1px solid var(--vt-border-active);
 }
 
 .vt-btn-disabled {
-  background: rgba(253, 246, 236, 0.06);
+  background: rgba(27, 42, 74, 0.05);
   color: var(--vt-text-muted);
   border: 1px solid var(--vt-border);
 }
@@ -373,23 +388,23 @@ a {
   border-radius: 9999px;
   padding: 0.3rem 0.75rem;
   font-size: 0.72rem;
-  background: rgba(253, 246, 236, 0.06);
-  border: 1px solid rgba(253, 246, 236, 0.12);
+  background: rgba(27, 42, 74, 0.05);
+  border: 1px solid rgba(27, 42, 74, 0.12);
   color: var(--vt-text-secondary);
 }
 
 .vt-numero {
   font-family: var(--font-main);
   font-weight: 800;
-  color: rgba(253, 246, 236, 0.85);
-  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+  color: rgba(27, 42, 74, 0.85);
+  text-shadow: none;
 }
 
 .vt-range {
   accent-color: var(--vt-mustard-light);
   height: 4px;
   border-radius: 9999px;
-  background: rgba(253, 246, 236, 0.1);
+  background: rgba(27, 42, 74, 0.1);
   cursor: pointer;
 }
 

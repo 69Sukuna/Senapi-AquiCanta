@@ -32,8 +32,9 @@ export function Navbar() {
 
   return (
     <header className="sticky top-0 z-50">
-      {/* Desktop — la línea dorado-carmesí inferior hace de "telón" que enmarca la página */}
-      <nav className="relative hidden h-[88px] items-center gap-4 bg-[linear-gradient(180deg,rgba(23,4,6,0.97)_0%,rgba(40,10,15,0.92)_100%)] px-6! lg:flex">
+      {/* Desktop — la cinta tricolor inferior (bandera) enmarca la página, como el
+          detalle de guitarra del logo, en vez del telón dorado-carmesí de antes. */}
+      <nav className="relative hidden h-[88px] items-center gap-4 border-b border-(--border) bg-white px-6! shadow-[0_1px_2px_rgba(27,42,74,0.05)] lg:flex">
         <Link href={ROUTES.home} className="flex shrink-0 items-center">
           <Image
             src="/images/logo_aquicanta.png"
@@ -54,8 +55,8 @@ export function Navbar() {
                 href={href}
                 className={`whitespace-nowrap rounded-lg border px-3! py-2! text-sm font-semibold transition-all duration-200 ${
                   active
-                    ? 'border-[#e0a527]/40 bg-[#e0a527]/15 text-[#f4c94f] shadow-[0_0_16px_-4px_rgba(224,165,39,0.7)]'
-                    : 'border-transparent text-[#fdf6ec]/60 hover:bg-white/[0.06] hover:text-[#fdf6ec]'
+                    ? 'border-[#1e63b8]/25 bg-[#1e63b8]/10 text-[#164a8c]'
+                    : 'border-transparent text-(--text-secondary) hover:bg-[#1e63b8]/5 hover:text-(--text-primary)'
                 }`}
               >
                 {label}
@@ -66,16 +67,16 @@ export function Navbar() {
 
         <Link
           href={ROUTES.login}
-          className="inline-flex shrink-0 items-center rounded-lg bg-linear-to-br from-[#f4c94f] to-[#e11d2e] px-5! py-2.5! text-sm font-semibold text-[#200308] shadow-md shadow-black/25 transition-all duration-300 hover:brightness-110"
+          className="inline-flex shrink-0 items-center rounded-lg bg-[#1e63b8] px-5! py-2.5! text-sm font-semibold text-white shadow-md shadow-[#1e63b8]/30 transition-all duration-300 hover:bg-[#164a8c]"
         >
           Login
         </Link>
 
-        <span className="pointer-events-none absolute inset-x-0 bottom-0 h-[2px] bg-linear-to-r from-[#f4c94f] via-[#e11d2e] to-[#f4c94f] opacity-70" />
+        <span className="pointer-events-none absolute inset-x-0 bottom-0 h-[3px] bg-[linear-gradient(90deg,#d52b1e_0%,#e08f1f_42%,#2e7d46_100%)]" />
       </nav>
 
-      {/* Mobile rail — misma línea dorado-carmesí, ahora en el borde derecho */}
-      <nav className="fixed bottom-0 left-0 top-0 z-50 flex w-[84px] flex-col items-center overflow-y-auto bg-[linear-gradient(180deg,rgba(23,4,6,0.97)_0%,rgba(40,10,15,0.92)_100%)] py-2! lg:hidden">
+      {/* Mobile rail — misma cinta tricolor, ahora en el borde derecho */}
+      <nav className="fixed bottom-0 left-0 top-0 z-50 flex w-[84px] flex-col items-center overflow-y-auto border-r border-(--border) bg-white py-2! shadow-[1px_0_2px_rgba(27,42,74,0.05)] lg:hidden">
         <Link
           href={ROUTES.home}
           className="mb-2! flex h-8 w-16 shrink-0 items-center justify-center"
@@ -101,8 +102,8 @@ export function Navbar() {
                 title={label}
                 className={`flex h-9 w-9 items-center justify-center rounded-xl border transition-all duration-200 ${
                   active
-                    ? 'border-[#e0a527]/40 bg-[#e0a527]/15 text-[#f4c94f] shadow-[0_0_16px_-4px_rgba(224,165,39,0.7)]'
-                    : 'border-transparent bg-[#fdf6ec]/[0.04] text-[#fdf6ec]/60 active:bg-[#fdf6ec]/[0.09] active:text-[#fdf6ec]'
+                    ? 'border-[#1e63b8]/25 bg-[#1e63b8]/10 text-[#164a8c]'
+                    : 'border-transparent bg-[#1b2a4a]/[0.03] text-(--text-secondary) active:bg-[#1e63b8]/10 active:text-[#164a8c]'
                 }`}
               >
                 <Icon size={17} />
@@ -111,16 +112,16 @@ export function Navbar() {
           })}
         </div>
 
-        <div className="my-1.5! h-px w-8 bg-[#e0a527]/18" />
+        <div className="my-1.5! h-px w-8 bg-(--border)" />
 
         <Link
           href={ROUTES.login}
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-[#f4c94f] to-[#e11d2e] text-[#200308] shadow-md shadow-black/25"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#1e63b8] text-white shadow-md shadow-[#1e63b8]/30"
         >
           <LogIn size={17} />
         </Link>
 
-        <span className="pointer-events-none absolute inset-y-0 right-0 w-[2px] bg-linear-to-b from-[#f4c94f] via-[#e11d2e] to-[#f4c94f] opacity-70" />
+        <span className="pointer-events-none absolute inset-y-0 right-0 w-[3px] bg-[linear-gradient(180deg,#d52b1e_0%,#e08f1f_42%,#2e7d46_100%)]" />
       </nav>
     </header>
   );

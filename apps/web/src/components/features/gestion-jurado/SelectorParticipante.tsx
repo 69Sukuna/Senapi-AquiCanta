@@ -36,7 +36,7 @@ export function SelectorParticipante({
             onClick={() => onSeleccionar(participante.id)}
             className="vt-card flex flex-col items-center gap-3 px-4 py-6 text-center"
             style={
-              activo ? { borderColor: 'var(--vt-border-active)', background: 'rgba(224, 165, 39, 0.1)' } : undefined
+              activo ? { borderColor: 'var(--vt-border-active)', background: 'rgba(224, 143, 31, 0.12)' } : undefined
             }
           >
             <div
@@ -58,7 +58,7 @@ export function SelectorParticipante({
               <p className="text-[0.65rem] leading-snug text-[var(--vt-text-muted)]">{participante.departamento}</p>
             </div>
             {emitido && (
-              <span className="flex items-center gap-1 text-[0.6rem] font-bold uppercase tracking-wide text-[var(--vt-mustard-light)]">
+              <span className="flex items-center gap-1 text-[0.6rem] font-bold uppercase tracking-wide text-[var(--vt-mustard-deep)]">
                 <Check size={11} aria-hidden="true" /> Calificado
               </span>
             )}

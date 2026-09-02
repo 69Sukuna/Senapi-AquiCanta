@@ -6,7 +6,7 @@ export default function PerfilPage() {
     <PageShell maxWidth="max-w-3xl">
       <PageHero title="Mi perfil" description="Gestiona tus datos e inscripciones." />
 
-      <div className="mt-12! rounded-2xl border border-dashed border-[rgba(224,165,39,0.3)] p-10! text-center text-[rgba(253,246,236,0.6)]">
+      <div className="mt-12! rounded-2xl border border-dashed border-(--border) p-10! text-center text-(--text-muted)">
         Esta sección está en construcción.
       </div>
     </PageShell>

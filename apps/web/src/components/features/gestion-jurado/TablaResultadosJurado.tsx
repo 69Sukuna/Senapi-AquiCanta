@@ -32,7 +32,7 @@ export function TablaResultadosJurado({ resultados }: TablaResultadosJuradoProps
         <tbody>
           {resultados.map((resultado) => (
             <tr key={resultado.participanteId} style={{ borderBottom: '1px solid var(--vt-border)' }}>
-              <td className="py-4 pr-4 font-bold text-[var(--vt-mustard-light)]">
+              <td className="py-4 pr-4 font-bold text-[var(--vt-mustard-deep)]">
                 <span className="inline-flex items-center gap-1">
                   {resultado.puesto !== null && resultado.puesto <= 3 && <Trophy size={14} aria-hidden="true" />}
                   {resultado.puesto ?? '—'}

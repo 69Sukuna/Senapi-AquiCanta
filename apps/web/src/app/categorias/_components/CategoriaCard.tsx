@@ -19,13 +19,13 @@ export function CategoriaCard({ id, nombre }: CategoriaCardProps) {
   return (
     <Link
       href={`/categorias/${id}`}
-      className="group relative flex flex-col justify-between gap-5 overflow-hidden rounded-3xl border border-[rgba(224,165,39,0.18)] bg-[rgba(40,10,15,0.55)] p-6! backdrop-blur-md transition-all duration-300 hover:-translate-y-1.5 hover:border-[rgba(224,165,39,0.55)] hover:bg-[rgba(60,14,20,0.7)] hover:shadow-[0_20px_45px_-15px_rgba(225,29,46,0.45)]"
+      className="group relative flex flex-col justify-between gap-5 overflow-hidden rounded-3xl border border-(--border) bg-white p-6! shadow-[0_1px_2px_rgba(27,42,74,0.06),0_10px_24px_-12px_rgba(27,42,74,0.14)] transition-all duration-300 hover:-translate-y-1.5 hover:border-[#1e63b8]/35 hover:shadow-[0_20px_45px_-15px_rgba(27,42,74,0.22)]"
     >
-      <span className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-transparent via-[#f4c94f] to-transparent opacity-40 transition-opacity duration-300 group-hover:opacity-80" />
+      <span className="absolute inset-x-0 top-0 h-1 bg-[linear-gradient(90deg,#d52b1e_0%,#e08f1f_42%,#2e7d46_100%)] opacity-70 transition-opacity duration-300 group-hover:opacity-100" />
 
-      <h3 className="text-lg leading-snug font-bold text-[#fdf6ec]">{nombre}</h3>
+      <h3 className="text-lg leading-snug font-bold text-(--text-primary)">{nombre}</h3>
 
-      <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#f4c94f] transition-transform duration-300 group-hover:translate-x-1.5">
+      <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#1e63b8] transition-transform duration-300 group-hover:translate-x-1.5">
         Ver participantes
         <span aria-hidden="true">→</span>
       </span>
