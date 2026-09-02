@@ -30,29 +30,29 @@ export function ParticipanteCard({
   return (
     <Link
       href={href}
-      className="group relative flex flex-col gap-4 overflow-hidden rounded-3xl border border-[rgba(224,165,39,0.18)] bg-[rgba(40,10,15,0.55)] p-6! backdrop-blur-md transition-all duration-300 hover:-translate-y-1.5 hover:border-[rgba(224,165,39,0.55)] hover:bg-[rgba(60,14,20,0.7)] hover:shadow-[0_20px_45px_-15px_rgba(225,29,46,0.45)]"
+      className="group relative flex flex-col gap-4 overflow-hidden rounded-3xl border border-(--border) bg-white p-6! shadow-[0_1px_2px_rgba(27,42,74,0.06),0_10px_24px_-12px_rgba(27,42,74,0.14)] transition-all duration-300 hover:-translate-y-1.5 hover:border-[#1e63b8]/35 hover:shadow-[0_20px_45px_-15px_rgba(27,42,74,0.22)]"
     >
-      <span className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-transparent via-[#f4c94f] to-transparent opacity-40 transition-opacity duration-300 group-hover:opacity-80" />
+      <span className="absolute inset-x-0 top-0 h-1 bg-[linear-gradient(90deg,#d52b1e_0%,#e08f1f_42%,#2e7d46_100%)] opacity-70 transition-opacity duration-300 group-hover:opacity-100" />
 
-      <div className="relative h-40 w-full overflow-hidden rounded-2xl bg-[rgba(0,0,0,0.3)]">
+      <div className="relative h-40 w-full overflow-hidden rounded-2xl bg-[#1b2a4a]/5">
         {fotoUrl && <Image src={fotoUrl} alt={nombre} fill sizes="300px" className="object-cover" />}
       </div>
 
       <div>
         <div className="flex flex-wrap items-center gap-1.5">
-          <span className="inline-flex! rounded-full border border-[rgba(224,165,39,0.35)] bg-[rgba(224,165,39,0.1)] px-2.5! py-0.5! text-[0.65rem] font-bold uppercase tracking-[0.1em] text-[#f4c94f]">
+          <span className="inline-flex! rounded-full border border-[#1e63b8]/25 bg-[#1e63b8]/8 px-2.5! py-0.5! text-[0.65rem] font-bold uppercase tracking-[0.1em] text-[#164a8c]">
             {tipo === 'CANTANTE' ? 'Solista' : 'Grupo'}
           </span>
           {categoriaNombre && (
-            <span className="inline-flex! rounded-full border border-[rgba(224,165,39,0.35)] bg-[rgba(224,165,39,0.1)] px-2.5! py-0.5! text-[0.65rem] font-bold uppercase tracking-[0.1em] text-[#f4c94f]">
+            <span className="inline-flex! rounded-full border border-[#1e63b8]/25 bg-[#1e63b8]/8 px-2.5! py-0.5! text-[0.65rem] font-bold uppercase tracking-[0.1em] text-[#164a8c]">
               {categoriaNombre}
             </span>
           )}
           <DepartamentoBadge departamento={departamento} className="px-2.5! py-0.5! text-[0.65rem]" />
         </div>
-        <h3 className="mt-2.5! text-lg leading-snug font-bold text-[#fdf6ec]">{nombre}</h3>
+        <h3 className="mt-2.5! text-lg leading-snug font-bold text-(--text-primary)">{nombre}</h3>
         {tipo === 'GRUPO' && integrantesCount !== undefined && (
-          <p className="mt-1! text-sm text-[rgba(253,246,236,0.55)]">
+          <p className="mt-1! text-sm text-(--text-secondary)">
             {integrantesCount} {integrantesCount === 1 ? 'integrante' : 'integrantes'}
           </p>
         )}

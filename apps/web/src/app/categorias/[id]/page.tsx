@@ -78,26 +78,26 @@ export default async function CategoriaDetallePage({ params }: CategoriaDetalleP
   const totalParticipantes = cantantesDeCategoria.length + gruposDeCategoria.length;
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-[linear-gradient(165deg,#3d0a13_0%,#1f0407_55%,#0a0102_100%)]">
-      <div className="pointer-events-none absolute -top-32 -left-32 h-[28rem] w-[28rem] rounded-full bg-[#e0a527] opacity-[0.14] blur-3xl" />
-      <div className="pointer-events-none absolute top-1/3 -right-40 h-[32rem] w-[32rem] rounded-full bg-[#ff4d5e] opacity-[0.14] blur-3xl" />
+    <main className="relative min-h-screen overflow-hidden bg-(--bg-primary)">
+      <div className="pointer-events-none absolute -top-32 -left-32 h-[28rem] w-[28rem] rounded-full bg-[#f0a83e] opacity-[0.14] blur-3xl" />
+      <div className="pointer-events-none absolute top-1/3 -right-40 h-[32rem] w-[32rem] rounded-full bg-[#1e63b8] opacity-[0.1] blur-3xl" />
 
       <div className="relative mx-auto! max-w-7xl px-6! py-16! sm:px-10! lg:py-20!">
         <Link
           href="/categorias"
-          className="flex! w-fit items-center gap-1.5 text-sm font-semibold text-[#f4c94f]! transition-transform duration-200 hover:translate-x-[-2px] hover:underline!"
+          className="flex! w-fit items-center gap-1.5 text-sm font-semibold text-[#1e63b8]! transition-transform duration-200 hover:translate-x-[-2px] hover:underline!"
         >
           <span aria-hidden="true">←</span> Todas las categorías
         </Link>
 
-        <span className="mt-8! inline-flex! items-center gap-2 rounded-full border border-[rgba(224,165,39,0.4)] bg-[rgba(224,165,39,0.1)] px-4! py-1.5! text-xs font-bold uppercase tracking-[0.14em] text-[#f4c94f]">
+        <span className="badge badge-gold mt-8! inline-flex! w-fit">
           Categoría
         </span>
 
-        <h1 className="mt-5! text-[clamp(2.25rem,5vw,3.75rem)] leading-[1.2] font-extrabold tracking-tight bg-gradient-to-r from-[#fdf6ec] via-[#f4c94f] to-[#ff4d5e] bg-clip-text text-transparent">
+        <h1 className="mt-5! text-[clamp(2.25rem,5vw,3.75rem)] leading-[1.2] font-extrabold tracking-tight text-(--text-primary)">
           {categoria.nombre}
         </h1>
-        <p className="mt-2! text-[rgba(253,246,236,0.6)]">
+        <p className="mt-2! text-(--text-secondary)">
           {totalParticipantes} {totalParticipantes === 1 ? 'participante' : 'participantes'}
         </p>
 
@@ -126,7 +126,7 @@ export default async function CategoriaDetallePage({ params }: CategoriaDetalleP
             ))}
           </div>
         ) : (
-          <div className="mt-12! rounded-3xl border border-dashed border-[rgba(224,165,39,0.3)] p-10! text-center text-[rgba(253,246,236,0.6)]">
+          <div className="mt-12! rounded-3xl border border-dashed border-(--border) p-10! text-center text-(--text-muted)">
             Todavía no hay participantes cargados en esta categoría.
           </div>
         )}

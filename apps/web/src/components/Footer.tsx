@@ -67,9 +67,9 @@ const WHATSAPP_NUMBERS = ['59164775274', '59171856225', '59176153717'];
 
 export function Footer() {
   return (
-    <footer className="relative bg-[linear-gradient(180deg,rgba(23,4,6,0.55)_0%,rgba(23,4,6,0.92)_100%)] px-6! pt-10! pb-10! text-sm text-[#fdf6ec]/50">
-      {/* Línea de "candilejas": el mismo borde dorado-carmesí que enmarca el Navbar, cerrando el escenario por abajo */}
-      <span className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-linear-to-r from-[#f4c94f] via-[#e11d2e] to-[#f4c94f] opacity-70" />
+    <footer className="relative border-t border-(--border) bg-white px-6! pt-10! pb-10! text-sm text-(--text-muted)">
+      {/* Cinta tricolor: mismo detalle del Navbar, cerrando la página por abajo */}
+      <span className="pointer-events-none absolute inset-x-0 top-0 h-[3px] bg-[linear-gradient(90deg,#d52b1e_0%,#e08f1f_42%,#2e7d46_100%)]" />
 
       <div className="mx-auto flex max-w-5xl flex-col items-center gap-8">
         {/* Evento + organizador */}
@@ -82,7 +82,7 @@ export function Footer() {
             className="h-16 w-auto"
           />
 
-          <span className="hidden h-12 w-px bg-[#e0a527]/15 sm:block" />
+          <span className="hidden h-12 w-px bg-(--border) sm:block" />
 
           <div className="flex items-center gap-3">
             <Image
@@ -93,16 +93,15 @@ export function Footer() {
               className="h-14 w-14 shrink-0 rounded-full object-contain"
             />
             <div className="flex flex-col">
-              <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#fdf6ec]/40">Organiza</span>
-              <span className="text-sm font-semibold text-[#fdf6ec]/70">Secretaría de Cultura y Turismo — Oruro</span>
+              <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-(--text-muted)">Organiza</span>
+              <span className="text-sm font-semibold text-(--text-secondary)">Secretaría de Cultura y Turismo — Oruro</span>
             </div>
           </div>
         </div>
 
-        <div className="h-px w-full max-w-md bg-[#e0a527]/10" />
+        <div className="h-px w-full max-w-md bg-(--border)" />
 
-
-        <span className="text-xs font-semibold tracking-[0.2em] text-[#fdf6ec]/50 uppercase">
+        <span className="text-xs font-semibold tracking-[0.2em] text-(--text-muted) uppercase">
           Más Información
         </span>
 
@@ -113,9 +112,9 @@ export function Footer() {
               href={href}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-2.5 text-[#fdf6ec]/60 transition-colors duration-300 hover:text-[#f4c94f]"
+              className="inline-flex items-center gap-2.5 text-(--text-secondary) transition-colors duration-300 hover:text-[#1e63b8]"
             >
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[#e0a527]/18">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-(--border)">
                 <Icon className="h-4 w-4" />
               </span>
               <span className="text-sm font-medium">{handle}</span>
@@ -130,14 +129,14 @@ export function Footer() {
               href={`https://wa.me/${number}`}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-2 text-[#fdf6ec]/60 transition-colors hover:text-green-400"
+              className="inline-flex items-center gap-2 text-(--text-secondary) transition-colors hover:text-[#2e7d46]"
             >
               <WhatsAppIcon className="h-4 w-4" />+{number.slice(0, 3)} {number.slice(3)}
             </a>
           ))}
         </div>
 
-        <p className="text-center text-[#fdf6ec]/40">
+        <p className="text-center text-(--text-muted)">
           © {new Date().getFullYear()} Aqui Canta Bolivia — Festival Nacional de la Canción Boliviana
         </p>
       </div>

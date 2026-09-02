@@ -84,25 +84,20 @@ function esUrlValida(valor: string): boolean {
   }
 }
 
-// "Panel de telón": fondo aterciopelado (degradado vino) a juego con el resto
-// del sitio, en vez de una tarjeta clara — el festival se monta en un teatro,
-// así que el panel del formulario reutiliza esa estética (franja dorada
-// arriba, como el borde de un telón, más un resplandor tenue de "foco").
+// Panel de contenido del formulario: tarjeta blanca con una fina cinta
+// tricolor arriba, mismo detalle que Navbar/Footer, marcando cada paso.
 const panelClass =
-  'relative overflow-hidden rounded-2xl border border-[#e0a527]/25 bg-[linear-gradient(165deg,rgba(127,15,30,0.45)_0%,rgba(40,10,15,0.88)_55%,rgba(23,4,6,0.95)_100%)] shadow-2xl shadow-black/50';
+  'relative overflow-hidden rounded-2xl border border-(--border) bg-white shadow-[0_1px_2px_rgba(27,42,74,0.06),0_10px_24px_-12px_rgba(27,42,74,0.14)]';
 
 function TelonDecor() {
   return (
-    <>
-      <span className="pointer-events-none absolute inset-x-0 top-0 h-1.5 bg-linear-to-r from-[#f4c94f] via-[#e11d2e] to-[#f4c94f]" />
-      <span className="pointer-events-none absolute -top-24 left-1/2 h-64 w-[140%] -translate-x-1/2 rounded-full bg-[#e0a527] opacity-[0.08] blur-3xl" />
-    </>
+    <span className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-[linear-gradient(90deg,#d52b1e_0%,#e08f1f_42%,#2e7d46_100%)]" />
   );
 }
 
 const inputClass =
-  'w-full rounded-lg bg-[rgba(253,246,236,0.05)] border border-[#e0a527]/25 px-4! py-2.5! text-sm text-[#fdf6ec] placeholder:text-white/30 focus:outline-none focus:border-[#e0a527]/70 focus:ring-2! focus:ring-[#e0a527]/25 focus:bg-[rgba(253,246,236,0.08)] transition-colors';
-const labelClass = 'block text-sm font-semibold text-white/80 mb-2!';
+  'w-full rounded-lg bg-(--bg-primary) border border-(--border) px-4! py-2.5! text-sm text-(--text-primary) placeholder:text-(--text-muted) focus:outline-none focus:border-[#1e63b8]/60 focus:ring-2! focus:ring-[#1e63b8]/15 focus:bg-white transition-colors';
+const labelClass = 'block text-sm font-semibold text-(--text-secondary) mb-2!';
 
 function Campo({
   label,
@@ -118,10 +113,10 @@ function Campo({
   return (
     <div>
       <label className={labelClass}>
-        {label} {required && <span className="text-[#ff4d5e]">*</span>}
+        {label} {required && <span className="text-[#d52b1e]">*</span>}
       </label>
       {children}
-      {hint && <p className="text-xs text-white/40 mt-1.5!">{hint}</p>}
+      {hint && <p className="text-xs text-(--text-muted) mt-1.5!">{hint}</p>}
     </div>
   );
 }
@@ -287,8 +282,8 @@ export default function InscripcionesPage() {
         <span className="badge badge-gold w-fit mb-4!">
           <span className="pulse-dot" /> Convocatoria 2026
         </span>
-        <h1 className="text-3xl md:text-4xl font-extrabold bg-linear-to-r from-[#fdf6ec] via-[#f4c94f] to-[#ff4d5e] bg-clip-text text-transparent mb-3!">Formulario de Inscripción</h1>
-        <p className="text-white/70 leading-relaxed">
+        <h1 className="text-3xl md:text-4xl font-extrabold text-(--text-primary) mb-3!">Formulario de Inscripción</h1>
+        <p className="text-(--text-secondary) leading-relaxed">
           Completa los datos de tu postulación al XXXIII Festival Nacional de la Canción Boliviana
           “Aquí… Canta Bolivia”. Este formulario reúne la Ficha de Postulación, la Carta de
           Presentación y la Declaración Voluntaria de los anexos de la convocatoria.
@@ -298,12 +293,12 @@ export default function InscripcionesPage() {
       {enviado ? (
         <section className={`${panelClass} p-8! md:p-12! mb-16! flex flex-col items-center text-center gap-4`}>
           <TelonDecor />
-          <div className="w-16 h-16 rounded-full bg-emerald-500/15 border border-emerald-400/30 flex items-center justify-center text-emerald-400">
+          <div className="w-16 h-16 rounded-full bg-[#2e7d46]/12 border border-[#2e7d46]/35 flex items-center justify-center text-[#2e7d46]">
             <Check size={32} />
           </div>
-          <h2 className="text-2xl font-bold text-white">¡Postulación enviada!</h2>
-          <p className="text-white/60 max-w-lg">
-            Tu inscripción a la categoría <strong className="text-white">{categoria}</strong> con{' '}
+          <h2 className="text-2xl font-bold text-(--text-primary)">¡Postulación enviada!</h2>
+          <p className="text-(--text-secondary) max-w-lg">
+            Tu inscripción a la categoría <strong className="text-(--text-primary)">{categoria}</strong> con{' '}
             {integrantes.length} integrante{integrantes.length > 1 ? 's' : ''} quedó registrada y
             está pendiente de revisión por el comité organizador. Guarda una copia de los anexos
             para presentarlos firmados.
@@ -311,18 +306,18 @@ export default function InscripcionesPage() {
           <div className="flex flex-wrap items-center justify-center gap-3 mt-4!">
             <button
               onClick={descargarDocx}
-              className="inline-flex items-center gap-2 px-6! py-3! rounded-lg font-semibold text-[#200308] bg-linear-to-br from-[#f4c94f] to-[#e11d2e] shadow-md shadow-[#e11d2e]/25 transition-all duration-300 hover:brightness-110 hover:-translate-y-0.5 cursor-pointer"
+              className="inline-flex items-center gap-2 px-6! py-3! rounded-lg font-semibold text-white bg-[#d52b1e] shadow-md shadow-[#d52b1e]/25 transition-all duration-300 hover:bg-[#b82419] hover:-translate-y-0.5 cursor-pointer"
             >
               <Download size={16} /> Descargar anexos en Word
             </button>
             <button
               onClick={reiniciarEdicion}
-              className="px-6! py-3! rounded-lg font-semibold text-[#f4c94f] border border-[#e0a527]/40 bg-[#e0a527]/10 transition-all duration-300 hover:border-[#e0a527]/70 hover:bg-[#e0a527]/20 hover:-translate-y-0.5 cursor-pointer"
+              className="px-6! py-3! rounded-lg font-semibold text-(--text-primary) border border-(--border) bg-white transition-all duration-300 hover:border-[#1e63b8]/40 hover:bg-[#1e63b8]/5 hover:-translate-y-0.5 cursor-pointer"
             >
               Editar información
             </button>
           </div>
-          <p className="text-white/40 text-xs max-w-lg">
+          <p className="text-(--text-muted) text-xs max-w-lg">
             El Word incluye la Ficha de Postulación (Anexo 1) y, por cada integrante, su propia Carta
             de Presentación (Anexo 2){categoria !== 'Especial' && ' y Declaración Voluntaria (Anexo 3)'}
             , ya que estos dos anexos son personales. Las firmas quedan en blanco para completarlas a
@@ -350,21 +345,21 @@ export default function InscripcionesPage() {
                       <span
                         className={`w-9 h-9 rounded-full flex items-center justify-center border transition-all ${
                           activo
-                            ? 'bg-[#e0a527]/20 border-[#e0a527] text-[#f4c94f] shadow-[0_0_16px_-2px_rgba(224,165,39,0.7)]'
+                            ? 'bg-[#1e63b8]/12 border-[#1e63b8] text-[#1e63b8] shadow-[0_0_0_4px_rgba(30,99,184,0.12)]'
                             : completado
-                              ? 'bg-emerald-500/15 border-emerald-400/50 text-emerald-400'
-                              : 'bg-black/30 border-white/10 text-white/40'
+                              ? 'bg-[#2e7d46]/12 border-[#2e7d46]/50 text-[#2e7d46]'
+                              : 'bg-[#1b2a4a]/4 border-(--border) text-(--text-muted)'
                         }`}
                       >
                         {completado && !activo ? <Check size={16} /> : <Icon size={16} />}
                       </span>
-                      <span className={`text-sm font-semibold ${activo ? 'text-white' : 'text-white/50'}`}>
+                      <span className={`text-sm font-semibold ${activo ? 'text-(--text-primary)' : 'text-(--text-secondary)'}`}>
                         {p.titulo}
                       </span>
                     </button>
                     {index < PASOS.length - 1 && (
                       <span
-                        className={`h-px flex-1 mx-3! ${index < pasoMaximo ? 'bg-emerald-400/40' : 'bg-white/10'}`}
+                        className={`h-px flex-1 mx-3! ${index < pasoMaximo ? 'bg-[#2e7d46]/40' : 'bg-(--border)'}`}
                       />
                     )}
                   </div>
@@ -375,13 +370,13 @@ export default function InscripcionesPage() {
             {/* Versión móvil: barra de progreso simple */}
             <div className="md:hidden">
               <div className="flex items-center justify-between mb-2!">
-                <span className="text-sm font-semibold text-white">
+                <span className="text-sm font-semibold text-(--text-primary)">
                   Paso {paso + 1} de {PASOS.length}: {PASOS[paso].titulo}
                 </span>
               </div>
-              <div className="h-1.5 rounded-full bg-white/10 overflow-hidden">
+              <div className="h-1.5 rounded-full bg-(--border) overflow-hidden">
                 <div
-                  className="h-full bg-linear-to-r from-[#f4c94f] to-[#e11d2e] transition-all duration-300"
+                  className="h-full bg-linear-to-r from-[#1e63b8] to-[#d52b1e] transition-all duration-300"
                   style={{ width: `${((paso + 1) / PASOS.length) * 100}%` }}
                 />
               </div>
@@ -395,12 +390,12 @@ export default function InscripcionesPage() {
             {paso === 0 && (
               <div className="flex flex-col gap-8">
                 <div>
-                  <h2 className="text-xl font-bold text-white mb-1!">¿En qué categoría postulas?</h2>
-                  <p className="text-white/50 text-sm">Selecciona una sola categoría, según el Anexo 1 de la convocatoria.</p>
+                  <h2 className="text-xl font-bold text-(--text-primary) mb-1!">¿En qué categoría postulas?</h2>
+                  <p className="text-(--text-secondary) text-sm">Selecciona una sola categoría, según el Anexo 1 de la convocatoria.</p>
                 </div>
                 {GRUPOS_CATEGORIA.map((grupo) => (
                   <div key={grupo.label}>
-                    <h3 className="text-xs font-semibold tracking-[0.15em] text-white/40 uppercase mb-3!">
+                    <h3 className="text-xs font-semibold tracking-[0.15em] text-(--text-muted) uppercase mb-3!">
                       {grupo.label}
                     </h3>
                     <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -413,14 +408,14 @@ export default function InscripcionesPage() {
                             onClick={() => seleccionarCategoria(item.nombre)}
                             className={`text-left px-4! py-3! rounded-lg border text-sm font-medium transition-all cursor-pointer ${
                               seleccionado
-                                ? 'bg-[#e0a527]/15 border-[#e0a527]/70 text-[#f4c94f] shadow-[0_0_20px_-4px_rgba(224,165,39,0.6)]'
-                                : 'bg-[rgba(253,246,236,0.04)] border-[#e0a527]/15 text-white/65 hover:border-[#e0a527]/40 hover:bg-[rgba(253,246,236,0.08)]'
+                                ? 'bg-[#1e63b8]/10 border-[#1e63b8]/60 text-[#164a8c] shadow-[0_0_0_3px_rgba(30,99,184,0.12)]'
+                                : 'bg-(--bg-primary) border-(--border) text-(--text-secondary) hover:border-[#1e63b8]/35 hover:bg-[#1e63b8]/5'
                             }`}
                           >
                             <span className="inline-flex items-center gap-2">
                               <span
                                 className={`w-3.5 h-3.5 rounded-full border shrink-0 ${
-                                  seleccionado ? 'border-[#f4c94f] bg-[#e0a527]' : 'border-white/30'
+                                  seleccionado ? 'border-[#1e63b8] bg-[#1e63b8]' : 'border-(--border)'
                                 }`}
                               />
                               {item.nombre}
@@ -438,14 +433,14 @@ export default function InscripcionesPage() {
             {paso === 1 && (
               <div className="flex flex-col gap-6">
                 <div>
-                  <h2 className="text-xl font-bold text-white mb-1!">Datos de la obra</h2>
-                  <p className="text-white/50 text-sm">Información del tema con el que postulas.</p>
+                  <h2 className="text-xl font-bold text-(--text-primary) mb-1!">Datos de la obra</h2>
+                  <p className="text-(--text-secondary) text-sm">Información del tema con el que postulas.</p>
                 </div>
 
                 {esComposicion && (
-                  <div className="rounded-lg border border-[#e0a527]/35 bg-[#e0a527]/10 px-4! py-3! flex gap-3 items-start">
-                    <Info size={18} className="text-[#f4c94f] shrink-0 mt-0.5!" />
-                    <p className="text-sm text-[#f4c94f]/90">
+                  <div className="rounded-lg border border-[#1e63b8]/25 bg-[#1e63b8]/8 px-4! py-3! flex gap-3 items-start">
+                    <Info size={18} className="text-[#1e63b8] shrink-0 mt-0.5!" />
+                    <p className="text-sm text-[#164a8c]">
                       La categoría <strong>Composición</strong> requiere un pseudónimo: el jurado evalúa
                       la obra sin conocer la identidad del autor.
                     </p>
@@ -515,7 +510,7 @@ export default function InscripcionesPage() {
                       <div className="relative">
                         <LinkIcon
                           size={16}
-                          className="pointer-events-none absolute top-1/2 left-3! -translate-y-1/2 text-white/30"
+                          className="pointer-events-none absolute top-1/2 left-3! -translate-y-1/2 text-(--text-muted)"
                         />
                         <input
                           type="url"
@@ -535,8 +530,8 @@ export default function InscripcionesPage() {
             {paso === 2 && (
               <div className="flex flex-col gap-6">
                 <div>
-                  <h2 className="text-xl font-bold text-white mb-1!">Datos del postulante</h2>
-                  <p className="text-white/50 text-sm">Información de contacto para coordinar tu participación.</p>
+                  <h2 className="text-xl font-bold text-(--text-primary) mb-1!">Datos del postulante</h2>
+                  <p className="text-(--text-secondary) text-sm">Información de contacto para coordinar tu participación.</p>
                 </div>
                 <div className="grid md:grid-cols-2 gap-5">
                   <Campo label="Departamento" required>
@@ -545,11 +540,11 @@ export default function InscripcionesPage() {
                       value={departamento}
                       onChange={(e) => setDepartamento(e.target.value)}
                     >
-                      <option value="" className="bg-[#3d0a13] text-[#fdf6ec]">
+                      <option value="" className="bg-white text-(--text-primary)">
                         Selecciona un departamento
                       </option>
                       {LISTA_DEPARTAMENTOS.map(([codigo, info]) => (
-                        <option key={codigo} value={info.label} className="bg-[#3d0a13] text-[#fdf6ec]">
+                        <option key={codigo} value={info.label} className="bg-white text-(--text-primary)">
                           {info.label}
                         </option>
                       ))}
@@ -587,10 +582,10 @@ export default function InscripcionesPage() {
               <div className="flex flex-col gap-6">
                 <div className="flex flex-wrap items-end justify-between gap-3">
                   <div>
-                    <h2 className="text-xl font-bold text-white mb-1!">
+                    <h2 className="text-xl font-bold text-(--text-primary) mb-1!">
                       {esGrupal ? 'Integrantes' : 'Datos del postulante'}
                     </h2>
-                    <p className="text-white/50 text-sm">
+                    <p className="text-(--text-secondary) text-sm">
                       {esGrupal
                         ? 'Agrega a cada participante (hasta 20, según la ficha de postulación).'
                         : 'Datos personales de quien postula, para la ficha de inscripción.'}
@@ -601,7 +596,7 @@ export default function InscripcionesPage() {
                       type="button"
                       onClick={agregarIntegrante}
                       disabled={integrantes.length >= maxIntegrantes}
-                      className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#e0a527] hover:text-[#f4c94f] disabled:text-white/20 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                      className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#1e63b8] hover:text-[#164a8c] disabled:text-(--text-muted) disabled:cursor-not-allowed transition-colors cursor-pointer"
                     >
                       <Plus size={16} /> Agregar integrante
                     </button>
@@ -610,14 +605,14 @@ export default function InscripcionesPage() {
 
                 <div className="flex flex-col gap-4">
                   {integrantes.map((integrante, index) => (
-                    <div key={integrante.id} className="rounded-xl border border-[#e0a527]/15 bg-[rgba(253,246,236,0.04)] p-5!">
+                    <div key={integrante.id} className="rounded-xl border border-(--border) bg-(--bg-primary) p-5!">
                       <div className="flex items-center justify-between mb-4!">
-                        <span className="text-sm font-bold text-white/80">Integrante {index + 1}</span>
+                        <span className="text-sm font-bold text-(--text-secondary)">Integrante {index + 1}</span>
                         {integrantes.length > 1 && (
                           <button
                             type="button"
                             onClick={() => quitarIntegrante(integrante.id)}
-                            className="text-white/40 hover:text-[#ff4d5e] transition-colors cursor-pointer"
+                            className="text-(--text-muted) hover:text-[#d52b1e] transition-colors cursor-pointer"
                             aria-label="Quitar integrante"
                           >
                             <Trash2 size={16} />
@@ -637,11 +632,11 @@ export default function InscripcionesPage() {
                         </Campo>
                         <div className="md:col-span-2">
                           <label className={labelClass}>
-                            Carnet de identidad <span className="text-[#ff4d5e]">*</span>
+                            Carnet de identidad <span className="text-[#d52b1e]">*</span>
                           </label>
                           <div className="flex items-end gap-3">
                             <div className="flex-1 min-w-0">
-                              <span className="block text-[11px] font-semibold uppercase tracking-wide text-white/40 mb-1!">
+                              <span className="block text-[11px] font-semibold uppercase tracking-wide text-(--text-muted) mb-1!">
                                 Número
                               </span>
                               <input
@@ -655,9 +650,9 @@ export default function InscripcionesPage() {
                                 placeholder="Ej: 1234567"
                               />
                             </div>
-                            <span className="pb-2.5! text-white/30 font-bold text-lg select-none">-</span>
+                            <span className="pb-2.5! text-(--text-muted) font-bold text-lg select-none">-</span>
                             <div className="w-24 sm:w-28 shrink-0">
-                              <span className="block text-[11px] font-semibold uppercase tracking-wide text-white/40 mb-1!">
+                              <span className="block text-[11px] font-semibold uppercase tracking-wide text-(--text-muted) mb-1!">
                                 Complemento
                               </span>
                               <input
@@ -672,7 +667,7 @@ export default function InscripcionesPage() {
                               />
                             </div>
                           </div>
-                          <p className="text-xs text-white/40 mt-1!">
+                          <p className="text-xs text-(--text-muted) mt-1!">
                             El complemento es opcional: código alfanumérico que va después del guion, ej. 123456-1A.
                           </p>
                         </div>
@@ -726,70 +721,70 @@ export default function InscripcionesPage() {
             {paso === 4 && (
               <div className="flex flex-col gap-6">
                 <div>
-                  <h2 className="text-xl font-bold text-white mb-1!">Declaraciones finales</h2>
-                  <p className="text-white/50 text-sm">
+                  <h2 className="text-xl font-bold text-(--text-primary) mb-1!">Declaraciones finales</h2>
+                  <p className="text-(--text-secondary) text-sm">
                     Estas declaraciones equivalen a la Carta de Presentación y la Declaración
                     Voluntaria de los anexos de la convocatoria.
                   </p>
                 </div>
 
-                <label className="flex items-start gap-3 rounded-lg border border-[#e0a527]/15 bg-[rgba(253,246,236,0.04)] p-4! cursor-pointer hover:border-[#e0a527]/40 transition-colors">
+                <label className="flex items-start gap-3 rounded-lg border border-(--border) bg-(--bg-primary) p-4! cursor-pointer hover:border-[#1e63b8]/35 transition-colors">
                   <input
                     type="checkbox"
                     checked={aceptaBases}
                     onChange={(e) => setAceptaBases(e.target.checked)}
-                    className="mt-1! w-4 h-4 accent-[#e0a527] shrink-0 cursor-pointer"
+                    className="mt-1! w-4 h-4 accent-[#1e63b8] shrink-0 cursor-pointer"
                   />
-                  <span className="text-sm text-white/80">
+                  <span className="text-sm text-(--text-secondary)">
                     Declaro y acepto expresamente las bases y condiciones de la convocatoria del
                     XXXIII Festival Nacional de la Canción Boliviana “Aquí… Canta Bolivia”.{' '}
-                    <span className="text-[#ff4d5e]">*</span>
+                    <span className="text-[#d52b1e]">*</span>
                   </span>
                 </label>
 
                 {!esEspecial && (
-                  <label className="flex items-start gap-3 rounded-lg border border-[#e0a527]/15 bg-[rgba(253,246,236,0.04)] p-4! cursor-pointer hover:border-[#e0a527]/40 transition-colors">
+                  <label className="flex items-start gap-3 rounded-lg border border-(--border) bg-(--bg-primary) p-4! cursor-pointer hover:border-[#1e63b8]/35 transition-colors">
                     <input
                       type="checkbox"
                       checked={declaracionVoluntaria}
                       onChange={(e) => setDeclaracionVoluntaria(e.target.checked)}
-                      className="mt-1! w-4 h-4 accent-[#e0a527] shrink-0 cursor-pointer"
+                      className="mt-1! w-4 h-4 accent-[#1e63b8] shrink-0 cursor-pointer"
                     />
-                    <span className="text-sm text-white/80">
+                    <span className="text-sm text-(--text-secondary)">
                       Declaro de manera voluntaria que no fui, ni actualmente soy, miembro de una
-                      agrupación musical profesional. <span className="text-[#ff4d5e]">*</span>
+                      agrupación musical profesional. <span className="text-[#d52b1e]">*</span>
                     </span>
                   </label>
                 )}
 
-                <div className="rounded-xl border border-[#e0a527]/15 bg-[rgba(253,246,236,0.04)] p-5!">
-                  <h3 className="text-sm font-bold text-white/80 mb-3! flex items-center gap-2">
-                    <Sparkles size={15} className="text-[#e0a527]" /> Resumen de tu postulación
+                <div className="rounded-xl border border-(--border) bg-(--bg-primary) p-5!">
+                  <h3 className="text-sm font-bold text-(--text-secondary) mb-3! flex items-center gap-2">
+                    <Sparkles size={15} className="text-[#1e63b8]" /> Resumen de tu postulación
                   </h3>
                   <dl className="grid sm:grid-cols-2 gap-x-6 gap-y-2 text-sm">
                     <div className="flex justify-between gap-4 sm:block">
-                      <dt className="text-white/40">Nombre</dt>
-                      <dd className="text-white/85 font-medium">{nombrePostulante || '—'}</dd>
+                      <dt className="text-(--text-muted)">Nombre</dt>
+                      <dd className="text-(--text-primary) font-medium">{nombrePostulante || '—'}</dd>
                     </div>
                     <div className="flex justify-between gap-4 sm:block">
-                      <dt className="text-white/40">Categoría</dt>
-                      <dd className="text-white/85 font-medium">{categoria || '—'}</dd>
+                      <dt className="text-(--text-muted)">Categoría</dt>
+                      <dd className="text-(--text-primary) font-medium">{categoria || '—'}</dd>
                     </div>
                     <div className="flex justify-between gap-4 sm:block">
-                      <dt className="text-white/40">Tema</dt>
-                      <dd className="text-white/85 font-medium">{tituloTema || '—'}</dd>
+                      <dt className="text-(--text-muted)">Tema</dt>
+                      <dd className="text-(--text-primary) font-medium">{tituloTema || '—'}</dd>
                     </div>
                     <div className="flex justify-between gap-4 sm:block">
-                      <dt className="text-white/40">Video</dt>
-                      <dd className="text-white/85 font-medium truncate max-w-50">{videoUrl || '—'}</dd>
+                      <dt className="text-(--text-muted)">Video</dt>
+                      <dd className="text-(--text-primary) font-medium truncate max-w-50">{videoUrl || '—'}</dd>
                     </div>
                     <div className="flex justify-between gap-4 sm:block">
-                      <dt className="text-white/40">Departamento</dt>
-                      <dd className="text-white/85 font-medium">{departamento || '—'}</dd>
+                      <dt className="text-(--text-muted)">Departamento</dt>
+                      <dd className="text-(--text-primary) font-medium">{departamento || '—'}</dd>
                     </div>
                     <div className="flex justify-between gap-4 sm:block">
-                      <dt className="text-white/40">Integrantes</dt>
-                      <dd className="text-white/85 font-medium">{integrantes.length}</dd>
+                      <dt className="text-(--text-muted)">Integrantes</dt>
+                      <dd className="text-(--text-primary) font-medium">{integrantes.length}</dd>
                     </div>
                   </dl>
                 </div>
@@ -798,7 +793,7 @@ export default function InscripcionesPage() {
           </section>
 
           {errorEnvio && (
-            <div className="mb-6! rounded-lg border border-[#e11d2e]/30 bg-[#e11d2e]/10 px-4! py-3! text-sm text-[#ff8b96]">
+            <div className="mb-6! rounded-lg border border-[#d52b1e]/30 bg-[#d52b1e]/8 px-4! py-3! text-sm text-[#b82419]">
               {errorEnvio}
             </div>
           )}
@@ -809,7 +804,7 @@ export default function InscripcionesPage() {
               type="button"
               onClick={anterior}
               disabled={paso === 0}
-              className="inline-flex items-center gap-1.5 px-5! py-2.5! rounded-lg font-semibold text-white/70 border border-white/10 hover:bg-white/5 disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-5! py-2.5! rounded-lg font-semibold text-(--text-secondary) border border-(--border) hover:bg-[#1b2a4a]/5 disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
             >
               <ChevronLeft size={16} /> Anterior
             </button>
@@ -819,7 +814,7 @@ export default function InscripcionesPage() {
                 type="button"
                 onClick={siguiente}
                 disabled={!puedeAvanzar}
-                className="inline-flex items-center gap-1.5 px-6! py-3! rounded-lg font-semibold text-[#200308] bg-linear-to-br from-[#f4c94f] to-[#e11d2e] shadow-md shadow-[#e11d2e]/25 transition-all duration-300 hover:brightness-110 hover:-translate-y-0.5 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:translate-y-0 cursor-pointer"
+                className="inline-flex items-center gap-1.5 px-6! py-3! rounded-lg font-semibold text-white bg-[#d52b1e] shadow-md shadow-[#d52b1e]/25 transition-all duration-300 hover:bg-[#b82419] hover:-translate-y-0.5 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:translate-y-0 cursor-pointer"
               >
                 Siguiente <ChevronRight size={16} />
               </button>
@@ -828,7 +823,7 @@ export default function InscripcionesPage() {
                 type="button"
                 onClick={enviar}
                 disabled={!puedeAvanzar || enviando}
-                className="inline-flex items-center gap-1.5 px-6! py-3! rounded-lg font-semibold text-[#200308] bg-linear-to-br from-[#f4c94f] to-[#e11d2e] shadow-md shadow-[#e11d2e]/25 transition-all duration-300 hover:brightness-110 hover:-translate-y-0.5 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:translate-y-0 cursor-pointer"
+                className="inline-flex items-center gap-1.5 px-6! py-3! rounded-lg font-semibold text-white bg-[#d52b1e] shadow-md shadow-[#d52b1e]/25 transition-all duration-300 hover:bg-[#b82419] hover:-translate-y-0.5 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:translate-y-0 cursor-pointer"
               >
                 <Send size={16} /> {enviando ? 'Enviando…' : 'Enviar inscripción'}
               </button>

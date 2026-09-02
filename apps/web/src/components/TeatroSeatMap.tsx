@@ -302,7 +302,7 @@ export function TeatroSeatMap({ butacas, zonas, seleccionadas, onToggle }: Teatr
         <button
           type="button"
           onClick={volverAZonas}
-          className="absolute left-3 top-3 z-10 flex items-center gap-1.5 rounded-lg border border-[#e0a527]/30 bg-[#170406]/85 px-3 py-2 text-sm font-semibold text-[#f4c94f] transition-colors hover:bg-[#e0a527]/15"
+          className="absolute left-3 top-3 z-10 flex items-center gap-1.5 rounded-lg border border-(--border) bg-white/90 px-3 py-2 text-sm font-semibold text-(--text-primary) shadow-sm backdrop-blur-md transition-colors hover:border-[#1e63b8]/40 hover:bg-[#1e63b8]/5"
         >
           <ChevronLeft size={16} />
           Volver a sectores
@@ -313,7 +313,7 @@ export function TeatroSeatMap({ butacas, zonas, seleccionadas, onToggle }: Teatr
         <button
           type="button"
           onClick={() => zoomEn(1.5)}
-          className="flex h-9 w-9 items-center justify-center rounded-lg border border-[#e0a527]/30 bg-[#170406]/85 text-[#f4c94f] transition-colors hover:bg-[#e0a527]/15"
+          className="flex h-9 w-9 items-center justify-center rounded-lg border border-(--border) bg-white/90 text-(--text-primary) shadow-sm backdrop-blur-md transition-colors hover:border-[#1e63b8]/40 hover:bg-[#1e63b8]/5"
           aria-label="Acercar"
         >
           <ZoomIn size={18} />
@@ -321,7 +321,7 @@ export function TeatroSeatMap({ butacas, zonas, seleccionadas, onToggle }: Teatr
         <button
           type="button"
           onClick={() => zoomEn(1 / 1.5)}
-          className="flex h-9 w-9 items-center justify-center rounded-lg border border-[#e0a527]/30 bg-[#170406]/85 text-[#f4c94f] transition-colors hover:bg-[#e0a527]/15"
+          className="flex h-9 w-9 items-center justify-center rounded-lg border border-(--border) bg-white/90 text-(--text-primary) shadow-sm backdrop-blur-md transition-colors hover:border-[#1e63b8]/40 hover:bg-[#1e63b8]/5"
           aria-label="Alejar"
         >
           <ZoomOut size={18} />
@@ -329,7 +329,7 @@ export function TeatroSeatMap({ butacas, zonas, seleccionadas, onToggle }: Teatr
       </div>
 
       {modo === 'zonas' && (
-        <p className="absolute bottom-3 left-3 z-10 max-w-[85%] text-xs text-white/40">
+        <p className="absolute bottom-3 left-3 z-10 max-w-[85%] text-xs text-(--text-muted)">
           Tocá un sector para ver y elegir sus butacas.
         </p>
       )}
@@ -347,9 +347,9 @@ export function TeatroSeatMap({ butacas, zonas, seleccionadas, onToggle }: Teatr
       >
         <defs>
           <radialGradient id="pisoTeatro" cx="50%" cy="82%" r="85%">
-            <stop offset="0%" stopColor="#3a0d14" />
-            <stop offset="55%" stopColor="#22060a" />
-            <stop offset="100%" stopColor="#0c0203" />
+            <stop offset="0%" stopColor="#ffffff" />
+            <stop offset="55%" stopColor="#f7f2e7" />
+            <stop offset="100%" stopColor="#ede2c8" />
           </radialGradient>
         </defs>
         <rect x={0} y={0} width={VIEWBOX.width} height={VIEWBOX.height} fill="url(#pisoTeatro)" />
@@ -359,8 +359,8 @@ export function TeatroSeatMap({ butacas, zonas, seleccionadas, onToggle }: Teatr
             <path
               key={i}
               d={d}
-              fill="rgba(224, 165, 39, 0.15)"
-              stroke="#e0a527"
+              fill="rgba(217, 138, 30, 0.15)"
+              stroke="#d98a1e"
               strokeWidth={1.5}
             />
           ))}
@@ -371,7 +371,7 @@ export function TeatroSeatMap({ butacas, zonas, seleccionadas, onToggle }: Teatr
             fontSize={14}
             fontWeight={700}
             letterSpacing="0.15em"
-            fill="#f4c94f"
+            fill="#8a5a12"
           >
             ESCENARIO
           </text>
@@ -397,7 +397,7 @@ export function TeatroSeatMap({ butacas, zonas, seleccionadas, onToggle }: Teatr
                   textAnchor="middle"
                   fontSize={26}
                   fontWeight={800}
-                  fill="#fdf6ec"
+                  fill="#1b2a4a"
                 >
                   {z.label}
                 </text>
@@ -442,8 +442,8 @@ export function TeatroSeatMap({ butacas, zonas, seleccionadas, onToggle }: Teatr
                       y={zonaActiva.centro.y + 40}
                       textAnchor="middle"
                       fontSize={13}
-                      fill="#fdf6ec"
-                      opacity={0.6}
+                      fill="#1b2a4a"
+                      opacity={0.55}
                     >
                       Butacas de este sector: próximamente
                     </text>
@@ -468,8 +468,8 @@ export function TeatroSeatMap({ butacas, zonas, seleccionadas, onToggle }: Teatr
                         textAnchor="end"
                         fontSize={4}
                         fontWeight={800}
-                        fill="#fdf6ec"
-                        opacity={0.7}
+                        fill="#1b2a4a"
+                        opacity={0.6}
                       >
                         {b.letra}
                       </text>
@@ -496,8 +496,8 @@ export function TeatroSeatMap({ butacas, zonas, seleccionadas, onToggle }: Teatr
                             height={ALTO_BUTACA}
                             rx={1}
                             fill={fill}
-                            opacity={b.ocupada ? 0.55 : 1}
-                            stroke={estaSeleccionada ? '#fff' : 'transparent'}
+                            opacity={b.ocupada ? 0.7 : 1}
+                            stroke={estaSeleccionada ? '#1b2a4a' : 'transparent'}
                             strokeWidth={0.6}
                           />
                           <text

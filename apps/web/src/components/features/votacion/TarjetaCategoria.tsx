@@ -33,7 +33,7 @@ export function TarjetaCategoria({ categoria, cantidadOpciones, votada, onSelecc
         {cantidadOpciones} {cantidadOpciones === 1 ? 'participante' : 'participantes'}
       </p>
 
-      <span className="mt-auto inline-flex items-center gap-1.5 text-sm font-semibold text-[var(--vt-mustard-light)]">
+      <span className="mt-auto inline-flex items-center gap-1.5 text-sm font-semibold text-[var(--vt-mustard-deep)]">
         {votada ? 'Ver mi voto' : 'Entrar a la categoría'}
         <ArrowRight size={14} className="transition-transform duration-300 group-hover:translate-x-1" aria-hidden="true" />
       </span>

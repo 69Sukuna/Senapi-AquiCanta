@@ -123,7 +123,7 @@ export function TarjetaParticipanteVotacion({
               <span className="text-[0.6rem] font-bold uppercase tracking-wider text-[var(--vt-text-muted)]">
                 % del total
               </span>
-              <span className="text-2xl font-extrabold leading-none tabular-nums text-[var(--vt-mustard-light)]">
+              <span className="text-2xl font-extrabold leading-none tabular-nums text-[var(--vt-mustard-deep)]">
                 {porcentajeAnimado.toFixed(1)}%
               </span>
             </div>

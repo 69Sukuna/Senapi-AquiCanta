@@ -28,7 +28,7 @@ export const NIVEL_LABEL: Record<NivelPrecio, string> = {
 // necesariamente coinciden con el color visual de la zona en el mapa (ver
 // COLOR_FILA más abajo).
 export const NIVEL_COLOR: Record<NivelPrecio, string> = {
-  vip: '#e0a527',
+  vip: '#d98a1e',
   preferencial: '#38bdf8',
   general: '#10b981',
 };
@@ -36,16 +36,17 @@ export const NIVEL_COLOR: Record<NivelPrecio, string> = {
 // Colores originales con los que el usuario trazó cada fila en el plano
 // (A=verde, B=amarillo, C=rojo, D=guinda). Son puramente para distinguir las
 // zonas a simple vista en el mapa — no representan nivel de precio, así que
-// van separados de NIVEL_COLOR.
+// van separados de NIVEL_COLOR. Usan la paleta de marca (no primarios puros)
+// para que el mapa se sienta parte del mismo sitio y no "de neón".
 export const COLOR_FILA: Record<string, string> = {
-  A: '#00ff00',
-  B: '#ffff00',
-  C: '#ff0000',
-  D: '#550000',
+  A: '#2e7d46',
+  B: '#d98a1e',
+  C: '#d52b1e',
+  D: '#8f1710',
 };
 
-export const COLOR_OCUPADO = '#5b3a3a';
-export const COLOR_SELECCIONADO = '#ff4d5e';
+export const COLOR_OCUPADO = '#b9b0a1';
+export const COLOR_SELECCIONADO = '#e6483a';
 
 export const VIEWBOX = { width: 1000, height: 700 };
 

@@ -74,13 +74,13 @@ export default function VotacionesPage() {
                 <>
                   Elegí tus favoritos de 
                   <br />
-                  <span style={{ color: 'var(--vt-mustard-light)' }}>cada categoria.</span>
+                  <span style={{ color: 'var(--vt-mustard-deep)' }}>cada categoria.</span>
                 </>
               ) : (
                 <>
                   El escenario está abierto,
                   <br />
-                  <span style={{ color: 'var(--vt-mustard-light)' }}>tu voto decide.</span>
+                  <span style={{ color: 'var(--vt-mustard-deep)' }}>tu voto decide.</span>
                 </>
               )}
             </h1>
@@ -100,7 +100,7 @@ export default function VotacionesPage() {
             <span className="vt-eyebrow flex items-center gap-2">
               <Vote size={14} aria-hidden="true" /> Votos registrados
             </span>
-            <p className="text-6xl font-extrabold leading-none tabular-nums" style={{ color: 'var(--vt-mustard-light)' }}>
+            <p className="text-6xl font-extrabold leading-none tabular-nums" style={{ color: 'var(--vt-mustard-deep)' }}>
               {Math.round(totalVotosAnimado).toLocaleString('es-BO')}
             </p>
             <p className="text-sm text-[var(--vt-text-muted)]">
@@ -117,8 +117,8 @@ export default function VotacionesPage() {
               onClick={() => cambiarModalidad(id)}
               className={`flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-semibold transition-all duration-200 ${
                 modalidad === id
-                  ? 'border-[var(--vt-border-active)] bg-[rgba(224,165,39,0.15)] text-[var(--vt-mustard-light)]'
-                  : 'border-transparent text-[var(--vt-text-muted)] hover:bg-white/6 hover:text-[var(--vt-text-secondary)]'
+                  ? 'border-[var(--vt-border-active)] bg-[rgba(224,143,31,0.12)] text-[var(--vt-mustard-deep)]'
+                  : 'border-transparent text-[var(--vt-text-muted)] hover:bg-[rgba(27,42,74,0.05)] hover:text-[var(--vt-text-secondary)]'
               }`}
             >
               {id === 'vivo' ? <Radio size={15} aria-hidden="true" /> : <Vote size={15} aria-hidden="true" />}
@@ -158,7 +158,7 @@ export default function VotacionesPage() {
             <button
               type="button"
               onClick={() => setCategoriaActiva(null)}
-              className="mb-5 inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-sm font-semibold text-[var(--vt-mustard-light)] transition-colors"
+              className="mb-5 inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-sm font-semibold text-[var(--vt-mustard-deep)] transition-colors"
               style={{ borderColor: 'var(--vt-border)' }}
             >
               <ChevronLeft size={16} aria-hidden="true" /> Volver a categorías
@@ -170,7 +170,7 @@ export default function VotacionesPage() {
                 <h2 className="mt-1 text-2xl font-extrabold">{categoriaActiva}</h2>
               </div>
               {sesion.yaVotoEnCategoria(categoriaActiva) && (
-                <p className="text-sm font-semibold" style={{ color: 'var(--vt-mustard-light)' }} role="status">
+                <p className="text-sm font-semibold" style={{ color: 'var(--vt-mustard-deep)' }} role="status">
                   Ya registraste tu voto en esta categoría. ¡Gracias por participar!
                 </p>
               )}

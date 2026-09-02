@@ -93,11 +93,11 @@ export function CategoriasCarousel({ categorias, href }: CategoriasCarouselProps
                   </div>
 
                   <div>
-                    <h3 className="text-lg font-bold text-white mb-1">{categoria.nombre}</h3>
-                    <p className="text-sm text-white/60 leading-relaxed">{categoria.descripcion}</p>
+                    <h3 className="text-lg font-bold text-(--text-primary) mb-1">{categoria.nombre}</h3>
+                    <p className="text-sm text-(--text-secondary) leading-relaxed">{categoria.descripcion}</p>
                   </div>
 
-                  <span className="mt-auto inline-flex w-fit items-center gap-1.5 rounded-full border border-[#e0a527]/30 bg-[#e0a527]/10 px-4 py-2 text-sm font-semibold text-[#f4c94f] transition-all group-hover:gap-2.5 group-hover:border-[#e0a527]/60 group-hover:bg-[#e0a527]/20">
+                  <span className="mt-auto inline-flex w-fit items-center gap-1.5 rounded-full border border-[#1e63b8]/25 bg-[#1e63b8]/8 px-4 py-2 text-sm font-semibold text-[#164a8c] transition-all group-hover:gap-2.5 group-hover:border-[#1e63b8]/50 group-hover:bg-[#1e63b8]/15">
                     Ver más <ExternalLink size={14} />
                   </span>
                 </Link>
@@ -110,7 +110,7 @@ export function CategoriasCarousel({ categorias, href }: CategoriasCarouselProps
       <div className="flex items-center gap-8">
         <button
           onClick={() => go(-1)}
-          className="w-12 h-12 rounded-full glass-panel border border-white/10 flex items-center justify-center text-white transition-all duration-300 hover:border-[#e0a527]/60 hover:text-[#f4c94f] hover:scale-110 hover:shadow-lg hover:shadow-[#e11d2e]/20 cursor-pointer"
+          className="w-12 h-12 rounded-full glass-panel border border-(--border) flex items-center justify-center text-(--text-primary) transition-all duration-300 hover:border-[#1e63b8]/40 hover:text-[#1e63b8] hover:scale-110 hover:shadow-lg hover:shadow-[#1e63b8]/15 cursor-pointer"
           aria-label="Categoría anterior"
         >
           <ChevronLeft size={22} />
@@ -122,7 +122,7 @@ export function CategoriasCarousel({ categorias, href }: CategoriasCarouselProps
               key={categoria.nombre}
               onClick={() => setActive(index)}
               className={`h-2 rounded-full transition-all cursor-pointer ${
-                index === active ? 'w-7 bg-[#e0a527]' : 'w-2 bg-white/20 hover:bg-white/40'
+                index === active ? 'w-7 bg-[#1e63b8]' : 'w-2 bg-(--border) hover:bg-[#1b2a4a]/25'
               }`}
               aria-label={`Ir a ${categoria.nombre}`}
             />
@@ -131,9 +131,8 @@ export function CategoriasCarousel({ categorias, href }: CategoriasCarouselProps
 
         <button
           onClick={() => go(1)}
-          className="w-12 h-12 rounded-full glass-panel border border-white/10 flex items-center justify-center text-white transition-all duration-300 hover:border-[#e0a527]/60 hover:text-[#f4c94f] hover:scale-110 hover:shadow-lg hover:shadow-[#e11d2e]/20 cursor-pointer"
-          aria-label="Siguiente categoría"
-        >
+          className="w-12 h-12 rounded-full glass-panel border border-(--border) flex items-center justify-center text-(--text-primary) transition-all duration-300 hover:border-[#1e63b8]/40 hover:text-[#1e63b8] hover:scale-110 hover:shadow-lg hover:shadow-[#1e63b8]/15 cursor-pointer"
+          aria-label="Siguiente categoría">
           <ChevronRight size={22} />
         </button>
       </div>
