@@ -6,7 +6,7 @@ import BannerFechasClave from './components/BannerFechasClave';
 
 export default function InscripcionesPage() {
   return (
-    <main className="container">
+    <main>
       <HeroInscripcion />
       <BannerCompletaFormulario />
       <FormularioInscripcion />
