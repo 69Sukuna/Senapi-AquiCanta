@@ -1,7 +1,76 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Barlow:wght@400;500;600;700;800;900&family=Barlow+Condensed:wght@400;500;600;700;800;900&family=Bakbak+One&family=Gasoek+One&display=swap');
 @import 'tailwindcss';
 
+@font-face {
+  font-family: 'Gasoek One';
+  src: url('/TIPOGRAFÍAS/Gasoek_One/GasoekOne-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Bakbak One';
+  src: url('/TIPOGRAFÍAS/Bakbak_One/BakbakOne-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Barlow Condensed';
+  src: url('/TIPOGRAFÍAS/Barlow_Condensed/BarlowCondensed-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Barlow Condensed';
+  src: url('/TIPOGRAFÍAS/Barlow_Condensed/BarlowCondensed-SemiBold.ttf') format('truetype');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Barlow Condensed';
+  src: url('/TIPOGRAFÍAS/Barlow_Condensed/BarlowCondensed-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Barlow Condensed';
+  src: url('/TIPOGRAFÍAS/Barlow_Condensed/BarlowCondensed-Black.ttf') format('truetype');
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Tipografías del Home (paleta 2026): Gasoek One para el titular de impacto
+   del hero (reemplaza a Megazoid), Bakbak One para títulos de sección,
+   Barlow Condensed para texto de apoyo y etiquetas numéricas. */
+@theme {
+  --font-gasoek: 'Gasoek One', sans-serif;
+  --font-bakbak: 'Bakbak One', sans-serif;
+  --font-barlow: 'Barlow Condensed', 'Barlow', sans-serif;
+}
+
 :root {
+  /* Paleta oficial 2026 (bandera boliviana + neutros), solo para el Home
+     por ahora — el resto del sitio sigue con --bg-primary/--text-primary/etc.
+     tal cual, sin tocar. */
+  --brand-rojo: #c1272d;
+  --brand-amarillo: #fcee21;
+  --brand-verde: #006837;
+  --brand-crema: #f1ede7;
+  --brand-blanco: #ffffff;
+  --brand-negro: #1a1a1a;
+  --brand-cafe: #534741;
+  --brand-grey: #808080;
+
   /* Tema claro "Bolivia en Blanco" — papel cálido + tinta índigo, con los
      acentos del logo (azul, sol, rojo/verde de la bandera). Reemplaza el
      tema oscuro de terciopelo que tenía el sitio antes. */
@@ -147,8 +216,15 @@ a {
 
 /* Animations */
 @keyframes pulseGlow {
-  0%, 100% { opacity: 0.6; }
-  50% { opacity: 1; }
+
+  0%,
+  100% {
+    opacity: 0.6;
+  }
+
+  50% {
+    opacity: 1;
+  }
 }
 
 .pulse-dot {
@@ -274,10 +350,12 @@ a {
 }
 
 @keyframes vtBrilloLider {
+
   0%,
   100% {
     filter: brightness(1);
   }
+
   50% {
     filter: brightness(1.1);
   }
@@ -324,7 +402,7 @@ a {
   z-index: 1;
 }
 
-.vt-btn-estrella > * {
+.vt-btn-estrella>* {
   position: relative;
   z-index: 2;
 }
