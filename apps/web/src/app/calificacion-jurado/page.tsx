@@ -9,7 +9,7 @@ import {
   TablaResultadosJurado,
 } from '@/components/features/gestion-jurado';
 import { useGestionJurado } from '@/hooks';
-import { JURADO_TITULARES, PARTICIPANTES_CALIFICACION } from '@/mocks';
+import { CATEGORIAS_CONCURSO, JURADO_TITULARES, PARTICIPANTES_CALIFICACION } from '@/mocks';
 import type { CategoriaConcurso } from '@/types';
 
 export default function CalificacionJuradoPage() {
@@ -20,6 +20,7 @@ export default function CalificacionJuradoPage() {
     emitirCalificacion,
     puntajesDe,
     totalParticipante,
+    criteriosDeParticipante,
     criteriosRespondidos,
     evaluacionCompleta,
     estaEmitido,
@@ -31,11 +32,6 @@ export default function CalificacionJuradoPage() {
   const [participanteActivoId, setParticipanteActivoId] = useState<string | null>(null);
 
   const juezActivo = JURADO_TITULARES.find((juez) => juez.id === juezActivoId);
-
-  const categorias = useMemo(
-    () => Array.from(new Set(PARTICIPANTES_CALIFICACION.map((participante) => participante.categoria))),
-    [],
-  );
 
   const participantesDeCategoria = useMemo(
     () => PARTICIPANTES_CALIFICACION.filter((participante) => participante.categoria === categoriaSeleccionada),
@@ -82,7 +78,7 @@ export default function CalificacionJuradoPage() {
           <span className="vt-eyebrow">1. Elegir categoría</span>
           <div className="mt-4">
             <SelectorCategoria
-              categorias={categorias}
+              categorias={CATEGORIAS_CONCURSO}
               categoriaActiva={categoriaSeleccionada}
               onSeleccionar={elegirCategoria}
               cantidadEnCategoria={(categoria) =>
@@ -95,7 +91,11 @@ export default function CalificacionJuradoPage() {
         <section className="mb-10">
           <span className="vt-eyebrow">2. Elegir participante a calificar</span>
           <div className="mt-4">
-            {categoriaSeleccionada ? (
+            {!categoriaSeleccionada ? (
+              <p className="vt-card p-5 text-center text-sm text-[var(--vt-text-muted)]">
+                Seleccione primero una categoría para ver a sus participantes.
+              </p>
+            ) : participantesDeCategoria.length > 0 ? (
               <SelectorParticipante
                 participantes={participantesDeCategoria}
                 participanteActivoId={participanteActivoId}
@@ -104,7 +104,7 @@ export default function CalificacionJuradoPage() {
               />
             ) : (
               <p className="vt-card p-5 text-center text-sm text-[var(--vt-text-muted)]">
-                Seleccione primero una categoría para ver a sus participantes.
+                Todavía no hay participantes de ejemplo cargados en &ldquo;{categoriaSeleccionada}&rdquo;.
               </p>
             )}
           </div>
@@ -116,6 +116,7 @@ export default function CalificacionJuradoPage() {
               participante={participanteActivo}
               numero={indiceParticipante + 1}
               totalParticipantes={participantesDeCategoria.length}
+              criterios={criteriosDeParticipante(participanteActivo.id)}
               puntajes={puntajesDe(juezActivoId, participanteActivo.id)}
               total={totalParticipante(juezActivoId, participanteActivo.id)}
               criteriosRespondidos={criteriosRespondidos(juezActivoId, participanteActivo.id)}

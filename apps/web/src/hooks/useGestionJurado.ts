@@ -1,9 +1,10 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { CRITERIOS_EVALUACION_JURADO } from '@/mocks';
+import { CRITERIOS_POR_CATEGORIA } from '@/mocks';
 import type {
   ClaveCriterioEvaluacion,
+  CriterioEvaluacionDefinicion,
   EmisionesPorJurado,
   JuezPerfil,
   ParticipanteCalificacion,
@@ -12,15 +13,6 @@ import type {
 } from '@/types';
 
 const STORAGE_KEY = 'gestion-jurado:estado';
-const TOTAL_CRITERIOS = CRITERIOS_EVALUACION_JURADO.length;
-
-const PUNTAJES_MAXIMOS = CRITERIOS_EVALUACION_JURADO.reduce<Record<ClaveCriterioEvaluacion, number>>(
-  (acumulado, criterio) => {
-    acumulado[criterio.clave] = criterio.puntajeMaximo;
-    return acumulado;
-  },
-  {} as Record<ClaveCriterioEvaluacion, number>,
-);
 
 interface EstadoJurado {
   puntajes: PuntajesPorJurado;
@@ -36,6 +28,7 @@ interface UseGestionJuradoResult {
   emitirCalificacion: (participanteId: string) => void;
   puntajesDe: (juezId: string, participanteId: string) => PuntajesPorJurado[string][string];
   totalParticipante: (juezId: string, participanteId: string) => number;
+  criteriosDeParticipante: (participanteId: string) => CriterioEvaluacionDefinicion[];
   criteriosRespondidos: (juezId: string, participanteId: string) => number;
   evaluacionCompleta: (juezId: string, participanteId: string) => boolean;
   estaEmitido: (juezId: string, participanteId: string) => boolean;
@@ -67,13 +60,24 @@ export function useGestionJurado(
     }
   }, []);
 
+  // Cada categoría tiene su propio baremo (Guía Explicativa §5), así que los
+  // criterios y su puntaje máximo dependen de la categoría del participante.
+  const criteriosDeParticipante = useCallback(
+    (participanteId: string): CriterioEvaluacionDefinicion[] => {
+      const participante = participantes.find((p) => p.id === participanteId);
+      return participante ? CRITERIOS_POR_CATEGORIA[participante.categoria] ?? [] : [];
+    },
+    [participantes],
+  );
+
   const actualizarCriterio = useCallback(
     (participanteId: string, clave: ClaveCriterioEvaluacion, valor: number) => {
       setEstado((actual) => {
         // Una calificación ya emitida queda bloqueada: no se admite ninguna modificación.
         if (actual.emitidos[juezActivoId]?.[participanteId]) return actual;
 
-        const maximo = PUNTAJES_MAXIMOS[clave];
+        const criterio = criteriosDeParticipante(participanteId).find((c) => c.clave === clave);
+        const maximo = criterio?.puntajeMaximo ?? 0;
         const valorValido = Math.min(maximo, Math.max(0, valor));
         const puntajesJuez = actual.puntajes[juezActivoId] ?? {};
         const puntajesParticipante = puntajesJuez[participanteId] ?? {};
@@ -93,7 +97,7 @@ export function useGestionJurado(
         return actualizado;
       });
     },
-    [juezActivoId, persistir],
+    [juezActivoId, persistir, criteriosDeParticipante],
   );
 
   const emitirCalificacion = useCallback(
@@ -102,7 +106,8 @@ export function useGestionJurado(
         if (actual.emitidos[juezActivoId]?.[participanteId]) return actual;
 
         const puntajes = actual.puntajes[juezActivoId]?.[participanteId] ?? {};
-        if (Object.keys(puntajes).length !== TOTAL_CRITERIOS) return actual;
+        const totalCriterios = criteriosDeParticipante(participanteId).length;
+        if (totalCriterios === 0 || Object.keys(puntajes).length !== totalCriterios) return actual;
 
         const actualizado: EstadoJurado = {
           ...actual,
@@ -116,7 +121,7 @@ export function useGestionJurado(
         return actualizado;
       });
     },
-    [juezActivoId, persistir],
+    [juezActivoId, persistir, criteriosDeParticipante],
   );
 
   const puntajesDe = useCallback(
@@ -138,8 +143,11 @@ export function useGestionJurado(
   );
 
   const evaluacionCompleta = useCallback(
-    (juezId: string, participanteId: string) => criteriosRespondidos(juezId, participanteId) === TOTAL_CRITERIOS,
-    [criteriosRespondidos],
+    (juezId: string, participanteId: string) => {
+      const totalCriterios = criteriosDeParticipante(participanteId).length;
+      return totalCriterios > 0 && criteriosRespondidos(juezId, participanteId) === totalCriterios;
+    },
+    [criteriosRespondidos, criteriosDeParticipante],
   );
 
   const estaEmitido = useCallback(
@@ -188,6 +196,7 @@ export function useGestionJurado(
     emitirCalificacion,
     puntajesDe,
     totalParticipante,
+    criteriosDeParticipante,
     criteriosRespondidos,
     evaluacionCompleta,
     estaEmitido,
