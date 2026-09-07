@@ -8,22 +8,133 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-// Igual a GRUPOS_CATEGORIA en apps/web/src/app/inscripciones/page.tsx — las
-// 4 categorías grupales marcan esGrupal: true.
+// Límites según la convocatoria oficial (CONVOCATORIA AQUI CANTA BOLIVIA, 26
+// AGOSTO 2026). Igual a GRUPOS_CATEGORIAS en apps/web/src/lib/categorias.ts —
+// integrantesMax > 1 determina si la postulación crea un Grupo o un Cantante.
+// acompanantesMax es el máximo de músicos de acompañamiento (solo aplica a
+// categorías individuales). edadMinima/edadMaxima, en años al 10-sep-2026.
 const CATEGORIAS_BASE = [
-  { nombre: 'Ñusta', esGrupal: false },
-  { nombre: 'Solista vocal', esGrupal: false },
-  { nombre: 'Solista instrumental – Armónico', esGrupal: false },
-  { nombre: 'Solista instrumental – Melódico', esGrupal: false },
-  { nombre: 'Dúo vocal instrumental', esGrupal: true },
-  { nombre: 'Trío vocal instrumental', esGrupal: true },
-  { nombre: 'Grupo vocal instrumental', esGrupal: true },
-  { nombre: 'Estudiantina', esGrupal: true },
-  { nombre: 'Autóctono', esGrupal: false },
-  { nombre: 'Composición', esGrupal: false },
-  { nombre: 'Solista vocal infantil', esGrupal: false },
-  { nombre: 'Solista instrumental infantil', esGrupal: false },
-  { nombre: 'Especial', esGrupal: false },
+  {
+    nombre: 'Ñusta',
+    integrantesMin: 1,
+    integrantesMax: 1,
+    acompanantesMax: 0,
+    edadMinima: 16,
+    edadMaxima: 25,
+    duracionMaximaMinutos: 10,
+  },
+  {
+    nombre: 'Solista vocal',
+    integrantesMin: 1,
+    integrantesMax: 1,
+    acompanantesMax: 5,
+    edadMinima: null,
+    edadMaxima: null,
+    duracionMaximaMinutos: 5,
+  },
+  {
+    nombre: 'Solista instrumental – Armónico',
+    integrantesMin: 1,
+    integrantesMax: 1,
+    acompanantesMax: 1,
+    edadMinima: null,
+    edadMaxima: null,
+    duracionMaximaMinutos: 5,
+  },
+  {
+    nombre: 'Solista instrumental – Melódico',
+    integrantesMin: 1,
+    integrantesMax: 1,
+    acompanantesMax: 1,
+    edadMinima: null,
+    edadMaxima: null,
+    duracionMaximaMinutos: 5,
+  },
+  {
+    nombre: 'Dúo vocal instrumental',
+    integrantesMin: 2,
+    integrantesMax: 2,
+    acompanantesMax: 0,
+    edadMinima: null,
+    edadMaxima: null,
+    duracionMaximaMinutos: 5,
+  },
+  {
+    nombre: 'Trío vocal instrumental',
+    integrantesMin: 3,
+    integrantesMax: 3,
+    acompanantesMax: 0,
+    edadMinima: null,
+    edadMaxima: null,
+    duracionMaximaMinutos: 5,
+  },
+  {
+    nombre: 'Grupo vocal instrumental',
+    integrantesMin: 4,
+    integrantesMax: 8,
+    acompanantesMax: 0,
+    edadMinima: null,
+    edadMaxima: null,
+    duracionMaximaMinutos: 5,
+  },
+  {
+    nombre: 'Estudiantina',
+    integrantesMin: 8,
+    integrantesMax: 15,
+    acompanantesMax: 0,
+    edadMinima: null,
+    edadMaxima: null,
+    duracionMaximaMinutos: 7,
+  },
+  {
+    nombre: 'Autóctono',
+    integrantesMin: 8,
+    integrantesMax: 20,
+    acompanantesMax: 0,
+    edadMinima: null,
+    edadMaxima: null,
+    duracionMaximaMinutos: 7,
+  },
+  {
+    nombre: 'Composición',
+    integrantesMin: 1,
+    integrantesMax: 1,
+    acompanantesMax: 5,
+    edadMinima: null,
+    edadMaxima: null,
+    duracionMaximaMinutos: 5,
+  },
+  {
+    nombre: 'Solista vocal infantil',
+    integrantesMin: 1,
+    integrantesMax: 1,
+    acompanantesMax: 5,
+    edadMinima: null,
+    edadMaxima: 12,
+    duracionMaximaMinutos: 5,
+    requiereAdultoResponsable: true,
+  },
+  {
+    nombre: 'Solista instrumental infantil',
+    integrantesMin: 1,
+    integrantesMax: 1,
+    acompanantesMax: 1,
+    edadMinima: null,
+    edadMaxima: 12,
+    duracionMaximaMinutos: 5,
+    requiereAdultoResponsable: true,
+  },
+  // 10 integrantes + 1 encargado de sonido opcional (no modelado aparte: se
+  // registra como un integrante más, distinguible por su instrumento).
+  {
+    nombre: 'Especial',
+    integrantesMin: 1,
+    integrantesMax: 11,
+    acompanantesMax: 0,
+    edadMinima: null,
+    edadMaxima: null,
+    duracionMaximaMinutos: 5,
+  },
 ];
 
 // Fotos de ejemplo: retratos reales de personas (Wikimedia Commons, CC),
@@ -169,11 +280,11 @@ function fotoPlaceholder(nombre: string, colorFondo: string) {
 async function main() {
   const categoriasPorNombre = new Map<string, string>();
 
-  for (const { nombre, esGrupal } of CATEGORIAS_BASE) {
+  for (const { nombre, ...limites } of CATEGORIAS_BASE) {
     const categoria = await prisma.categoria.upsert({
       where: { nombre },
-      update: { esGrupal },
-      create: { nombre, esGrupal },
+      update: limites,
+      create: { nombre, ...limites },
     });
     categoriasPorNombre.set(nombre, categoria.id);
   }

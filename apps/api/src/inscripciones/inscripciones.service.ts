@@ -2,6 +2,7 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { EstadoInscripcion } from '@repo/database';
 import { PrismaService } from '../prisma/prisma.service';
 import { CrearInscripcionDto } from './dto/crear-inscripcion.dto';
+import { cumpleRangoEdad } from './edad.util';
 
 export type TipoInscripcion = 'CANTANTE' | 'GRUPO';
 
@@ -15,13 +16,69 @@ export class InscripcionesService {
       throw new NotFoundException(`No existe la categoría "${dto.categoria}"`);
     }
 
+    if (dto.integrantes.length < categoria.integrantesMin || dto.integrantes.length > categoria.integrantesMax) {
+      const rango =
+        categoria.integrantesMin === categoria.integrantesMax
+          ? `exactamente ${categoria.integrantesMin}`
+          : `entre ${categoria.integrantesMin} y ${categoria.integrantesMax}`;
+      throw new BadRequestException(
+        `La categoría "${dto.categoria}" exige ${rango} integrante(s), llegaron ${dto.integrantes.length}`,
+      );
+    }
+
+    const cantidadAcompanantes = dto.acompanantes?.length ?? 0;
+    if (cantidadAcompanantes > categoria.acompanantesMax) {
+      throw new BadRequestException(
+        `La categoría "${dto.categoria}" permite hasta ${categoria.acompanantesMax} acompañante(s), llegaron ${cantidadAcompanantes}`,
+      );
+    }
+
+    if (categoria.edadMinima != null || categoria.edadMaxima != null) {
+      for (const integrante of dto.integrantes) {
+        if (!cumpleRangoEdad(new Date(integrante.fechaNacimiento), categoria.edadMinima, categoria.edadMaxima)) {
+          const rango =
+            categoria.edadMinima != null && categoria.edadMaxima != null
+              ? `entre ${categoria.edadMinima} y ${categoria.edadMaxima} años`
+              : categoria.edadMinima != null
+                ? `al menos ${categoria.edadMinima} años`
+                : `como máximo ${categoria.edadMaxima} años`;
+          throw new BadRequestException(
+            `La categoría "${dto.categoria}" exige tener ${rango} al 10 de septiembre de 2026`,
+          );
+        }
+      }
+    }
+
+    if (
+      categoria.requiereAdultoResponsable &&
+      (!dto.adultoResponsableNombre?.trim() ||
+        !dto.adultoResponsableCiNumero?.trim() ||
+        !dto.adultoResponsableCelular?.trim())
+    ) {
+      throw new BadRequestException(
+        `La categoría "${dto.categoria}" exige nombre, C.I. y celular de un adulto responsable (padre, madre o tutor legal)`,
+      );
+    }
+
+    if (categoria.requiereAdultoResponsable && !dto.autorizaParticipacionAdultoResponsable) {
+      throw new BadRequestException(
+        `La categoría "${dto.categoria}" exige la autorización del adulto responsable para la participación del o la menor`,
+      );
+    }
+
+    const duracion = Number(dto.tiempo);
+    if (!Number.isNaN(duracion) && duracion > categoria.duracionMaximaMinutos) {
+      throw new BadRequestException(
+        `La categoría "${dto.categoria}" exige una duración máxima de ${categoria.duracionMaximaMinutos} minutos`,
+      );
+    }
+
     const datosGenerales = {
       pseudonimo: dto.pseudonimo,
       tituloTema: dto.tituloTema,
       autorCompositor: dto.autorCompositor,
       ritmo: dto.ritmo,
       tiempo: dto.tiempo,
-      videoUrl: dto.videoUrl,
       departamento: dto.departamento,
       categoriaId: categoria.id,
       celular1: dto.celular1,
@@ -30,7 +87,7 @@ export class InscripcionesService {
       declaracionVoluntaria: dto.declaracionVoluntaria,
     };
 
-    if (categoria.esGrupal) {
+    if (categoria.integrantesMax > 1) {
       return this.prisma.grupo.create({
         data: {
           ...datosGenerales,
@@ -41,7 +98,7 @@ export class InscripcionesService {
               instrumento: integrante.instrumento,
               ciNumero: integrante.ciNumero,
               ciExtension: integrante.ciExtension,
-              edad: integrante.edad,
+              fechaNacimiento: new Date(integrante.fechaNacimiento),
               whatsapp: integrante.whatsapp,
               direccion: integrante.direccion,
             })),
@@ -51,12 +108,6 @@ export class InscripcionesService {
       });
     }
 
-    if (dto.integrantes.length !== 1) {
-      throw new BadRequestException(
-        `La categoría "${dto.categoria}" es individual: se esperaba 1 integrante, llegaron ${dto.integrantes.length}`,
-      );
-    }
-
     const [integrante] = dto.integrantes;
     return this.prisma.cantante.create({
       data: {
@@ -64,11 +115,24 @@ export class InscripcionesService {
         nombre: dto.nombrePostulante,
         ciNumero: integrante.ciNumero,
         ciExtension: integrante.ciExtension,
-        edad: integrante.edad,
+        fechaNacimiento: new Date(integrante.fechaNacimiento),
         whatsapp: integrante.whatsapp,
         direccion: integrante.direccion,
+        adultoResponsableNombre: dto.adultoResponsableNombre,
+        adultoResponsableCiNumero: dto.adultoResponsableCiNumero,
+        adultoResponsableCiExtension: dto.adultoResponsableCiExtension,
+        adultoResponsableCelular: dto.adultoResponsableCelular,
+        autorizaParticipacionAdultoResponsable: dto.autorizaParticipacionAdultoResponsable ?? false,
+        acompanantes: {
+          create: (dto.acompanantes ?? []).map((acompanante) => ({
+            nombre: acompanante.nombre,
+            ciNumero: acompanante.ciNumero,
+            ciExtension: acompanante.ciExtension,
+            instrumento: acompanante.instrumento,
+          })),
+        },
       },
-      include: { categoria: true },
+      include: { categoria: true, acompanantes: true },
     });
   }
 
@@ -76,7 +140,7 @@ export class InscripcionesService {
     const [cantantes, grupos] = await Promise.all([
       this.prisma.cantante.findMany({
         where: estado ? { estado } : undefined,
-        include: { categoria: true },
+        include: { categoria: true, acompanantes: true },
       }),
       this.prisma.grupo.findMany({
         where: estado ? { estado } : undefined,
