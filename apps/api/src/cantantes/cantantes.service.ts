@@ -2,8 +2,8 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 
 // Solo "datos generales" (ver Anexo 1): nunca se exponen acá ciNumero,
-// ciExtension, edad, whatsapp, direccion, celular1, celular2 — esos son
-// privados y solo se ven en /inscripciones (panel de administración).
+// ciExtension, fechaNacimiento, whatsapp, direccion, celular1, celular2 —
+// esos son privados y solo se ven en /inscripciones (panel de administración).
 const SELECT_PUBLICO = {
   id: true,
   nombre: true,
@@ -17,6 +17,13 @@ const SELECT_PUBLICO = {
   fotoUrl: true,
   categoriaId: true,
   categoria: true,
+  acompanantes: {
+    select: {
+      id: true,
+      nombre: true,
+      instrumento: true,
+    },
+  },
 } as const;
 
 @Injectable()

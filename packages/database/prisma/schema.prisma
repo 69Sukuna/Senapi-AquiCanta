@@ -61,10 +61,27 @@ enum EstadoInscripcion {
 }
 
 model Categoria {
-  id       String  @id @default(uuid())
-  nombre   String  @unique
-  // Determina si una postulación a esta categoría crea un Cantante o un Grupo.
-  esGrupal Boolean @default(false)
+  id     String @id @default(uuid())
+  nombre String @unique
+
+  // Límites de la convocatoria oficial. Si integrantesMax > 1, la
+  // postulación crea un Grupo; si no, crea un Cantante (ya no se guarda un
+  // booleano esGrupal aparte, para que no se pueda desincronizar).
+  integrantesMin Int @default(1)
+  integrantesMax Int @default(1)
+  // Máximo de músicos de acompañamiento permitidos (solo aplica a
+  // categorías individuales — ninguna categoría grupal admite acompañantes).
+  acompanantesMax Int @default(0)
+  // Rango de edad exigido por la convocatoria, en años, al 10-sep-2026
+  // (ej. Ñusta: 16-25, infantiles: hasta 12). Null = sin restricción.
+  edadMinima Int?
+  edadMaxima Int?
+  // Duración máxima del tema, en minutos, para la etapa de preselección
+  // (la mayoría son 5; Estudiantina/Autóctono 7; Ñusta 10).
+  duracionMaximaMinutos Float @default(5)
+  // Categorías infantiles: la convocatoria exige nombre y C.I. de un adulto
+  // responsable (padre, madre o tutor legal) del postulante.
+  requiereAdultoResponsable Boolean @default(false)
 
   cantantes Cantante[]
   grupos    Grupo[]
@@ -93,7 +110,7 @@ model Cantante {
   // públicos. Del Anexo 1 (tabla de firmas) y Anexo 2 (carta de presentación).
   ciNumero              String?
   ciExtension           String?
-  edad                  String?
+  fechaNacimiento       DateTime?
   whatsapp              String?
   direccion             String?
   celular1              String?
@@ -104,7 +121,32 @@ model Cantante {
   createdAt             DateTime          @default(now())
   updatedAt             DateTime          @default(now()) @updatedAt
 
+  // Categorías infantiles: adulto responsable (padre, madre o tutor legal).
+  // autorizaParticipacion es la aceptación digital de los términos del
+  // Anexo 4 (carta de autorización de participación) — no hay una carta
+  // firmada, pero sí debe quedar registrada la declaración.
+  adultoResponsableNombre      String?
+  adultoResponsableCiNumero    String?
+  adultoResponsableCiExtension String?
+  adultoResponsableCelular     String?
+  autorizaParticipacionAdultoResponsable Boolean @default(false)
+
+  // Músicos de acompañamiento (categorías individuales que lo permiten).
+  acompanantes Acompanante[]
+
   @@map("cantantes")
+}
+
+model Acompanante {
+  id          String   @id @default(uuid())
+  cantanteId  String
+  cantante    Cantante @relation(fields: [cantanteId], references: [id], onDelete: Cascade)
+  nombre      String
+  ciNumero    String?
+  ciExtension String?
+  instrumento String?
+
+  @@map("acompanantes")
 }
 
 model Grupo {
@@ -147,11 +189,11 @@ model GrupoIntegrante {
   fotoUrl          String?
 
   // Datos personales — privados, nunca se exponen en endpoints públicos.
-  ciNumero    String?
-  ciExtension String?
-  edad        String?
-  whatsapp    String?
-  direccion   String?
+  ciNumero        String?
+  ciExtension     String?
+  fechaNacimiento DateTime?
+  whatsapp        String?
+  direccion       String?
 
   @@map("grupo_integrantes")
 }

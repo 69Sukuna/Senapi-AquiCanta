@@ -3,10 +3,10 @@ import {
   ArrayMaxSize,
   ArrayMinSize,
   IsBoolean,
+  IsDateString,
   IsEnum,
   IsOptional,
   IsString,
-  IsUrl,
   ValidateNested,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
@@ -26,9 +26,9 @@ export class IntegranteDto {
   @IsString()
   ciExtension?: string;
 
-  @ApiProperty()
-  @IsString()
-  edad!: string;
+  @ApiProperty({ description: 'Fecha de nacimiento (ISO 8601, ej. 2005-03-14)' })
+  @IsDateString()
+  fechaNacimiento!: string;
 
   @ApiPropertyOptional()
   @IsOptional()
@@ -39,6 +39,27 @@ export class IntegranteDto {
   @IsOptional()
   @IsString()
   direccion?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  instrumento?: string;
+}
+
+export class AcompananteDto {
+  @ApiProperty()
+  @IsString()
+  nombre!: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  ciNumero?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  ciExtension?: string;
 
   @ApiPropertyOptional()
   @IsOptional()
@@ -76,11 +97,6 @@ export class CrearInscripcionDto {
   @IsString()
   tiempo!: string;
 
-  @ApiPropertyOptional({ description: 'Enlace al video de la interpretación (YouTube, Drive, etc.)' })
-  @IsOptional()
-  @IsUrl()
-  videoUrl?: string;
-
   @ApiProperty({ enum: Departamento })
   @IsEnum(Departamento)
   departamento!: Departamento;
@@ -101,6 +117,16 @@ export class CrearInscripcionDto {
   @ArrayMaxSize(20)
   integrantes!: IntegranteDto[];
 
+  @ApiPropertyOptional({
+    type: [AcompananteDto],
+    description: 'Músicos de acompañamiento (solo para categorías individuales que lo permiten)',
+  })
+  @IsOptional()
+  @ValidateNested({ each: true })
+  @Type(() => AcompananteDto)
+  @ArrayMaxSize(20)
+  acompanantes?: AcompananteDto[];
+
   @ApiProperty()
   @IsBoolean()
   aceptaBases!: boolean;
@@ -108,4 +134,32 @@ export class CrearInscripcionDto {
   @ApiProperty()
   @IsBoolean()
   declaracionVoluntaria!: boolean;
+
+  @ApiPropertyOptional({ description: 'Nombre del adulto responsable (padre/madre/tutor) — categorías infantiles' })
+  @IsOptional()
+  @IsString()
+  adultoResponsableNombre?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  adultoResponsableCiNumero?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  adultoResponsableCiExtension?: string;
+
+  @ApiPropertyOptional({ description: 'Celular del adulto responsable — categorías infantiles' })
+  @IsOptional()
+  @IsString()
+  adultoResponsableCelular?: string;
+
+  @ApiPropertyOptional({
+    description:
+      'Aceptación digital de los términos del Anexo 4 (carta de autorización de participación) — categorías infantiles',
+  })
+  @IsOptional()
+  @IsBoolean()
+  autorizaParticipacionAdultoResponsable?: boolean;
 }
