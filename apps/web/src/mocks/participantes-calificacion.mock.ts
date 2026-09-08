@@ -34,7 +34,7 @@ export const PARTICIPANTES_CALIFICACION: ParticipanteCalificacion[] = [
   {
     id: 'p-04',
     nombreArtistico: 'Dúo Sayariy',
-    categoria: 'Dúo',
+    categoria: 'Dúo Vocal Instrumental',
     departamento: 'Oruro',
     imagen: '/famosas-que-le-sacaron-provecho-al-2020-1107404.jpg',
     obra: { titulo: 'Diablada del Alma', ritmo: 'Diablada', autor: 'Colectiva', duracionSegundos: 284 },
@@ -44,7 +44,7 @@ export const PARTICIPANTES_CALIFICACION: ParticipanteCalificacion[] = [
   {
     id: 'p-05',
     nombreArtistico: 'Rayo de Plata',
-    categoria: 'Solista Instrumental Armónico/Melódico',
+    categoria: 'Solista Instrumental – Armónico',
     departamento: 'Potosí',
     imagen: '/fotos-de-famosos-en-blanco-y-negro-0102.jpg',
     obra: { titulo: 'Vientos de Potosí', ritmo: 'Huayño', autor: 'Tradicional', duracionSegundos: 232 },
