@@ -3,13 +3,14 @@
 import type { ChangeEvent } from 'react';
 import Image from 'next/image';
 import { ArrowRight, Lock, ShieldCheck } from 'lucide-react';
-import { CRITERIOS_EVALUACION_JURADO, PUNTAJE_MAXIMO_TOTAL } from '@/mocks';
-import type { ClaveCriterioEvaluacion, ParticipanteCalificacion, PuntajesCriterios } from '@/types';
+import { PUNTAJE_MAXIMO_TOTAL } from '@/mocks';
+import type { ClaveCriterioEvaluacion, CriterioEvaluacionDefinicion, ParticipanteCalificacion, PuntajesCriterios } from '@/types';
 
 interface PlanillaCalificacionProps {
   participante: ParticipanteCalificacion;
   numero: number;
   totalParticipantes: number;
+  criterios: CriterioEvaluacionDefinicion[];
   puntajes: PuntajesCriterios;
   total: number;
   criteriosRespondidos: number;
@@ -23,6 +24,7 @@ export function PlanillaCalificacion({
   participante,
   numero,
   totalParticipantes,
+  criterios,
   puntajes,
   total,
   criteriosRespondidos,
@@ -78,22 +80,25 @@ export function PlanillaCalificacion({
             Origen: <span className="text-[var(--vt-text-primary)]">{participante.departamento}</span> · Tema:{' '}
             <span className="text-[var(--vt-text-primary)]">&ldquo;{participante.obra.titulo}&rdquo;</span>
           </p>
-          <span className="vt-badge mt-1 font-mono text-[0.6rem]">ID · {participante.id.toUpperCase()}</span>
+          <span className="vt-badge mt-1 font-mono text-[0.6rem]">Categoría · {participante.categoria}</span>
         </div>
 
         <div>
           <div className="flex flex-wrap items-end justify-between gap-2">
             <div>
               <h3 className="text-lg font-extrabold text-[var(--vt-text-primary)]">Rúbrica de calificación</h3>
-              <p className="text-xs text-[var(--vt-text-secondary)]">Asigne un puntaje dentro del rango de cada criterio.</p>
+              <p className="text-xs text-[var(--vt-text-secondary)]">
+                Baremo oficial de la categoría &ldquo;{participante.categoria}&rdquo;: asigne un puntaje dentro del rango de
+                cada criterio.
+              </p>
             </div>
             <span className="text-xs font-bold tabular-nums text-[var(--vt-mustard-deep)]">
-              {criteriosRespondidos} de {CRITERIOS_EVALUACION_JURADO.length} respondidos
+              {criteriosRespondidos} de {criterios.length} respondidos
             </span>
           </div>
 
           <div className="mt-4 flex flex-col gap-4">
-            {CRITERIOS_EVALUACION_JURADO.map((criterio, indice) => {
+            {criterios.map((criterio, indice) => {
               const valor = puntajes[criterio.clave] ?? 0;
               const inputId = `${participante.id}-${criterio.clave}`;
               const porcentaje = Math.round((criterio.puntajeMaximo / PUNTAJE_MAXIMO_TOTAL) * 100);
@@ -167,7 +172,7 @@ export function PlanillaCalificacion({
         <div className="flex items-center justify-between border-y py-3 text-xs" style={{ borderColor: 'var(--vt-border)' }}>
           <span className="font-semibold text-[var(--vt-text-muted)]">Criterios evaluados</span>
           <span className="font-bold tabular-nums text-[var(--vt-text-primary)]">
-            {criteriosRespondidos}/{CRITERIOS_EVALUACION_JURADO.length}
+            {criteriosRespondidos}/{criterios.length}
           </span>
         </div>
 

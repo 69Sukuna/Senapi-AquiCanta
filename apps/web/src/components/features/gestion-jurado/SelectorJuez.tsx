@@ -1,6 +1,7 @@
 'use client';
 
-import { Mic2 } from 'lucide-react';
+import Image from 'next/image';
+import { Star } from 'lucide-react';
 import type { JuezPerfil } from '@/types';
 
 interface SelectorJuezProps {
@@ -32,9 +33,25 @@ export function SelectorJuez({ jueces, juezActivoId, onSeleccionar, progreso, to
                 : undefined
             }
           >
-            <span className="flex items-center gap-2 text-sm font-bold text-[var(--vt-text-primary)]">
-              <Mic2 size={14} aria-hidden="true" /> {juez.nombre}
-            </span>
+            <div
+              className="relative h-16 w-16 shrink-0 overflow-hidden rounded-full"
+              style={{
+                background: 'var(--vt-gradient-brand)',
+                boxShadow: activo ? '0 0 0 3px var(--vt-border-active)' : '0 0 0 2px var(--vt-border)',
+              }}
+            >
+              <Image src={juez.fotoUrl} alt={juez.nombre} fill sizes="64px" className="object-cover" />
+              {juez.esPortavoz && (
+                <span
+                  className="absolute -right-0.5 -bottom-0.5 flex h-5 w-5 items-center justify-center rounded-full"
+                  style={{ background: 'var(--vt-mustard-deep)' }}
+                  title="Portavoz del jurado"
+                >
+                  <Star size={11} className="fill-current text-white" aria-hidden="true" />
+                </span>
+              )}
+            </div>
+            <span className="text-sm font-bold text-[var(--vt-text-primary)]">{juez.nombre}</span>
             {juez.esPortavoz && <span className="vt-badge text-[0.6rem]">Portavoz</span>}
             <p className="text-xs leading-snug text-[var(--vt-text-secondary)]">{juez.especialidad}</p>
             <div className="mt-1.5 flex w-full items-center gap-2">

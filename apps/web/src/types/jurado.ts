@@ -1,12 +1,7 @@
-export type ClaveCriterioEvaluacion =
-  | 'afinacion'
-  | 'tecnicaVocal'
-  | 'ritmo'
-  | 'calidadVoz'
-  | 'interpretacion'
-  | 'dominioEscenico'
-  | 'diccion'
-  | 'musicalidad';
+// Cada categoría del concurso tiene su propio baremo (Guía Explicativa §5),
+// así que la clave del criterio ya no es una unión fija: depende de la
+// categoría que se esté calificando.
+export type ClaveCriterioEvaluacion = string;
 
 export interface CriterioEvaluacionDefinicion {
   clave: ClaveCriterioEvaluacion;
@@ -20,6 +15,7 @@ export interface JuezPerfil {
   nombre: string;
   especialidad: string;
   esPortavoz: boolean;
+  fotoUrl: string;
 }
 
 // Puntaje parcial: solo contiene las claves de los criterios ya calificados por el jurado.
