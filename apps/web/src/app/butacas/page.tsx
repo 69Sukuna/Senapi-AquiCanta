@@ -23,6 +23,11 @@ import {
   type Butaca,
   type NivelPrecio,
 } from '@/lib/asientos';
+import BannerFechasClave from '@/components/BannerFechasClave';
+import HeroButacas from './components/HeroButacas';
+import BannerReservaLugares from './components/BannerReservaLugares';
+import FaqButacas from './components/FaqButacas';
+import ComoLlegarButacas from './components/ComoLlegarButacas';
 
 // El mapa usa trigonometría (Math.sin/cos) para ubicar cada butaca; el motor
 // V8 del server (Node) y el del browser pueden redondear el último bit
@@ -159,32 +164,40 @@ export default function ButacasPage() {
   };
 
   return (
-    <div className="flex h-dvh flex-col lg:h-[calc(100dvh-88px)]">
-      <div className="flex flex-wrap items-center justify-between gap-3 px-4 pb-3 pt-4 sm:px-6">
+    <main>
+      <HeroButacas />
+      <BannerReservaLugares />
+
+      <div className="container flex h-[85vh] min-h-[560px] flex-col">
+      <div className="flex flex-wrap items-center justify-between gap-3 pb-3">
         <div>
-          <span className="badge badge-gold w-fit mb-2">
+          <span className="font-barlow inline-flex w-fit items-center gap-2 rounded-full border border-(--brand-negro)/20 bg-(--brand-crema) px-4! py-1.5! text-xs font-semibold tracking-wide text-(--brand-cafe) uppercase mb-2!">
             <Armchair size={14} /> Teatro Internacional de Oruro
           </span>
-          <h1 className="text-2xl md:text-3xl font-extrabold text-(--text-primary)">
-            Butacas
+          <h1 className="font-bakbak text-3xl md:text-4xl font-black text-(--brand-negro)">
+            BUTACAS
           </h1>
+          <p className="font-barlow mt-1! max-w-xl text-sm text-(--brand-cafe)">
+            Toque un sector y elija los asientos de su preferencia. No olvide que solo puede reservar un
+            máximo de {MAX_BUTACAS} asientos.
+          </p>
         </div>
 
         {pestana === 'reserva' && (
-          <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-(--text-secondary)">
+          <div className="font-barlow flex flex-wrap gap-x-4 gap-y-1 text-xs text-(--brand-cafe)">
             <span className="inline-flex items-center gap-1.5">
               <span className="inline-block h-2.5 w-2.5 rounded-sm" style={{ backgroundColor: COLOR_SELECCIONADO }} />
               Seleccionado
             </span>
             <span className="inline-flex items-center gap-1.5">
-              <span className="inline-block h-2.5 w-2.5 rounded-sm border border-(--border)" style={{ backgroundColor: COLOR_OCUPADO }} />
+              <span className="inline-block h-2.5 w-2.5 rounded-sm border border-(--brand-negro)/20" style={{ backgroundColor: COLOR_OCUPADO }} />
               Ocupado
             </span>
           </div>
         )}
       </div>
 
-      <div className="flex gap-1.5 px-4 pb-3 sm:px-6">
+      <div className="flex gap-1.5 pb-3">
         {(
           [
             { id: 'reserva', label: 'Reserva de Asientos', icon: Armchair },
@@ -195,16 +208,20 @@ export default function ButacasPage() {
             key={id}
             type="button"
             onClick={() => setPestana(id)}
-            className={`flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-semibold transition-all duration-200 ${
+            className={`font-barlow flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold transition-all duration-200 ${
               pestana === id
-                ? 'border-[#1e63b8]/25 bg-[#1e63b8]/10 text-[#164a8c]'
-                : 'border-transparent text-(--text-secondary) hover:bg-[#1e63b8]/5 hover:text-(--text-primary)'
+                ? 'border-(--brand-negro) bg-(--brand-negro) text-white'
+                : 'border-(--brand-negro)/20 text-(--brand-cafe) hover:border-(--brand-negro)/40'
             }`}
           >
             <Icon size={15} />
             {label}
             {id === 'mis-asientos' && reservas.length > 0 && (
-              <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-[#1e63b8]/15 px-1 text-[11px] font-bold text-[#164a8c]">
+              <span
+                className={`flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-[11px] font-bold ${
+                  pestana === id ? 'bg-white/15 text-white' : 'bg-(--brand-negro)/10 text-(--brand-negro)'
+                }`}
+              >
                 {reservas.length}
               </span>
             )}
@@ -349,7 +366,12 @@ export default function ButacasPage() {
       {modalAbierto && (
         <ModalReserva seleccionList={seleccionList} onClose={() => setModalAbierto(false)} onConfirmar={confirmarReserva} />
       )}
-    </div>
+      </div>
+
+      <FaqButacas />
+      <ComoLlegarButacas />
+      <BannerFechasClave />
+    </main>
   );
 }
 
