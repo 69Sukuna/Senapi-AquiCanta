@@ -157,6 +157,12 @@ interface DefinicionZonaAsientos {
    * orientándose hacia el escenario según su posición en el ancho de la
    * fila — para bloques rectos donde las filas no están en abanico. */
   recto?: boolean;
+  /** Si es true, todas las butacas del bloque (todas las filas y columnas)
+   * comparten un único ángulo, tomado del centro de la primera fila (la más
+   * cercana al escenario), en vez de ir variando de izquierda a derecha en
+   * cada fila — para bloques donde el plano real muestra las filas rectas
+   * entre sí, sin abanicarse columna a columna. */
+  anguloUniforme?: boolean;
 }
 
 function lerp(a: Punto, b: Punto, t: number): Punto {
@@ -173,6 +179,18 @@ function restar(a: Punto, b: Punto): Punto {
 // falta entre ese eje y v.
 function anguloHaciaEscenario(v: Punto): number {
   return (Math.atan2(v[1], v[0]) * 180) / Math.PI - 90;
+}
+
+// Perpendicular de la dirección de una fila (de punta a punta) que mira
+// hacia el escenario en vez de hacia atrás — hay 2 perpendiculares posibles
+// (90° para cada lado), se elige la que apunta más parecido a `referencia`
+// (el "adelante" real de esa zona) para no terminar mirando al revés.
+function perpendicularHaciaAdelante(direccionFila: Punto, referencia: Punto): Punto {
+  const perpA: Punto = [-direccionFila[1], direccionFila[0]];
+  const perpB: Punto = [direccionFila[1], -direccionFila[0]];
+  const dotA = perpA[0] * referencia[0] + perpA[1] * referencia[1];
+  const dotB = perpB[0] * referencia[0] + perpB[1] * referencia[1];
+  return dotA >= dotB ? perpA : perpB;
 }
 
 function crearButaca(
@@ -212,6 +230,11 @@ function generarButacasTrapecio(def: DefinicionZonaAsientos): Butaca[] {
   const adelanteIzq = restar(bottomLeft, topLeft);
   const adelanteDer = restar(bottomRight, topRight);
 
+  // Con anguloUniforme, se fija un único ángulo para todo el bloque a partir
+  // del centro de la primera fila, en vez de recalcularlo por columna (s) en
+  // cada fila — así todas las butacas quedan alineadas entre sí.
+  const anguloBloque = def.anguloUniforme ? anguloHaciaEscenario(lerp(adelanteIzq, adelanteDer, 0.5)) : null;
+
   def.filas.forEach((fila, i) => {
     const t = (i + 0.5) / n;
     const left = lerp(bottomLeft, topLeft, t);
@@ -222,7 +245,7 @@ function generarButacasTrapecio(def: DefinicionZonaAsientos): Butaca[] {
     for (let j = 0; j < cantidad; j++) {
       const s = (j + 0.5) / cantidad;
       const numero = fila.inicio + j;
-      const angulo = def.recto ? 0 : anguloHaciaEscenario(lerp(adelanteIzq, adelanteDer, s));
+      const angulo = def.recto ? 0 : anguloBloque ?? anguloHaciaEscenario(lerp(adelanteIzq, adelanteDer, s));
       butacas.push(
         crearButaca(def.sectorId, def.sectorLabel, def.nivel, filaNum, numero, lerp(left, right, s), angulo, fila.letra)
       );
@@ -304,8 +327,8 @@ function generarButacasCurva(def: DefinicionZonaCurva): Butaca[] {
 // Para zonas donde el quiebre no está en el borde cercano/lejano sino en uno
 // de los lados (ej. la punta de una cuña en el extremo del abanico, como
 // D1 o D5): el lado con quiebre se arma en 2 tramos según la altura (y)
-// real del vértice de quiebre; el otro lado es un tramo recto normal.
-// Exactamente uno de quiebreIzquierdo/quiebreDerecho debe estar presente.
+// real del vértice de quiebre; el otro lado es un tramo recto normal (o
+// también con su propio quiebre, si ambos lados lo tienen).
 interface DefinicionZonaLadoCurvo {
   sectorId: string;
   sectorLabel: string;
@@ -321,15 +344,27 @@ interface DefinicionZonaLadoCurvo {
     quiebreDerecho?: Punto;
   };
   filas: DefinicionFilaAsientos[];
+  /** Igual que en DefinicionZonaAsientos: un único ángulo para todo el
+   * bloque, tomado de la primera fila, en vez de variar por columna. */
+  anguloUniforme?: boolean;
 }
 
+// Punto y dirección "hacia adelante" en un lado del contorno, a un % (t) del
+// tramo de ESE lado — no una altura física compartida entre izquierda y
+// derecha: cuando el frente/fondo de cada lado están a alturas bastante
+// distintas (como en D7), compartir la altura tuerce la fila entera en
+// diagonal en vez de seguir la inclinación real de la cuña.
 function ladoConQuiebre(
   front: Punto,
   back: Punto,
-  quiebre: Punto,
-  t: number
+  quiebre: Punto | undefined,
+  t: number,
+  quiebreTForzado?: number
 ): { punto: Punto; adelante: Punto } {
-  const quiebreT = (front[1] - quiebre[1]) / (front[1] - back[1]);
+  if (!quiebre) {
+    return { punto: lerp(front, back, t), adelante: restar(front, back) };
+  }
+  const quiebreT = quiebreTForzado ?? (front[1] - quiebre[1]) / (front[1] - back[1]);
   if (t <= quiebreT) {
     return { punto: lerp(front, quiebre, t / quiebreT), adelante: restar(front, quiebre) };
   }
@@ -341,15 +376,33 @@ function generarButacasLadoCurvo(def: DefinicionZonaLadoCurvo): Butaca[] {
   const n = def.filas.length;
   const butacas: Butaca[] = [];
 
+  // Cuando ambos lados tienen quiebre, cada uno cambiaría de tramo en una
+  // fila distinta (según la altura real de su propio vértice) — eso tuerce
+  // la fila que queda justo en el medio. Se promedian ambos umbrales para
+  // que los dos lados cambien de tramo juntos, en la misma fila.
+  const quiebreTCompartido =
+    quiebreIzquierdo && quiebreDerecho
+      ? ((frontLeft[1] - quiebreIzquierdo[1]) / (frontLeft[1] - backLeft[1]) +
+          (frontRight[1] - quiebreDerecho[1]) / (frontRight[1] - backRight[1])) /
+        2
+      : undefined;
+
   def.filas.forEach((fila, i) => {
     const t = (i + 0.5) / n;
 
-    const ladoIzq = quiebreIzquierdo
-      ? ladoConQuiebre(frontLeft, backLeft, quiebreIzquierdo, t)
-      : { punto: lerp(frontLeft, backLeft, t), adelante: restar(frontLeft, backLeft) };
-    const ladoDer = quiebreDerecho
-      ? ladoConQuiebre(frontRight, backRight, quiebreDerecho, t)
-      : { punto: lerp(frontRight, backRight, t), adelante: restar(frontRight, backRight) };
+    const ladoIzq = ladoConQuiebre(frontLeft, backLeft, quiebreIzquierdo, t, quiebreTCompartido);
+    const ladoDer = ladoConQuiebre(frontRight, backRight, quiebreDerecho, t, quiebreTCompartido);
+
+    // Con anguloUniforme, toda la fila comparte un solo ángulo — el de la
+    // dirección real de esa fila (de punta a punta) — en vez de recalcularlo
+    // por columna (s). Esto evita el abanico dentro de la fila sin forzar a
+    // todo el bloque al ángulo de una sola fila: cada fila sigue su propia
+    // orientación real, que es lo que de verdad varía sector a sector.
+    const anguloFila = def.anguloUniforme
+      ? anguloHaciaEscenario(
+          perpendicularHaciaAdelante(restar(ladoDer.punto, ladoIzq.punto), lerp(ladoIzq.adelante, ladoDer.adelante, 0.5))
+        )
+      : null;
 
     const cantidad = fila.fin - fila.inicio + 1;
     const filaNum = i + 1;
@@ -357,7 +410,7 @@ function generarButacasLadoCurvo(def: DefinicionZonaLadoCurvo): Butaca[] {
     for (let j = 0; j < cantidad; j++) {
       const s = (j + 0.5) / cantidad;
       const numero = fila.inicio + j;
-      const angulo = anguloHaciaEscenario(lerp(ladoIzq.adelante, ladoDer.adelante, s));
+      const angulo = anguloFila ?? anguloHaciaEscenario(lerp(ladoIzq.adelante, ladoDer.adelante, s));
       butacas.push(
         crearButaca(
           def.sectorId,
@@ -922,18 +975,23 @@ const BUTACAS_D6 = generarButacasLadoCurvo({
 });
 
 // D7 reutiliza las letras DD..LL (acá sí tiene la fila LL completa) y
-// continúa la numeración desde D6. El plano real muestra esta zona como una
-// cuña pareja (filas en abanico regular), así que se usan sus 4 esquinas
-// principales en vez de los quiebres menores del trazado.
-const BUTACAS_D7 = generarButacasTrapecio({
+// continúa la numeración desde D6. La forma real (ver ZONAS) es un polígono
+// de 7 puntos, no un trapecio de 4 esquinas: el lado izquierdo se angosta y
+// el derecho se abulta respecto a la línea recta entre sus esquinas — usar
+// solo las 4 esquinas principales dejaba butacas del lado izquierdo fuera
+// del polígono real, así que acá se usan también esos 2 quiebres.
+const BUTACAS_D7 = generarButacasLadoCurvo({
   sectorId: 'D7',
   sectorLabel: 'D7',
   nivel: 'general',
+  anguloUniforme: true,
   esquinas: {
-    bottomLeft: [667.47, 130.89],
-    bottomRight: [727.58, 156.95],
-    topLeft: [694.46, 51.16],
-    topRight: [747.51, 52.39],
+    frontLeft: [667.47, 130.89],
+    frontRight: [727.58, 156.95],
+    backLeft: [694.46, 51.16],
+    backRight: [747.51, 52.39],
+    quiebreIzquierdo: [689.24, 88.88],
+    quiebreDerecho: [744.75, 115.56],
   },
   filas: [
     { inicio: 11, fin: 20, letra: 'DD' },
@@ -950,12 +1008,14 @@ const BUTACAS_D7 = generarButacasTrapecio({
 
 // D8 reutiliza las mismas letras y continúa desde D7. Su forma real se
 // abulta hacia afuera en el lado derecho (2 vértices, aproximados como uno
-// solo a mitad de camino entre ambos) — sin esto el bloque de butacas deja
-// un hueco vacío contra el borde real de la zona.
+// solo a mitad de camino entre ambos) — se usa ese quiebre para llenar hasta
+// el borde real, y puntoPorAltura reparte las filas por altura física (no
+// por tramo) para que el espaciado entre filas quede parejo pese al quiebre.
 const BUTACAS_D8 = generarButacasLadoCurvo({
   sectorId: 'D8',
   sectorLabel: 'D8',
   nivel: 'general',
+  anguloUniforme: true,
   esquinas: {
     frontLeft: [738.39, 160.32],
     frontRight: [793.9, 182.43],

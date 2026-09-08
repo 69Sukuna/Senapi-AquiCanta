@@ -1,7 +1,9 @@
 {
   "permissions": {
     "allow": [
-      "WebSearch"
+      "WebSearch",
+      "Bash(powershell -Command 'Get-NetTCPConnection -LocalPort 3000 -State Listen -ErrorAction SilentlyContinue | Stop-Process -Id {$_.OwningProcess} -Force')",
+      "Bash(nohup bun run dev)"
     ]
   }
 }
