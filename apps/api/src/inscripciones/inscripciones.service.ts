@@ -1,14 +1,27 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { EstadoInscripcion } from '@repo/database';
 import { PrismaService } from '../prisma/prisma.service';
 import { CrearInscripcionDto } from './dto/crear-inscripcion.dto';
-import { cumpleRangoEdad } from './edad.util';
+import { cumpleRangoEdad, edadEnFecha } from './edad.util';
+import { LadoFotoCi, ObjetivoFotoDto, TipoObjetivoFoto } from './dto/subir-fotos.dto';
+import { STORAGE_SERVICE, type StorageService } from '../storage/storage.interface';
 
 export type TipoInscripcion = 'CANTANTE' | 'GRUPO';
 
+// No dependemos de los tipos de Multer/Express (no está instalado
+// @types/multer) — solo se necesita esto de cada archivo subido.
+interface ArchivoSubido {
+  buffer: Buffer;
+  mimetype: string;
+  originalname: string;
+}
+
 @Injectable()
 export class InscripcionesService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    @Inject(STORAGE_SERVICE) private readonly storageService: StorageService,
+  ) {}
 
   async crear(dto: CrearInscripcionDto) {
     const categoria = await this.prisma.categoria.findUnique({ where: { nombre: dto.categoria } });
@@ -49,18 +62,32 @@ export class InscripcionesService {
       }
     }
 
+    // No alcanza con el flag fijo de la categoría: la documentación de Ñusta
+    // (16-25 años) dice literal "En caso de ser menor de edad, una carta de
+    // autorización... *Anexo 4" — una postulante de 16-17 es menor (mayoría
+    // de edad en Bolivia: 18 años) aunque Ñusta no esté marcada como
+    // categoría "infantil". Se detecta por la fecha de nacimiento del único
+    // integrante en categorías individuales (en grupales queda pendiente).
+    const esIndividual = categoria.integrantesMax <= 1;
+    const postulante = dto.integrantes[0];
+    const postulanteEsMenorDeEdad =
+      esIndividual && !!postulante?.fechaNacimiento && edadEnFecha(new Date(postulante.fechaNacimiento)) < 18;
+    const requiereAdultoResponsable = categoria.requiereAdultoResponsable || postulanteEsMenorDeEdad;
+
     if (
-      categoria.requiereAdultoResponsable &&
+      requiereAdultoResponsable &&
       (!dto.adultoResponsableNombre?.trim() ||
         !dto.adultoResponsableCiNumero?.trim() ||
         !dto.adultoResponsableCelular?.trim())
     ) {
       throw new BadRequestException(
-        `La categoría "${dto.categoria}" exige nombre, C.I. y celular de un adulto responsable (padre, madre o tutor legal)`,
+        `La categoría "${dto.categoria}" exige nombre, C.I. y celular de un adulto responsable (padre, madre o tutor legal)${
+          postulanteEsMenorDeEdad && !categoria.requiereAdultoResponsable ? ' porque el/la postulante es menor de edad' : ''
+        }`,
       );
     }
 
-    if (categoria.requiereAdultoResponsable && !dto.autorizaParticipacionAdultoResponsable) {
+    if (requiereAdultoResponsable && !dto.autorizaParticipacionAdultoResponsable) {
       throw new BadRequestException(
         `La categoría "${dto.categoria}" exige la autorización del adulto responsable para la participación del o la menor`,
       );
@@ -182,5 +209,97 @@ export class InscripcionesService {
       throw new NotFoundException(`Grupo ${id} no encontrado`);
     }
     return this.prisma.grupo.update({ where: { id }, data: { estado } });
+  }
+
+  // Fotos del carnet de identidad (anverso/reverso) de cada participante —
+  // subida separada del POST /inscripciones principal a propósito: para
+  // cuando esto se llama, Prisma ya generó los IDs reales de cada
+  // Acompanante/GrupoIntegrante, así que cada foto puede apuntar a su
+  // registro exacto. Anti-fraude (CAPTCHA, C.I. duplicado, rate limit)
+  // queda pendiente para una pasada aparte, no entra acá todavía.
+  async subirFotos(tipo: string, id: string, archivos: ArchivoSubido[], objetivos: ObjetivoFotoDto[]) {
+    if (archivos.length !== objetivos.length) {
+      throw new BadRequestException('La cantidad de archivos no coincide con la cantidad de objetivos');
+    }
+
+    const tipoNormalizado = tipo.toUpperCase();
+    if (tipoNormalizado !== 'CANTANTE' && tipoNormalizado !== 'GRUPO') {
+      throw new BadRequestException(`Tipo de inscripción inválido: "${tipo}" (use CANTANTE o GRUPO)`);
+    }
+
+    if (tipoNormalizado === 'CANTANTE') {
+      const cantante = await this.prisma.cantante.findUnique({ where: { id }, include: { acompanantes: true } });
+      if (!cantante) {
+        throw new NotFoundException(`Cantante ${id} no encontrado`);
+      }
+
+      let guardadas = 0;
+      for (let i = 0; i < archivos.length; i++) {
+        const objetivo = objetivos[i];
+        const archivo = archivos[i];
+
+        if (objetivo.tipo === TipoObjetivoFoto.POSTULANTE) {
+          const url = await this.storageService.guardarArchivo(archivo.buffer, archivo.originalname, archivo.mimetype);
+          await this.prisma.cantante.update({
+            where: { id },
+            data: objetivo.lado === LadoFotoCi.REVERSO ? { fotoCiReversoUrl: url } : { fotoCiAnversoUrl: url },
+          });
+        } else if (objetivo.tipo === TipoObjetivoFoto.ADULTO_RESPONSABLE) {
+          const url = await this.storageService.guardarArchivo(archivo.buffer, archivo.originalname, archivo.mimetype);
+          await this.prisma.cantante.update({
+            where: { id },
+            data:
+              objetivo.lado === LadoFotoCi.REVERSO
+                ? { adultoResponsableFotoCiReversoUrl: url }
+                : { adultoResponsableFotoCiAnversoUrl: url },
+          });
+        } else if (objetivo.tipo === TipoObjetivoFoto.ACOMPANANTE) {
+          if (!objetivo.id || !cantante.acompanantes.some((a) => a.id === objetivo.id)) {
+            throw new BadRequestException(`El acompañante "${objetivo.id}" no pertenece a este postulante`);
+          }
+          const url = await this.storageService.guardarArchivo(archivo.buffer, archivo.originalname, archivo.mimetype);
+          await this.prisma.acompanante.update({
+            where: { id: objetivo.id },
+            data: objetivo.lado === LadoFotoCi.REVERSO ? { fotoCiReversoUrl: url } : { fotoCiAnversoUrl: url },
+          });
+        } else {
+          throw new BadRequestException(`El objetivo "${objetivo.tipo}" no es válido para un Cantante`);
+        }
+        guardadas++;
+      }
+      return { guardadas };
+    }
+
+    const grupo = await this.prisma.grupo.findUnique({ where: { id }, include: { integrantes: true } });
+    if (!grupo) {
+      throw new NotFoundException(`Grupo ${id} no encontrado`);
+    }
+
+    let guardadas = 0;
+    for (let i = 0; i < archivos.length; i++) {
+      const objetivo = objetivos[i];
+      const archivo = archivos[i];
+
+      if (objetivo.tipo === TipoObjetivoFoto.INTEGRANTE) {
+        if (!objetivo.id || !grupo.integrantes.some((integrante) => integrante.id === objetivo.id)) {
+          throw new BadRequestException(`El integrante "${objetivo.id}" no pertenece a este grupo`);
+        }
+        const url = await this.storageService.guardarArchivo(archivo.buffer, archivo.originalname, archivo.mimetype);
+        await this.prisma.grupoIntegrante.update({
+          where: { id: objetivo.id },
+          data: objetivo.lado === LadoFotoCi.REVERSO ? { fotoCiReversoUrl: url } : { fotoCiAnversoUrl: url },
+        });
+      } else if (objetivo.tipo === TipoObjetivoFoto.GRUPO_CARNETS_BULK) {
+        const url = await this.storageService.guardarArchivo(archivo.buffer, archivo.originalname, archivo.mimetype);
+        await this.prisma.grupo.update({
+          where: { id },
+          data: { fotosCarnetsGrupalUrls: { push: url } },
+        });
+      } else {
+        throw new BadRequestException(`El objetivo "${objetivo.tipo}" no es válido para un Grupo`);
+      }
+      guardadas++;
+    }
+    return { guardadas };
   }
 }

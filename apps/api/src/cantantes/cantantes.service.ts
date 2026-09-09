@@ -2,8 +2,11 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 
 // Solo "datos generales" (ver Anexo 1): nunca se exponen acá ciNumero,
-// ciExtension, fechaNacimiento, whatsapp, direccion, celular1, celular2 —
-// esos son privados y solo se ven en /inscripciones (panel de administración).
+// ciExtension, fechaNacimiento, whatsapp, direccion, celular1, celular2,
+// ni las fotos del carnet (fotoCiAnversoUrl/fotoCiReversoUrl,
+// adultoResponsableFotoCiAnversoUrl/ReversoUrl) — esos son privados y solo
+// se ven en /inscripciones (panel de administración). NO agregar esas
+// columnas acá.
 const SELECT_PUBLICO = {
   id: true,
   nombre: true,
@@ -17,6 +20,7 @@ const SELECT_PUBLICO = {
   fotoUrl: true,
   categoriaId: true,
   categoria: true,
+  // NO agregar fotoCiAnversoUrl/fotoCiReversoUrl del acompañante acá.
   acompanantes: {
     select: {
       id: true,

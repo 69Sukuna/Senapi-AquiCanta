@@ -20,11 +20,14 @@ import {
   ArrowRight,
   FileDown,
   FileText,
+  Camera,
+  X,
+  Paperclip,
 } from 'lucide-react';
 import { generarInscripcionDocx } from '@/lib/generarInscripcionDocx';
 import { GRUPOS_CATEGORIAS, obtenerCategoriaInfo } from '@/lib/categorias';
 import { DEPARTAMENTOS, type DepartamentoValue } from '@/lib/departamentos';
-import { cumpleRangoEdad } from '@/lib/edad';
+import { cumpleRangoEdad, edadEnFecha } from '@/lib/edad';
 import { panelClass, TelonDecor } from './ui';
 
 // Misma agrupación que /categorias (fuente única en lib/categorias.ts).
@@ -42,6 +45,10 @@ function codigoDepartamento(label: string): DepartamentoValue | null {
 
 // TODO: pegar acá el link de Drive del PDF de la convocatoria cuando esté listo.
 const CONVOCATORIA_URL = '';
+// TODO: pegar acá la fecha real de la preselección departamental cuando esté
+// definida (ej. "15 de octubre de 2026"). Mientras esté vacío, el modal de
+// aviso usa una frase genérica en vez de una fecha inventada.
+const FECHA_PRESELECCION = '';
 
 // Íconos propios (public/images/iconos/IACB-16 a 20.svg) para el stepper.
 // El SVG original trae el color fijo (fill:gray vía una clase interna) —
@@ -118,7 +125,28 @@ const PASOS = [
   { titulo: 'Declaración', icon: IconoDeclaracion },
 ] as const;
 
-interface Integrante {
+// Foto del carnet de identidad de una persona — se pide anverso y reverso
+// (coincide con "2 fotocopias de C.I." de la convocatoria). Se guarda el
+// File crudo (para subirlo recién después de crear la inscripción, ver
+// enviar()) más una URL de previsualización (URL.createObjectURL).
+interface FotosCarnet {
+  fotoCiAnverso: File | null;
+  fotoCiAnversoPreviewUrl: string;
+  fotoCiReverso: File | null;
+  fotoCiReversoPreviewUrl: string;
+}
+
+function crearFotosCarnetVacias(): FotosCarnet {
+  return { fotoCiAnverso: null, fotoCiAnversoPreviewUrl: '', fotoCiReverso: null, fotoCiReversoPreviewUrl: '' };
+}
+
+type LadoFoto = 'anverso' | 'reverso';
+
+function revocarSiExiste(url: string) {
+  if (url) URL.revokeObjectURL(url);
+}
+
+interface Integrante extends FotosCarnet {
   id: string;
   nombre: string;
   ciNumero: string;
@@ -143,12 +171,13 @@ function crearIntegrante(): Integrante {
     whatsapp: '',
     direccion: '',
     instrumento: '',
+    ...crearFotosCarnetVacias(),
   };
 }
 
 // Músico de acompañamiento (categorías individuales que lo permiten) — la
 // convocatoria solo pide su nombre, C.I. e instrumento, nada más.
-interface Acompanante {
+interface Acompanante extends FotosCarnet {
   id: string;
   nombre: string;
   ciNumero: string;
@@ -157,7 +186,7 @@ interface Acompanante {
 }
 
 function crearAcompanante(): Acompanante {
-  return { id: crearId(), nombre: '', ciNumero: '', ciExtension: '', instrumento: '' };
+  return { id: crearId(), nombre: '', ciNumero: '', ciExtension: '', instrumento: '', ...crearFotosCarnetVacias() };
 }
 
 // El WhatsApp/celular solo debe contener dígitos.
@@ -220,6 +249,92 @@ function Campo({
   );
 }
 
+function RecuadroFoto({
+  lado,
+  previewUrl,
+  onCambiar,
+  onQuitar,
+}: {
+  lado: LadoFoto;
+  previewUrl: string;
+  onCambiar: (file: File) => void;
+  onQuitar: () => void;
+}) {
+  const etiqueta = lado === 'anverso' ? 'Anverso' : 'Reverso';
+  return (
+    <label className="relative flex aspect-3/2 cursor-pointer flex-col items-center justify-center gap-1 overflow-hidden rounded-lg border border-dashed border-(--border) bg-(--bg-primary) text-center transition-colors hover:border-(--brand-cafe)/50">
+      {previewUrl ? (
+        <>
+          {/* eslint-disable-next-line @next/next/no-img-element -- preview de un File local (blob:), no un asset del proyecto */}
+          <img src={previewUrl} alt={etiqueta} className="absolute inset-0 h-full w-full object-cover" />
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              onQuitar();
+            }}
+            aria-label={`Quitar foto ${etiqueta.toLowerCase()}`}
+            className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-black/60 text-white cursor-pointer"
+          >
+            <X size={12} />
+          </button>
+        </>
+      ) : (
+        <>
+          <Camera size={18} className="text-(--text-muted)" />
+          <span className="text-[11px] font-semibold text-(--text-muted)">{etiqueta}</span>
+        </>
+      )}
+      {/* Sin el atributo `capture`: en el celular esto deja elegir entre
+          sacar una foto nueva o subir una que ya está en la galería, en vez
+          de forzar la cámara directamente. */}
+      <input
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) onCambiar(file);
+          e.target.value = '';
+        }}
+      />
+    </label>
+  );
+}
+
+function CampoFotoCarnet({
+  fotos,
+  onCambiar,
+  onQuitar,
+}: {
+  fotos: FotosCarnet;
+  onCambiar: (lado: LadoFoto, file: File) => void;
+  onQuitar: (lado: LadoFoto) => void;
+}) {
+  return (
+    <div className="md:col-span-2">
+      <label className={labelClass}>
+        Foto del carnet de identidad{' '}
+        <span className="font-normal text-(--text-muted)">(recomendado)</span>
+      </label>
+      <div className="grid grid-cols-2 gap-3">
+        <RecuadroFoto
+          lado="anverso"
+          previewUrl={fotos.fotoCiAnversoPreviewUrl}
+          onCambiar={(file) => onCambiar('anverso', file)}
+          onQuitar={() => onQuitar('anverso')}
+        />
+        <RecuadroFoto
+          lado="reverso"
+          previewUrl={fotos.fotoCiReversoPreviewUrl}
+          onCambiar={(file) => onCambiar('reverso', file)}
+          onQuitar={() => onQuitar('reverso')}
+        />
+      </div>
+    </div>
+  );
+}
+
 export default function FormularioInscripcion() {
   // Ancla para "volver arriba" — apunta al inicio de ESTE componente, no al
   // top de la página entera, porque arriba del formulario ahora hay
@@ -257,6 +372,18 @@ export default function FormularioInscripcion() {
   // Aceptación digital de los términos del Anexo 4 (carta de autorización de
   // participación) — no hay una carta firmada, pero sí queda la declaración.
   const [autorizaAdultoResponsable, setAutorizaAdultoResponsable] = useState(false);
+  // Foto del carnet del adulto responsable — mismo patrón que Integrante/
+  // Acompanante, pero es un solo bloque top-level porque solo hay un adulto
+  // responsable por inscripción (no una lista).
+  const [adultoResponsableFotos, setAdultoResponsableFotos] = useState<FotosCarnet>(crearFotosCarnetVacias());
+
+  // Alternativa para categorías con muchos integrantes (Grupo/Estudiantina/
+  // Autóctono): en vez de pedir anverso+reverso a cada persona (hasta 40
+  // fotos de una sentada), por defecto se ofrece subir un solo archivo con
+  // todos los carnets del grupo. Un toggle permite pasar al modo "uno por
+  // persona" si el grupo prefiere hacerlo así.
+  const [modoFotosGrupo, setModoFotosGrupo] = useState<'grupal' | 'individual'>('grupal');
+  const [fotosCarnetsGrupal, setFotosCarnetsGrupal] = useState<File[]>([]);
 
   // Anexo 1 (declaración de bases) + Anexo 3 (declaración voluntaria)
   const [aceptaBases, setAceptaBases] = useState(false);
@@ -264,18 +391,26 @@ export default function FormularioInscripcion() {
 
   const [enviando, setEnviando] = useState(false);
   const [errorEnvio, setErrorEnvio] = useState('');
+  // Aviso NO bloqueante si falla la subida de fotos después de que la
+  // inscripción ya se guardó — no es un error fatal, la postulación existe
+  // igual (ver enviar()).
+  const [avisoFotos, setAvisoFotos] = useState('');
+  // Modal que aparece apenas se confirma el envío, recordando que los
+  // anexos se presentan impresos y firmados el día de la preselección.
+  const [modalDocumentosAbierto, setModalDocumentosAbierto] = useState(false);
   // Una vez que se intenta avanzar/enviar con algo inválido, se resaltan los
   // campos con error en vez de solo bloquear el botón sin explicación.
   const [mostrarErrores, setMostrarErrores] = useState(false);
 
   const esComposicion = categoria === 'Composición';
   const esEspecial = categoria === 'Especial';
-  // Composición y Especial son las únicas categorías donde la convocatoria
-  // permite postulantes profesionales: el Anexo 3 no lleva la declaración de
-  // "no soy profesional" para ellas, sino la de exención de plagio/propiedad
-  // (que igual exige una declaración — solo cambia el texto, no se omite el
-  // checkbox).
-  const esExentoProfesional = esEspecial || esComposicion;
+  // El texto oficial del Anexo 3 dice literal "(Omitir este punto para la
+  // categoría: Especial)" — solo Especial, no Composición (aunque la
+  // convocatoria sí permite profesionales en ambas categorías, el Anexo 3
+  // solo exime a Especial de la declaración de "no soy profesional"; en su
+  // lugar lleva la de exención de plagio/propiedad, que igual exige una
+  // declaración — solo cambia el texto, no se omite el checkbox).
+  const esExentoProfesional = esEspecial;
 
   const categoriaInfo = obtenerCategoriaInfo(categoria);
   const integrantesMin = categoriaInfo?.integrantesMin ?? 1;
@@ -283,8 +418,24 @@ export default function FormularioInscripcion() {
   const acompanantesMax = categoriaInfo?.acompanantesMax ?? 0;
   const edadMinima = categoriaInfo?.edadMinima ?? null;
   const edadMaxima = categoriaInfo?.edadMaxima ?? null;
-  const requiereAdultoResponsable = categoriaInfo?.requiereAdultoResponsable ?? false;
   const esGrupal = integrantesMax > 1;
+  // La documentación de Ñusta dice literal: "En caso de ser menor de edad,
+  // una carta de autorización... *Anexo 4" — Ñusta va de 16 a 25 años, así
+  // que una postulante de 16-17 SÍ es menor (mayoría de edad en Bolivia:
+  // 18 años) aunque la categoría en sí no esté marcada como "infantil". Por
+  // eso el adulto responsable no depende solo del flag fijo de la
+  // categoría: también se activa si la fecha de nacimiento del postulante
+  // (categorías individuales — en grupales, con varios integrantes, esto
+  // queda pendiente, ver nota en el plan) indica que es menor al corte.
+  const postulante = !esGrupal ? integrantes[0] : undefined;
+  const postulanteEsMenorDeEdad =
+    !!postulante?.fechaNacimiento && edadEnFecha(new Date(postulante.fechaNacimiento)) < 18;
+  const requiereAdultoResponsable = (categoriaInfo?.requiereAdultoResponsable ?? false) || postulanteEsMenorDeEdad;
+  // Categorías con muchos integrantes y sin otra complejidad (Grupo 4-8,
+  // Estudiantina 8-15, Autóctono 8-20) — ahí se ofrece la opción de subir
+  // un solo archivo con todos los carnets en vez de uno por persona. Dúo
+  // (2) y Trío (3) quedan afuera: son pocas personas, no hace falta.
+  const mostrarOpcionGrupal = esGrupal && integrantesMax >= 4;
   const rangoIntegrantesTexto =
     integrantesMin === integrantesMax ? `exactamente ${integrantesMin}` : `entre ${integrantesMin} y ${integrantesMax}`;
   const rangoEdadTexto =
@@ -461,6 +612,136 @@ export default function FormularioInscripcion() {
     setAcompanantes((prev) => prev.filter((a) => a.id !== id));
   };
 
+  // Actualiza el anverso/reverso de la foto de una persona dentro de una
+  // lista (integrantes o acompañantes) — revoca la URL de preview anterior
+  // antes de crear la nueva, para no dejar object URLs sueltos en memoria.
+  function actualizarFotoEnLista<T extends FotosCarnet & { id: string }>(
+    lista: T[],
+    id: string,
+    lado: LadoFoto,
+    file: File | null,
+  ): T[] {
+    return lista.map((item) => {
+      if (item.id !== id) return item;
+      if (lado === 'anverso') {
+        revocarSiExiste(item.fotoCiAnversoPreviewUrl);
+        return { ...item, fotoCiAnverso: file, fotoCiAnversoPreviewUrl: file ? URL.createObjectURL(file) : '' };
+      }
+      revocarSiExiste(item.fotoCiReversoPreviewUrl);
+      return { ...item, fotoCiReverso: file, fotoCiReversoPreviewUrl: file ? URL.createObjectURL(file) : '' };
+    });
+  }
+
+  const actualizarIntegranteFoto = (id: string, lado: LadoFoto, file: File) => {
+    setIntegrantes((prev) => actualizarFotoEnLista(prev, id, lado, file));
+  };
+  const quitarIntegranteFoto = (id: string, lado: LadoFoto) => {
+    setIntegrantes((prev) => actualizarFotoEnLista(prev, id, lado, null));
+  };
+
+  const actualizarAcompananteFoto = (id: string, lado: LadoFoto, file: File) => {
+    setAcompanantes((prev) => actualizarFotoEnLista(prev, id, lado, file));
+  };
+  const quitarAcompananteFoto = (id: string, lado: LadoFoto) => {
+    setAcompanantes((prev) => actualizarFotoEnLista(prev, id, lado, null));
+  };
+
+  const actualizarAdultoResponsableFoto = (lado: LadoFoto, file: File) => {
+    setAdultoResponsableFotos((prev) => {
+      if (lado === 'anverso') {
+        revocarSiExiste(prev.fotoCiAnversoPreviewUrl);
+        return { ...prev, fotoCiAnverso: file, fotoCiAnversoPreviewUrl: URL.createObjectURL(file) };
+      }
+      revocarSiExiste(prev.fotoCiReversoPreviewUrl);
+      return { ...prev, fotoCiReverso: file, fotoCiReversoPreviewUrl: URL.createObjectURL(file) };
+    });
+  };
+  const quitarAdultoResponsableFoto = (lado: LadoFoto) => {
+    setAdultoResponsableFotos((prev) => {
+      if (lado === 'anverso') {
+        revocarSiExiste(prev.fotoCiAnversoPreviewUrl);
+        return { ...prev, fotoCiAnverso: null, fotoCiAnversoPreviewUrl: '' };
+      }
+      revocarSiExiste(prev.fotoCiReversoPreviewUrl);
+      return { ...prev, fotoCiReverso: null, fotoCiReversoPreviewUrl: '' };
+    });
+  };
+
+  // Opción grupal (Grupo/Estudiantina/Autóctono): un solo archivo (o varios)
+  // con todos los carnets juntos, en vez de uno por persona.
+  const agregarFotosCarnetsGrupal = (files: FileList) => {
+    setFotosCarnetsGrupal((prev) => [...prev, ...Array.from(files)]);
+  };
+  const quitarFotoCarnetGrupal = (index: number) => {
+    setFotosCarnetsGrupal((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  // Sube las fotos de carnet después de que la inscripción ya se creó (así
+  // se tienen los IDs reales de cada Acompanante/GrupoIntegrante que Prisma
+  // acaba de generar). No lanza — si algo falla, se avisa sin bloquear la
+  // pantalla de éxito, porque la inscripción en sí ya quedó guardada.
+  const subirFotosCarnet = async (apiUrl: string, tipo: 'cantante' | 'grupo', id: string, dataCreada: any) => {
+    type Objetivo = { tipo: string; lado?: 'ANVERSO' | 'REVERSO'; id?: string };
+    const objetivos: Objetivo[] = [];
+    const archivos: File[] = [];
+
+    const agregar = (objetivo: Objetivo, anverso: File | null, reverso: File | null) => {
+      if (anverso) {
+        objetivos.push({ ...objetivo, lado: 'ANVERSO' });
+        archivos.push(anverso);
+      }
+      if (reverso) {
+        objetivos.push({ ...objetivo, lado: 'REVERSO' });
+        archivos.push(reverso);
+      }
+    };
+
+    if (tipo === 'cantante') {
+      const postulante = integrantes[0];
+      if (postulante) agregar({ tipo: 'POSTULANTE' }, postulante.fotoCiAnverso, postulante.fotoCiReverso);
+
+      const acompanantesCreados: Array<{ id: string }> = dataCreada?.acompanantes ?? [];
+      acompanantes.forEach((acompanante, index) => {
+        const creado = acompanantesCreados[index];
+        if (creado) agregar({ tipo: 'ACOMPANANTE', id: creado.id }, acompanante.fotoCiAnverso, acompanante.fotoCiReverso);
+      });
+
+      if (requiereAdultoResponsable) {
+        agregar({ tipo: 'ADULTO_RESPONSABLE' }, adultoResponsableFotos.fotoCiAnverso, adultoResponsableFotos.fotoCiReverso);
+      }
+    } else if (modoFotosGrupo === 'individual') {
+      const integrantesCreados: Array<{ id: string }> = dataCreada?.integrantes ?? [];
+      integrantes.forEach((integrante, index) => {
+        const creado = integrantesCreados[index];
+        if (creado) agregar({ tipo: 'INTEGRANTE', id: creado.id }, integrante.fotoCiAnverso, integrante.fotoCiReverso);
+      });
+    } else {
+      fotosCarnetsGrupal.forEach((file) => {
+        objetivos.push({ tipo: 'GRUPO_CARNETS_BULK' });
+        archivos.push(file);
+      });
+    }
+
+    if (archivos.length === 0) return;
+
+    const formData = new FormData();
+    formData.append('objetivos', JSON.stringify(objetivos));
+    archivos.forEach((file) => formData.append('fotos', file));
+
+    try {
+      const resFotos = await fetch(`${apiUrl}/inscripciones/${tipo}/${id}/fotos`, { method: 'POST', body: formData });
+      if (!resFotos.ok) {
+        setAvisoFotos(
+          'Tu inscripción quedó registrada, pero hubo un problema subiendo las fotos del carnet. El equipo del festival te contactará para completarlas.',
+        );
+      }
+    } catch {
+      setAvisoFotos(
+        'Tu inscripción quedó registrada, pero no se pudieron subir las fotos del carnet por un problema de conexión. El equipo del festival te contactará para completarlas.',
+      );
+    }
+  };
+
   const enviar = async () => {
     if (!formularioCompleto || enviando) {
       setMostrarErrores(true);
@@ -549,7 +830,13 @@ export default function FormularioInscripcion() {
       return;
     }
 
+    const dataCreada = await res.json().catch(() => null);
+    if (dataCreada?.id) {
+      await subirFotosCarnet(apiUrl, esGrupal ? 'grupo' : 'cantante', dataCreada.id, dataCreada);
+    }
+
     setEnviado(true);
+    setModalDocumentosAbierto(true);
     scrollArriba();
     setEnviando(false);
   };
@@ -582,7 +869,7 @@ export default function FormularioInscripcion() {
   };
 
   return (
-    <div ref={inicioRef} className="container">
+    <div ref={inicioRef} className="container form-inscripcion-cafe">
       {/* Encabezado */}
       <header className="pt-10! pb-10! md:pt-14! md:pb-12! max-w-3xl">
         <h1 className="text-3xl md:text-4xl font-extrabold text-black mb-3!">Formulario de Inscripción</h1>
@@ -599,39 +886,57 @@ export default function FormularioInscripcion() {
               hasta tener el video real y el link de Drive del PDF. */}
           <div className="grid lg:grid-cols-[2fr_1fr] gap-4 max-w-4xl w-full mx-auto items-stretch">
             <div
-              className={`${panelClass} aspect-video flex flex-col items-center justify-center gap-3 p-6!`}
+              className={`${panelClass} min-h-64 flex flex-col items-center justify-center gap-3 p-6!`}
             >
               <TelonDecor />
               <div className="w-16 h-16 rounded-full bg-(--brand-cafe)/10 flex items-center justify-center text-(--brand-cafe)">
                 <PlayCircle size={32} />
               </div>
-              <p className="text-(--text-primary) font-semibold">Video tutorial próximamente</p>
-              <p className="text-(--text-muted) text-sm text-center max-w-sm">
+              <p className="font-bakbak font-black text-black">Video tutorial próximamente</p>
+              <p className="text-(--brand-cafe)/70 text-sm text-center max-w-sm">
                 Acá vas a encontrar un video explicando cómo completar tu inscripción paso a paso.
               </p>
             </div>
 
-            <a
-              href={CONVOCATORIA_URL || undefined}
-              target="_blank"
-              rel="noreferrer"
-              onClick={(e) => {
-                if (!CONVOCATORIA_URL) e.preventDefault();
-              }}
-              aria-disabled={!CONVOCATORIA_URL}
-              className={`${panelClass} flex flex-col items-center justify-center gap-3 p-6! text-center transition-all duration-300 ${
-                CONVOCATORIA_URL ? 'hover:-translate-y-0.5 cursor-pointer' : 'cursor-default'
-              }`}
-            >
-              <TelonDecor />
-              <div className="w-16 h-16 rounded-full bg-[#2e7d46]/10 flex items-center justify-center text-[#2e7d46]">
-                <FileDown size={28} />
-              </div>
-              <p className="text-(--text-primary) font-semibold">Descargar convocatoria</p>
-              <p className="text-(--text-muted) text-sm max-w-45">
-                {CONVOCATORIA_URL ? 'PDF con las bases completas.' : 'Enlace próximamente.'}
-              </p>
-            </a>
+            <div className="flex flex-col gap-10">
+              <a
+                href={CONVOCATORIA_URL || undefined}
+                target="_blank"
+                rel="noreferrer"
+                onClick={(e) => {
+                  if (!CONVOCATORIA_URL) e.preventDefault();
+                }}
+                aria-disabled={!CONVOCATORIA_URL}
+                className={`${panelClass} flex flex-1 flex-col items-center justify-center gap-3 p-6! text-center transition-all duration-300 ${
+                  CONVOCATORIA_URL ? 'hover:-translate-y-0.5 cursor-pointer' : 'cursor-default'
+                }`}
+              >
+                <TelonDecor />
+                <div className="w-16 h-16 rounded-full bg-[#2e7d46]/10 flex items-center justify-center text-[#2e7d46]">
+                  <FileDown size={28} />
+                </div>
+                <p className="font-bakbak font-black text-black">Descargar convocatoria</p>
+                <p className="text-(--brand-cafe)/70 text-sm max-w-45">
+                  {CONVOCATORIA_URL ? 'PDF con las bases completas.' : 'Enlace próximamente.'}
+                </p>
+              </a>
+
+              {/* Anexos 1-4 en blanco, tal como los trae la convocatoria
+                  oficial — para quien prefiera postular en físico, a mano,
+                  sin usar este formulario digital. */}
+              <a
+                href="/documentos/Convocatoria-y-Anexos-2026.docx"
+                download
+                className={`${panelClass} flex flex-1 flex-col items-center justify-center gap-3 p-6! text-center transition-all duration-300 hover:-translate-y-0.5 cursor-pointer`}
+              >
+                <TelonDecor />
+                <div className="w-16 h-16 rounded-full bg-(--brand-cafe)/10 flex items-center justify-center text-(--brand-cafe)">
+                  <FileText size={28} />
+                </div>
+                <p className="font-bakbak font-black text-black">Descargar anexos</p>
+                <p className="text-(--brand-cafe)/70 text-sm max-w-45">Para llenar a mano, sin el formulario digital.</p>
+              </a>
+            </div>
           </div>
 
           <button
@@ -648,32 +953,79 @@ export default function FormularioInscripcion() {
       )}
 
       {enviado ? (
-        <section className={`${panelClass} p-8! md:p-12! mb-16! flex flex-col items-center text-center gap-4`}>
-          <TelonDecor />
-          <div className="w-16 h-16 rounded-full bg-[#2e7d46]/12 border border-[#2e7d46]/35 flex items-center justify-center text-[#2e7d46]">
-            <Check size={32} />
+        <>
+          <div className="relative mb-16! overflow-hidden rounded-2xl bg-(--brand-negro) p-3! sm:p-4!">
+            <span className="pointer-events-none absolute inset-x-0 top-0 h-3 bg-[linear-gradient(90deg,#d52b1e_0%,#e08f1f_42%,#2e7d46_100%)]" />
+            <section className={`${panelClass} p-8! md:p-12! flex flex-col items-center text-center gap-4`}>
+              <div className="w-16 h-16 rounded-full bg-[#2e7d46]/12 border border-[#2e7d46]/35 flex items-center justify-center text-[#2e7d46]">
+                <Check size={32} />
+              </div>
+              <h2 className="font-bakbak text-2xl font-black text-black">¡Postulación enviada!</h2>
+              <p className="text-(--brand-cafe) max-w-lg">
+                Tu inscripción a la categoría <strong className="text-black">{categoria}</strong> con{' '}
+                {integrantes.length} integrante{integrantes.length > 1 ? 's' : ''} quedó registrada y
+                está pendiente de revisión por el comité organizador. Guarda una copia de los anexos
+                para presentarlos firmados.
+              </p>
+              <div className="flex flex-wrap items-center justify-center gap-3 mt-4!">
+                <button
+                  onClick={descargarDocx}
+                  className="inline-flex items-center gap-2 px-6! py-3! rounded-lg font-semibold text-white bg-[#534741] shadow-md shadow-[#d52b1e]/25 transition-all duration-300 hover:bg-[#3b2b23] hover:-translate-y-0.5 cursor-pointer"
+                >
+                  <Download size={16} /> Descargar anexos en Word
+                </button>
+              </div>
+              <p className="text-(--text-muted) text-xs max-w-lg">
+                El Word incluye la Ficha de Postulación (Anexo 1) y, por cada integrante, su propia Carta
+                de Presentación (Anexo 2) y Declaración Voluntaria (Anexo 3), ya que estos dos anexos son
+                personales. Las firmas quedan en blanco para completarlas a mano.
+              </p>
+              {avisoFotos && (
+                <div className="w-full max-w-lg rounded-lg border border-[#e08f1f]/30 bg-[#e08f1f]/8 px-4! py-3! text-sm text-[#8a5a12]">
+                  {avisoFotos}
+                </div>
+              )}
+            </section>
           </div>
-          <h2 className="text-2xl font-bold text-(--text-primary)">¡Postulación enviada!</h2>
-          <p className="text-(--text-secondary) max-w-lg">
-            Tu inscripción a la categoría <strong className="text-(--text-primary)">{categoria}</strong> con{' '}
-            {integrantes.length} integrante{integrantes.length > 1 ? 's' : ''} quedó registrada y
-            está pendiente de revisión por el comité organizador. Guarda una copia de los anexos
-            para presentarlos firmados.
-          </p>
-          <div className="flex flex-wrap items-center justify-center gap-3 mt-4!">
-            <button
-              onClick={descargarDocx}
-              className="inline-flex items-center gap-2 px-6! py-3! rounded-lg font-semibold text-white bg-[#d52b1e] shadow-md shadow-[#d52b1e]/25 transition-all duration-300 hover:bg-[#b82419] hover:-translate-y-0.5 cursor-pointer"
+
+          {modalDocumentosAbierto && (
+            <div
+              className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4!"
+              onClick={() => setModalDocumentosAbierto(false)}
             >
-              <Download size={16} /> Descargar anexos en Word
-            </button>
-          </div>
-          <p className="text-(--text-muted) text-xs max-w-lg">
-            El Word incluye la Ficha de Postulación (Anexo 1) y, por cada integrante, su propia Carta
-            de Presentación (Anexo 2) y Declaración Voluntaria (Anexo 3), ya que estos dos anexos son
-            personales. Las firmas quedan en blanco para completarlas a mano.
-          </p>
-        </section>
+              <div
+                className="relative w-full max-w-md overflow-hidden rounded-2xl bg-white p-6! text-center shadow-xl"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <span className="pointer-events-none absolute inset-x-0 top-0 h-2 bg-[linear-gradient(90deg,#d52b1e_0%,#e08f1f_42%,#2e7d46_100%)]" />
+                <div className="mx-auto mb-3! flex h-14 w-14 items-center justify-center rounded-full bg-[#d52b1e]/10 text-[#d52b1e]">
+                  <FileText size={26} />
+                </div>
+                <h3 className="font-bakbak mb-2! text-lg font-black text-black">Importante</h3>
+                <p className="mb-4! text-sm leading-relaxed text-(--brand-cafe)">
+                  Todos estos documentos (Anexos 1 al 4) deben presentarse <strong>impresos y firmados</strong> el
+                  día de la preselección departamental
+                  {FECHA_PRESELECCION ? (
+                    <>
+                      , <strong>{FECHA_PRESELECCION}</strong>
+                    </>
+                  ) : (
+                    ', en la fecha que se coordine con los encargados del festival en tu departamento'
+                  )}
+                  . Por favor, descargá los documentos correspondientes con el botón "Descargar anexos en Word"
+                  al final de esta pantalla.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setModalDocumentosAbierto(false)}
+                  className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#534741] px-6! py-2.5! text-sm font-semibold text-white transition-colors hover:bg-[#3b2b23] cursor-pointer"
+                >
+                  Entendido
+                </button>
+              </div>
+            </div>
+          )}
+        </>
       ) : mostrarFormulario ? (
         <>
           {/* Stepper */}
@@ -992,6 +1344,68 @@ export default function FormularioInscripcion() {
                   )}
                 </div>
 
+                {mostrarOpcionGrupal && (
+                  <div className="rounded-xl border border-(--border) bg-(--bg-primary) p-5!">
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div>
+                        <h3 className="text-sm font-bold text-(--text-primary) mb-1!">Carnets del grupo</h3>
+                        <p className="text-(--text-secondary) text-sm">
+                          {modoFotosGrupo === 'grupal'
+                            ? 'Subí una foto o PDF con los carnets de todo el grupo (anverso y reverso) — la forma más rápida cuando hay muchos integrantes.'
+                            : 'Subí el anverso y reverso del carnet de cada integrante, en su propia tarjeta más abajo.'}
+                        </p>
+                      </div>
+                      <label className="inline-flex shrink-0 cursor-pointer select-none items-center gap-1.5 text-sm font-semibold text-(--brand-cafe)">
+                        <input
+                          type="checkbox"
+                          checked={modoFotosGrupo === 'individual'}
+                          onChange={(e) => setModoFotosGrupo(e.target.checked ? 'individual' : 'grupal')}
+                          className="h-4 w-4 cursor-pointer accent-(--brand-cafe)"
+                        />
+                        Prefiero subir uno por persona
+                      </label>
+                    </div>
+
+                    {modoFotosGrupo === 'grupal' && (
+                      <div className="mt-4! flex flex-col gap-3">
+                        <label className="inline-flex w-fit cursor-pointer items-center gap-2 rounded-lg border border-dashed border-(--brand-cafe)/40 px-4! py-2.5! text-sm font-semibold text-(--brand-cafe) transition-colors hover:border-(--brand-cafe)/60">
+                          <Paperclip size={16} /> Agregar archivo(s)
+                          <input
+                            type="file"
+                            accept="image/*,application/pdf"
+                            multiple
+                            className="hidden"
+                            onChange={(e) => {
+                              if (e.target.files) agregarFotosCarnetsGrupal(e.target.files);
+                              e.target.value = '';
+                            }}
+                          />
+                        </label>
+                        {fotosCarnetsGrupal.length > 0 && (
+                          <ul className="flex flex-col gap-1.5">
+                            {fotosCarnetsGrupal.map((file, index) => (
+                              <li
+                                key={`${file.name}-${index}`}
+                                className="flex items-center justify-between gap-2 rounded-lg border border-(--border) bg-white px-3! py-2! text-sm text-(--text-secondary)"
+                              >
+                                <span className="truncate">{file.name}</span>
+                                <button
+                                  type="button"
+                                  onClick={() => quitarFotoCarnetGrupal(index)}
+                                  className="shrink-0 cursor-pointer text-(--text-muted) transition-colors hover:text-[#d52b1e]"
+                                  aria-label={`Quitar ${file.name}`}
+                                >
+                                  <X size={14} />
+                                </button>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 <div className="flex flex-col gap-4">
                   {integrantes.map((integrante, index) => (
                     <div key={integrante.id} className="rounded-xl border border-(--border) bg-(--bg-primary) p-5!">
@@ -1125,6 +1539,13 @@ export default function FormularioInscripcion() {
                             placeholder="Ej: Charango, guitarra..."
                           />
                         </Campo>
+                        {(!mostrarOpcionGrupal || modoFotosGrupo === 'individual') && (
+                          <CampoFotoCarnet
+                            fotos={integrante}
+                            onCambiar={(lado, file) => actualizarIntegranteFoto(integrante.id, lado, file)}
+                            onQuitar={(lado) => quitarIntegranteFoto(integrante.id, lado)}
+                          />
+                        )}
                       </div>
                     </div>
                   ))}
@@ -1237,6 +1658,11 @@ export default function FormularioInscripcion() {
                               placeholder="Ej: Charango, guitarra..."
                             />
                           </Campo>
+                          <CampoFotoCarnet
+                            fotos={acompanante}
+                            onCambiar={(lado, file) => actualizarAcompananteFoto(acompanante.id, lado, file)}
+                            onQuitar={(lado) => quitarAcompananteFoto(acompanante.id, lado)}
+                          />
                         </div>
                       </div>
                     ))}
@@ -1331,6 +1757,11 @@ export default function FormularioInscripcion() {
                             placeholder="Ej: 70000000"
                           />
                         </Campo>
+                        <CampoFotoCarnet
+                          fotos={adultoResponsableFotos}
+                          onCambiar={actualizarAdultoResponsableFoto}
+                          onQuitar={quitarAdultoResponsableFoto}
+                        />
                       </div>
                     </div>
                   </div>

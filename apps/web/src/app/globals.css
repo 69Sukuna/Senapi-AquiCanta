@@ -94,6 +94,20 @@
   --font-main: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
 }
 
+/* Formulario de Inscripciones: sobreescribe los tokens de texto/borde
+   genéricos (azul índigo, heredados del resto del sitio) por tonos de
+   café/negro de marca, para que labels, hints y bordes del formulario
+   queden consistentes con el resto de la página (botones, tarjetas,
+   modal) en vez de desentonar con el índigo genérico. Solo aplica
+   dentro de esta sección — el resto del sitio sigue usando
+   --text-primary/--text-muted/etc. tal cual. */
+.form-inscripcion-cafe {
+  --text-primary: var(--brand-negro);
+  --text-secondary: rgba(83, 71, 65, 0.75);
+  --text-muted: rgba(83, 71, 65, 0.58);
+  --border: rgba(83, 71, 65, 0.2);
+}
+
 @layer base {
   * {
     box-sizing: border-box;

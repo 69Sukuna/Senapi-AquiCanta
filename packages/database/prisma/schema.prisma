@@ -131,6 +131,15 @@ model Cantante {
   adultoResponsableCelular     String?
   autorizaParticipacionAdultoResponsable Boolean @default(false)
 
+  // Foto del carnet de identidad (anverso/reverso) — privada, nunca se
+  // expone en endpoints públicos. No confundir con fotoUrl (foto pública
+  // de perfil del artista).
+  fotoCiAnversoUrl String?
+  fotoCiReversoUrl String?
+  // Foto del carnet del adulto responsable — mismo criterio de privacidad.
+  adultoResponsableFotoCiAnversoUrl String?
+  adultoResponsableFotoCiReversoUrl String?
+
   // Músicos de acompañamiento (categorías individuales que lo permiten).
   acompanantes Acompanante[]
 
@@ -145,6 +154,11 @@ model Acompanante {
   ciNumero    String?
   ciExtension String?
   instrumento String?
+
+  // Foto del carnet de identidad (anverso/reverso) — privada, nunca se
+  // expone en endpoints públicos.
+  fotoCiAnversoUrl String?
+  fotoCiReversoUrl String?
 
   @@map("acompanantes")
 }
@@ -176,6 +190,14 @@ model Grupo {
   createdAt             DateTime          @default(now())
   updatedAt             DateTime          @default(now()) @updatedAt
 
+  // Alternativa a subir la foto del carnet integrante por integrante: un
+  // representante sube una o varias fotos/PDFs con todos los carnets del
+  // grupo juntos (pensado para categorías con muchos integrantes, ej.
+  // Estudiantina/Autóctono, donde pedir anverso+reverso a cada uno es
+  // demasiada carga para llenar desde el celular). Privado, nunca se
+  // expone en endpoints públicos.
+  fotosCarnetsGrupalUrls String[] @default([])
+
   @@map("grupos")
 }
 
@@ -194,6 +216,11 @@ model GrupoIntegrante {
   fechaNacimiento DateTime?
   whatsapp        String?
   direccion       String?
+
+  // Foto del carnet de identidad (anverso/reverso) — privada, nunca se
+  // expone en endpoints públicos.
+  fotoCiAnversoUrl String?
+  fotoCiReversoUrl String?
 
   @@map("grupo_integrantes")
 }
