@@ -151,7 +151,10 @@ body::after {
 
 @media (max-width: 1023px) {
   body {
-    padding-left: 84px;
+    /* La barra de navegación mobile pasa a estar fija abajo (ver Navbar.tsx)
+       en vez de a la izquierda, para no comerse ancho de pantalla en
+       celulares — antes era padding-left: 84px. */
+    padding-bottom: 64px;
   }
 }
 

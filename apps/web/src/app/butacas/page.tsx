@@ -23,6 +23,11 @@ import {
   type Butaca,
   type NivelPrecio,
 } from '@/lib/asientos';
+import BannerFechasClave from '@/components/BannerFechasClave';
+import HeroButacas from './components/HeroButacas';
+import BannerReservaLugares from './components/BannerReservaLugares';
+import FaqButacas from './components/FaqButacas';
+import ComoLlegarButacas from './components/ComoLlegarButacas';
 
 // El mapa usa trigonometría (Math.sin/cos) para ubicar cada butaca; el motor
 // V8 del server (Node) y el del browser pueden redondear el último bit
@@ -159,32 +164,40 @@ export default function ButacasPage() {
   };
 
   return (
-    <div className="flex h-dvh flex-col lg:h-[calc(100dvh-88px)]">
-      <div className="flex flex-wrap items-center justify-between gap-3 px-4 pb-3 pt-4 sm:px-6">
+    <main>
+      <HeroButacas />
+      <BannerReservaLugares />
+
+      <div className="container flex flex-col py-4!">
+      <div className="flex flex-wrap items-center justify-between gap-3 pb-3">
         <div>
-          <span className="badge badge-gold w-fit mb-2">
+          <span className="font-barlow inline-flex w-fit items-center gap-2 rounded-full border border-(--brand-negro)/20 bg-(--brand-crema) px-4! py-1.5! text-xs font-semibold tracking-wide text-(--brand-cafe) uppercase mb-2!">
             <Armchair size={14} /> Teatro Internacional de Oruro
           </span>
-          <h1 className="text-2xl md:text-3xl font-extrabold text-(--text-primary)">
-            Butacas
+          <h1 className="font-bakbak text-3xl md:text-4xl font-black text-(--brand-cafe)">
+            BUTACAS
           </h1>
+          <p className="font-barlow mt-1! max-w-xl text-sm text-(--brand-cafe)">
+            Toque un sector y elija los asientos de su preferencia. No olvide que solo puede reservar un
+            máximo de {MAX_BUTACAS} asientos.
+          </p>
         </div>
 
         {pestana === 'reserva' && (
-          <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-(--text-secondary)">
+          <div className="font-barlow flex flex-wrap gap-x-4 gap-y-1 text-xs text-(--brand-cafe)">
             <span className="inline-flex items-center gap-1.5">
               <span className="inline-block h-2.5 w-2.5 rounded-sm" style={{ backgroundColor: COLOR_SELECCIONADO }} />
               Seleccionado
             </span>
             <span className="inline-flex items-center gap-1.5">
-              <span className="inline-block h-2.5 w-2.5 rounded-sm border border-(--border)" style={{ backgroundColor: COLOR_OCUPADO }} />
+              <span className="inline-block h-2.5 w-2.5 rounded-sm border border-(--brand-negro)/20" style={{ backgroundColor: COLOR_OCUPADO }} />
               Ocupado
             </span>
           </div>
         )}
       </div>
 
-      <div className="flex gap-1.5 px-4 pb-3 sm:px-6">
+      <div className="flex gap-1.5 pb-3">
         {(
           [
             { id: 'reserva', label: 'Reserva de Asientos', icon: Armchair },
@@ -195,16 +208,20 @@ export default function ButacasPage() {
             key={id}
             type="button"
             onClick={() => setPestana(id)}
-            className={`flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-semibold transition-all duration-200 ${
+            className={`font-barlow flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold transition-all duration-200 ${
               pestana === id
-                ? 'border-[#1e63b8]/25 bg-[#1e63b8]/10 text-[#164a8c]'
-                : 'border-transparent text-(--text-secondary) hover:bg-[#1e63b8]/5 hover:text-(--text-primary)'
+                ? 'border-(--brand-negro) bg-(--brand-negro) text-white'
+                : 'border-(--brand-negro)/20 text-(--brand-cafe) hover:border-(--brand-negro)/40'
             }`}
           >
             <Icon size={15} />
             {label}
             {id === 'mis-asientos' && reservas.length > 0 && (
-              <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-[#1e63b8]/15 px-1 text-[11px] font-bold text-[#164a8c]">
+              <span
+                className={`flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-[11px] font-bold ${
+                  pestana === id ? 'bg-white/15 text-white' : 'bg-(--brand-negro)/10 text-(--brand-negro)'
+                }`}
+              >
                 {reservas.length}
               </span>
             )}
@@ -213,15 +230,15 @@ export default function ButacasPage() {
       </div>
 
       {pestana === 'reserva' ? (
-        <div className="relative mx-2 mb-2 min-h-0 flex-1 overflow-hidden rounded-2xl border border-(--border) bg-(--bg-primary) sm:mx-4 sm:mb-4">
+        <div className="relative mx-2 mb-2 h-[420px] overflow-hidden rounded-2xl border border-(--border) bg-(--bg-primary) sm:mx-4 sm:mb-4">
           <TeatroSeatMap butacas={butacas} zonas={zonas} seleccionadas={seleccionadas} onToggle={toggleButaca} />
 
           {/* Carrito flotante: no ocupa columna propia para no achicar el mapa. Cuando
               está minimizado con algo elegido, se resalta con un anillo rojo — y la
               medallita del ícono pulsa — para que la selección no pase desapercibida. */}
           <div
-            className={`absolute bottom-3 left-3 right-3 z-10 flex max-h-[75%] flex-col overflow-hidden rounded-2xl border border-(--border) bg-white shadow-xl shadow-[#1b2a4a]/15 backdrop-blur-xl transition-shadow duration-300 sm:bottom-4 sm:left-auto sm:right-4 sm:w-96 ${
-              !carritoAbierto && seleccionList.length > 0 ? 'ring-2 ring-[#d52b1e]/60' : ''
+            className={`font-barlow absolute bottom-3 left-3 right-3 z-10 flex max-h-[75%] flex-col overflow-hidden rounded-2xl bg-(--brand-cafe) shadow-xl shadow-black/25 transition-shadow duration-300 sm:bottom-4 sm:left-auto sm:right-4 sm:w-96 ${
+              !carritoAbierto && seleccionList.length > 0 ? 'ring-2 ring-(--brand-rojo)/70' : ''
             }`}
           >
             <button
@@ -230,31 +247,31 @@ export default function ButacasPage() {
               className="flex w-full shrink-0 items-center justify-between gap-3 px-4 py-3"
             >
               <span className="flex items-center gap-2.5">
-                <span className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#1e63b8]/10 text-[#1e63b8]">
+                <span className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/10 text-white">
                   <Armchair size={17} />
                   {!carritoAbierto && seleccionList.length > 0 && (
-                    <span className="absolute -right-1 -top-1 flex h-4 w-4 animate-pulse items-center justify-center rounded-full bg-[#d52b1e] text-[10px] font-bold text-white">
+                    <span className="absolute -right-1 -top-1 flex h-4 w-4 animate-pulse items-center justify-center rounded-full bg-(--brand-rojo) text-[10px] font-bold text-white">
                       {seleccionList.length}
                     </span>
                   )}
                 </span>
                 <span className="flex flex-col items-start leading-tight">
-                  <span className="text-sm font-bold text-(--text-primary)">Tu selección</span>
-                  <span className="text-[11px] text-(--text-muted)">
+                  <span className="text-sm font-bold text-white">Tu selección</span>
+                  <span className="text-[11px] text-white/60">
                     {seleccionList.length}/{MAX_BUTACAS} butacas
                   </span>
                 </span>
               </span>
               {carritoAbierto ? (
-                <ChevronDown size={16} className="text-(--text-muted)" />
+                <ChevronDown size={16} className="text-white/70" />
               ) : (
-                <ChevronUp size={16} className="text-(--text-muted)" />
+                <ChevronUp size={16} className="text-white/70" />
               )}
             </button>
 
-            <div className="h-1 w-full shrink-0 bg-(--border)">
+            <div className="h-1 w-full shrink-0 bg-black/20">
               <div
-                className="h-full bg-linear-to-r from-[#1e63b8] to-[#d52b1e] transition-[width] duration-300"
+                className="h-full bg-linear-to-r from-(--brand-rojo) via-(--brand-amarillo) to-(--brand-verde) transition-[width] duration-300"
                 style={{ width: `${(seleccionList.length / MAX_BUTACAS) * 100}%` }}
               />
             </div>
@@ -262,7 +279,7 @@ export default function ButacasPage() {
             {carritoAbierto && (
               <>
                 {aviso && (
-                  <div className="mx-4 mt-3 flex shrink-0 items-start gap-2 rounded-lg border border-[#d52b1e]/30 bg-[#d52b1e]/8 px-3 py-2 text-xs text-[#b82419]">
+                  <div className="mx-4 mt-3 flex shrink-0 items-start gap-2 rounded-lg border border-(--brand-amarillo)/30 bg-(--brand-amarillo)/10 px-3 py-2 text-xs text-(--brand-amarillo)">
                     <Info size={14} className="mt-0.5 shrink-0" />
                     {aviso}
                   </div>
@@ -271,10 +288,10 @@ export default function ButacasPage() {
                 <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3">
                   {seleccionList.length === 0 ? (
                     <div className="flex flex-col items-center gap-2 py-8 text-center">
-                      <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#1b2a4a]/5 text-(--text-muted)">
+                      <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white/50">
                         <Armchair size={18} />
                       </span>
-                      <p className="max-w-55 text-sm text-(--text-secondary)">
+                      <p className="max-w-55 text-sm text-white/60">
                         Tocá un asiento disponible en el mapa para elegirlo.
                       </p>
                     </div>
@@ -283,21 +300,21 @@ export default function ButacasPage() {
                       {seleccionList.map((b) => (
                         <li
                           key={b.id}
-                          className="group flex items-center justify-between gap-2 rounded-lg bg-[#1b2a4a]/4 px-3 py-2 text-sm transition-colors hover:bg-[#1b2a4a]/8"
+                          className="group flex items-center justify-between gap-2 rounded-lg bg-white px-3 py-2 text-sm shadow-sm transition-colors hover:bg-white/90"
                         >
                           <span className="flex min-w-0 items-center gap-2.5">
                             <span
                               className="h-2 w-2 shrink-0 rounded-full"
                               style={{ backgroundColor: NIVEL_COLOR[b.nivel] }}
                             />
-                            <span className="truncate text-(--text-secondary)">
-                              <span className="font-semibold text-(--text-primary)">{b.sectorLabel}</span> · {b.codigo}
+                            <span className="truncate text-(--brand-cafe)">
+                              <span className="font-semibold text-(--brand-negro)">{b.sectorLabel}</span> · {b.codigo}
                             </span>
                           </span>
                           <button
                             type="button"
                             onClick={() => toggleButaca(b)}
-                            className="shrink-0 text-(--text-muted) transition-colors hover:text-[#d52b1e] group-hover:text-(--text-secondary)"
+                            className="shrink-0 text-(--brand-cafe)/60 transition-colors hover:text-(--brand-rojo)"
                             aria-label="Quitar butaca"
                           >
                             <Trash2 size={14} />
@@ -308,13 +325,13 @@ export default function ButacasPage() {
                   )}
                 </div>
 
-                <div className="shrink-0 border-t border-(--border) bg-(--bg-primary) px-4 pt-3 pb-4">
+                <div className="shrink-0 border-t border-white/10 bg-black/10 px-4 pt-3 pb-4">
                   {seleccionList.length > 0 && (
                     <div className="mb-3 flex flex-col gap-1 text-sm">
                       {(Object.keys(NIVEL_LABEL) as NivelPrecio[])
                         .filter((nivel) => conteoPorNivel[nivel])
                         .map((nivel) => (
-                          <div key={nivel} className="flex items-center gap-1.5 text-(--text-secondary)">
+                          <div key={nivel} className="flex items-center gap-1.5 text-white/80">
                             <span
                               className="h-2 w-2 rounded-full"
                               style={{ backgroundColor: NIVEL_COLOR[nivel] }}
@@ -329,12 +346,12 @@ export default function ButacasPage() {
                     type="button"
                     disabled={seleccionList.length === 0}
                     onClick={() => setModalAbierto(true)}
-                    className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg bg-[#d52b1e] px-6 py-3 font-semibold text-white shadow-md shadow-[#d52b1e]/25 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-[#d52b1e]/35 hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:translate-y-0 disabled:hover:brightness-100"
+                    className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-(--brand-negro) px-6 py-3 font-semibold text-white shadow-md shadow-black/30 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:brightness-125 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:translate-y-0 disabled:hover:brightness-100"
                   >
                     Reservar asientos
                     <ArrowRight size={16} />
                   </button>
-                  <p className="mt-2 text-center text-xs text-(--text-muted)">
+                  <p className="mt-2 text-center text-xs text-white/50">
                     Esto es una reserva, no un pago — la confirmación estará disponible próximamente.
                   </p>
                 </div>
@@ -349,7 +366,12 @@ export default function ButacasPage() {
       {modalAbierto && (
         <ModalReserva seleccionList={seleccionList} onClose={() => setModalAbierto(false)} onConfirmar={confirmarReserva} />
       )}
-    </div>
+      </div>
+
+      <FaqButacas />
+      <ComoLlegarButacas />
+      <BannerFechasClave />
+    </main>
   );
 }
 
@@ -365,7 +387,7 @@ function MisAsientos({
   const ordenadas = [...reservas].sort((a, b) => b.fecha.localeCompare(a.fecha));
 
   return (
-    <div className="mx-2 mb-2 min-h-0 flex-1 overflow-y-auto rounded-2xl border border-(--border) bg-(--bg-card) p-4 sm:mx-4 sm:mb-4 sm:p-6">
+    <div className="mx-2 mb-2 h-[420px] overflow-y-auto rounded-2xl border border-(--border) bg-(--bg-card) p-4 sm:mx-4 sm:mb-4 sm:p-6">
       {ordenadas.length === 0 ? (
         <div className="flex h-full flex-col items-center justify-center gap-3 py-16 text-center">
           <span className="flex h-14 w-14 items-center justify-center rounded-full bg-[#1b2a4a]/5 text-(--text-muted)">
