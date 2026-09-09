@@ -179,7 +179,7 @@ function fechaLegible(iso: string) {
 }
 
 const inputClass =
-  'w-full rounded-lg bg-(--bg-primary) border border-(--border) px-4! py-2.5! text-sm text-(--text-primary) placeholder:text-(--text-muted) focus:outline-none focus:border-[#1e63b8]/60 focus:ring-2! focus:ring-[#1e63b8]/15 focus:bg-white transition-colors';
+  'w-full rounded-lg bg-(--bg-primary) border border-(--border) px-4! py-2.5! text-sm text-(--text-primary) placeholder:text-(--text-muted) focus:outline-none focus:border-(--brand-cafe)/60 focus:ring-2! focus:ring-(--brand-cafe)/15 focus:bg-white transition-colors';
 const labelClass = 'block text-sm font-semibold text-(--text-secondary) mb-2!';
 
 function Campo({
@@ -602,7 +602,7 @@ export default function FormularioInscripcion() {
               className={`${panelClass} aspect-video flex flex-col items-center justify-center gap-3 p-6!`}
             >
               <TelonDecor />
-              <div className="w-16 h-16 rounded-full bg-[#1e63b8]/10 flex items-center justify-center text-[#1e63b8]">
+              <div className="w-16 h-16 rounded-full bg-(--brand-cafe)/10 flex items-center justify-center text-(--brand-cafe)">
                 <PlayCircle size={32} />
               </div>
               <p className="text-(--text-primary) font-semibold">Video tutorial próximamente</p>
@@ -678,7 +678,7 @@ export default function FormularioInscripcion() {
         <>
           {/* Stepper */}
           <nav className="mb-8!">
-            <div className="hidden md:flex items-center justify-between">
+            <div className="hidden lg:flex items-center justify-between">
               {PASOS.map((p, index) => {
                 const Icon = p.icon;
                 const activo = index === paso;
@@ -717,8 +717,8 @@ export default function FormularioInscripcion() {
               })}
             </div>
 
-            {/* Versión móvil: barra de progreso simple */}
-            <div className="md:hidden">
+            {/* Versión móvil/tablet: barra de progreso simple */}
+            <div className="lg:hidden">
               <div className="flex items-center justify-between mb-2!">
                 <span className="text-sm font-semibold text-(--text-primary)">
                   Paso {paso + 1} de {PASOS.length}: {PASOS[paso].titulo}
@@ -726,7 +726,7 @@ export default function FormularioInscripcion() {
               </div>
               <div className="h-1.5 rounded-full bg-(--border) overflow-hidden">
                 <div
-                  className="h-full bg-linear-to-r from-[#1e63b8] to-[#d52b1e] transition-all duration-300"
+                  className="h-full bg-linear-to-r from-(--brand-cafe) to-[#d52b1e] transition-all duration-300"
                   style={{ width: `${((paso + 1) / PASOS.length) * 100}%` }}
                 />
               </div>
@@ -742,15 +742,17 @@ export default function FormularioInscripcion() {
               vez de estirar el PNG, para que se vea igual sin importar la
               altura del paso. El panel blanco de panelClass queda inset
               adentro, por eso acá no se usa <TelonDecor />, para no repetir
-              la franja de colores. */}
-          <div className="relative mb-6! overflow-hidden rounded-2xl bg-(--brand-negro) p-3! sm:p-4!">
+              la franja de colores. En mobile se saca el margen negro (no
+              hay espacio de sobra ahí) y queda solo la franja de color
+              pegada arriba del panel; el marco completo vuelve desde sm. */}
+          <div className="relative mb-6! overflow-hidden rounded-2xl sm:bg-(--brand-negro) sm:p-4!">
             <span className="pointer-events-none absolute inset-x-0 top-0 h-3 bg-[linear-gradient(90deg,#d52b1e_0%,#e08f1f_42%,#2e7d46_100%)]" />
             <section className={`${panelClass} p-6! sm:p-8! md:p-12!`}>
               {/* Paso 0: Categoría */}
             {paso === 0 && (
               <div className="flex flex-col gap-8">
                 <div>
-                  <h2 className="text-xl font-bold text-(--text-primary) mb-1!">¿En qué categoría postulas?</h2>
+                  <h2 className="font-bakbak text-xl font-black text-black mb-1!">¿En qué categoría postulas?</h2>
                   <p className="text-(--text-secondary) text-sm">Selecciona una sola categoría, según el Anexo 1 de la convocatoria.</p>
                   {mostrarErrores && categoria === '' && (
                     <p className="text-xs text-[#d52b1e] font-medium mt-2!">Selecciona una categoría para continuar.</p>
@@ -771,14 +773,14 @@ export default function FormularioInscripcion() {
                             onClick={() => seleccionarCategoria(item.nombre)}
                             className={`text-left px-4! py-3! rounded-lg border text-sm font-medium transition-all cursor-pointer ${
                               seleccionado
-                                ? 'bg-[#1e63b8]/10 border-[#1e63b8]/60 text-[#164a8c] shadow-[0_0_0_3px_rgba(30,99,184,0.12)]'
-                                : 'bg-(--bg-primary) border-(--border) text-(--text-secondary) hover:border-[#1e63b8]/35 hover:bg-[#1e63b8]/5'
+                                ? 'bg-(--brand-cafe)/10 border-(--brand-cafe)/60 text-(--brand-cafe) shadow-[0_0_0_3px_rgba(83,71,65,0.12)]'
+                                : 'bg-(--bg-primary) border-(--border) text-(--text-secondary) hover:border-(--brand-cafe)/35 hover:bg-(--brand-cafe)/5'
                             }`}
                           >
                             <span className="inline-flex items-center gap-2">
                               <span
                                 className={`w-3.5 h-3.5 rounded-full border shrink-0 ${
-                                  seleccionado ? 'border-[#1e63b8] bg-[#1e63b8]' : 'border-(--border)'
+                                  seleccionado ? 'border-(--brand-cafe) bg-(--brand-cafe)' : 'border-(--border)'
                                 }`}
                               />
                               {item.nombre}
@@ -796,14 +798,14 @@ export default function FormularioInscripcion() {
             {paso === 1 && (
               <div className="flex flex-col gap-6">
                 <div>
-                  <h2 className="text-xl font-bold text-(--text-primary) mb-1!">Datos de la obra</h2>
+                  <h2 className="font-bakbak text-xl font-black text-black mb-1!">Datos de la obra</h2>
                   <p className="text-(--text-secondary) text-sm">Información del tema con el que postulas.</p>
                 </div>
 
                 {esComposicion && (
-                  <div className="rounded-lg border border-[#1e63b8]/25 bg-[#1e63b8]/8 px-4! py-3! flex gap-3 items-start">
-                    <Info size={18} className="text-[#1e63b8] shrink-0 mt-0.5!" />
-                    <p className="text-sm text-[#164a8c]">
+                  <div className="rounded-lg border border-(--brand-cafe)/25 bg-(--brand-cafe)/8 px-4! py-3! flex gap-3 items-start">
+                    <Info size={18} className="text-(--brand-cafe) shrink-0 mt-0.5!" />
+                    <p className="text-sm text-(--brand-cafe)">
                       La categoría <strong>Composición</strong> requiere un pseudónimo: el jurado evalúa
                       la obra sin conocer la identidad del autor.
                     </p>
@@ -904,7 +906,7 @@ export default function FormularioInscripcion() {
             {paso === 2 && (
               <div className="flex flex-col gap-6">
                 <div>
-                  <h2 className="text-xl font-bold text-(--text-primary) mb-1!">Datos del postulante</h2>
+                  <h2 className="font-bakbak text-xl font-black text-black mb-1!">Datos del postulante</h2>
                   <p className="text-(--text-secondary) text-sm">Información de contacto para coordinar tu participación.</p>
                 </div>
                 <div className="grid md:grid-cols-2 gap-5">
@@ -964,7 +966,7 @@ export default function FormularioInscripcion() {
               <div className="flex flex-col gap-6">
                 <div className="flex flex-wrap items-end justify-between gap-3">
                   <div>
-                    <h2 className="text-xl font-bold text-(--text-primary) mb-1!">
+                    <h2 className="font-bakbak text-xl font-black text-black mb-1!">
                       {esGrupal ? 'Integrantes' : 'Datos del postulante'}
                     </h2>
                     <p className="text-(--text-secondary) text-sm">
@@ -983,7 +985,7 @@ export default function FormularioInscripcion() {
                       type="button"
                       onClick={agregarIntegrante}
                       disabled={integrantes.length >= integrantesMax}
-                      className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#1e63b8] hover:text-[#164a8c] disabled:text-(--text-muted) disabled:cursor-not-allowed transition-colors cursor-pointer"
+                      className="inline-flex items-center gap-1.5 text-sm font-semibold text-(--brand-cafe) hover:text-(--brand-negro) disabled:text-(--text-muted) disabled:cursor-not-allowed transition-colors cursor-pointer"
                     >
                       <Plus size={16} /> Agregar integrante
                     </button>
@@ -1048,7 +1050,7 @@ export default function FormularioInscripcion() {
                               />
                             </div>
                             <span className="pb-2.5! text-(--text-muted) font-bold text-lg select-none">-</span>
-                            <div className="w-24 sm:w-28 shrink-0">
+                            <div className="w-20 shrink-0">
                               <span className="block text-[11px] font-semibold uppercase tracking-wide text-(--text-muted) mb-1!">
                                 Complemento
                               </span>
@@ -1131,7 +1133,7 @@ export default function FormularioInscripcion() {
                       type="button"
                       onClick={agregarIntegrante}
                       disabled={integrantes.length >= integrantesMax}
-                      className="inline-flex items-center justify-center gap-1.5 text-sm font-semibold text-[#1e63b8] hover:text-[#164a8c] disabled:text-(--text-muted) disabled:cursor-not-allowed transition-colors cursor-pointer rounded-xl border border-dashed border-[#1e63b8]/40 hover:border-[#1e63b8]/60 disabled:border-(--border) py-3! self-stretch"
+                      className="inline-flex items-center justify-center gap-1.5 text-sm font-semibold text-(--brand-cafe) hover:text-(--brand-negro) disabled:text-(--text-muted) disabled:cursor-not-allowed transition-colors cursor-pointer rounded-xl border border-dashed border-(--brand-cafe)/40 hover:border-(--brand-cafe)/60 disabled:border-(--border) py-3! self-stretch"
                     >
                       <Plus size={16} /> Agregar integrante
                     </button>
@@ -1152,7 +1154,7 @@ export default function FormularioInscripcion() {
                         type="button"
                         onClick={agregarAcompanante}
                         disabled={acompanantes.length >= acompanantesMax}
-                        className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#1e63b8] hover:text-[#164a8c] disabled:text-(--text-muted) disabled:cursor-not-allowed transition-colors cursor-pointer"
+                        className="inline-flex items-center gap-1.5 text-sm font-semibold text-(--brand-cafe) hover:text-(--brand-negro) disabled:text-(--text-muted) disabled:cursor-not-allowed transition-colors cursor-pointer"
                       >
                         <Plus size={16} /> Agregar acompañante
                       </button>
@@ -1242,7 +1244,7 @@ export default function FormularioInscripcion() {
                       <button
                         type="button"
                         onClick={agregarAcompanante}
-                        className="inline-flex items-center justify-center gap-1.5 text-sm font-semibold text-[#1e63b8] hover:text-[#164a8c] transition-colors cursor-pointer rounded-xl border border-dashed border-[#1e63b8]/40 hover:border-[#1e63b8]/60 py-3! self-stretch"
+                        className="inline-flex items-center justify-center gap-1.5 text-sm font-semibold text-(--brand-cafe) hover:text-(--brand-negro) transition-colors cursor-pointer rounded-xl border border-dashed border-(--brand-cafe)/40 hover:border-(--brand-cafe)/60 py-3! self-stretch"
                       >
                         <Plus size={16} /> Agregar acompañante
                       </button>
@@ -1340,7 +1342,7 @@ export default function FormularioInscripcion() {
             {paso === 4 && (
               <div className="flex flex-col gap-6">
                 <div>
-                  <h2 className="text-xl font-bold text-(--text-primary) mb-1!">Revisa y confirma</h2>
+                  <h2 className="font-bakbak text-xl font-black text-black mb-1!">Revisa y confirma</h2>
                   <p className="text-(--text-secondary) text-sm">
                     Revisa que todos los datos sean correctos antes de enviar — no podrás editarlos
                     después de la revisión del comité organizador.
@@ -1349,7 +1351,7 @@ export default function FormularioInscripcion() {
 
                 <div className="rounded-xl border border-(--border) bg-(--bg-primary) p-5!">
                   <h3 className="text-sm font-bold text-(--text-secondary) mb-4! flex items-center gap-2">
-                    <Sparkles size={15} className="text-[#1e63b8]" /> Resumen de tu postulación
+                    <Sparkles size={15} className="text-(--brand-cafe)" /> Resumen de tu postulación
                   </h3>
 
                   <h4 className="text-xs font-semibold tracking-widest text-(--text-muted) uppercase mb-2!">La obra</h4>
@@ -1466,7 +1468,7 @@ export default function FormularioInscripcion() {
 
                 <div className="rounded-lg border border-(--border) bg-(--bg-primary) overflow-hidden">
                   <details className="group [&_summary::-webkit-details-marker]:hidden">
-                    <summary className="flex items-center gap-2 cursor-pointer list-none px-4! py-3! text-sm font-semibold text-[#1e63b8] hover:bg-[#1e63b8]/5 transition-colors">
+                    <summary className="flex items-center gap-2 cursor-pointer list-none px-4! py-3! text-sm font-semibold text-(--brand-cafe) hover:bg-(--brand-cafe)/5 transition-colors">
                       <FileText size={16} className="shrink-0" />
                       Ver lo más importante de las bases y condiciones
                       <ChevronDown size={16} className="ml-auto shrink-0 transition-transform group-open:rotate-180" />
@@ -1507,14 +1509,14 @@ export default function FormularioInscripcion() {
                   className={`flex items-start gap-3 rounded-lg border p-4! cursor-pointer transition-colors ${
                     mostrarErrores && !aceptaBases
                       ? 'border-[#d52b1e]/60 bg-[#d52b1e]/5'
-                      : 'border-(--border) bg-(--bg-primary) hover:border-[#1e63b8]/35'
+                      : 'border-(--border) bg-(--bg-primary) hover:border-(--brand-cafe)/35'
                   }`}
                 >
                   <input
                     type="checkbox"
                     checked={aceptaBases}
                     onChange={(e) => setAceptaBases(e.target.checked)}
-                    className="mt-1! w-4 h-4 accent-[#1e63b8] shrink-0 cursor-pointer"
+                    className="mt-1! w-4 h-4 accent-(--brand-cafe) shrink-0 cursor-pointer"
                   />
                   <span className="text-sm text-(--text-secondary)">
                     Declaro y acepto expresamente las bases y condiciones de la convocatoria del
@@ -1527,14 +1529,14 @@ export default function FormularioInscripcion() {
                   className={`flex items-start gap-3 rounded-lg border p-4! cursor-pointer transition-colors ${
                     mostrarErrores && !declaracionVoluntaria
                       ? 'border-[#d52b1e]/60 bg-[#d52b1e]/5'
-                      : 'border-(--border) bg-(--bg-primary) hover:border-[#1e63b8]/35'
+                      : 'border-(--border) bg-(--bg-primary) hover:border-(--brand-cafe)/35'
                   }`}
                 >
                   <input
                     type="checkbox"
                     checked={declaracionVoluntaria}
                     onChange={(e) => setDeclaracionVoluntaria(e.target.checked)}
-                    className="mt-1! w-4 h-4 accent-[#1e63b8] shrink-0 cursor-pointer"
+                    className="mt-1! w-4 h-4 accent-(--brand-cafe) shrink-0 cursor-pointer"
                   />
                   <span className="text-sm text-(--text-secondary)">
                     {esExentoProfesional ? (
@@ -1557,14 +1559,14 @@ export default function FormularioInscripcion() {
                     className={`flex items-start gap-3 rounded-lg border p-4! cursor-pointer transition-colors ${
                       mostrarErrores && !autorizaAdultoResponsable
                         ? 'border-[#d52b1e]/60 bg-[#d52b1e]/5'
-                        : 'border-(--border) bg-(--bg-primary) hover:border-[#1e63b8]/35'
+                        : 'border-(--border) bg-(--bg-primary) hover:border-(--brand-cafe)/35'
                     }`}
                   >
                     <input
                       type="checkbox"
                       checked={autorizaAdultoResponsable}
                       onChange={(e) => setAutorizaAdultoResponsable(e.target.checked)}
-                      className="mt-1! w-4 h-4 accent-[#1e63b8] shrink-0 cursor-pointer"
+                      className="mt-1! w-4 h-4 accent-(--brand-cafe) shrink-0 cursor-pointer"
                     />
                     <span className="text-sm text-(--text-secondary)">
                       Yo, <strong>{adultoResponsableNombre || '[nombre del adulto responsable]'}</strong>,
@@ -1610,7 +1612,7 @@ export default function FormularioInscripcion() {
           )}
 
           {/* Navegación */}
-          <div className="flex items-center justify-between mb-16!">
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-16!">
             <button
               type="button"
               onClick={anterior}

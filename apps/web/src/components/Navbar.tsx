@@ -75,44 +75,31 @@ export function Navbar() {
         <span className="pointer-events-none absolute inset-x-0 bottom-0 h-[3px] bg-[linear-gradient(90deg,#d52b1e_0%,#e08f1f_42%,#2e7d46_100%)]" />
       </nav>
 
-      {/* Mobile rail — misma cinta tricolor, ahora en el borde derecho */}
-      <nav className="fixed bottom-0 left-0 top-0 z-50 flex w-[84px] flex-col items-center overflow-y-auto border-r border-(--border) bg-white py-2! shadow-[1px_0_2px_rgba(27,42,74,0.05)] lg:hidden">
-        <Link
-          href={ROUTES.home}
-          className="mb-2! flex h-8 w-16 shrink-0 items-center justify-center"
-        >
-          <Image
-            src="/images/logo_aquicanta.png"
-            alt="Aquí Canta Bolivia"
-            width={1204}
-            height={880}
-            priority
-            className="h-full w-full object-contain"
-          />
-        </Link>
+      {/* Mobile bar — abajo en vez de a la izquierda, para no comerse ancho
+          de pantalla en celulares (antes era una barra vertical de 84px).
+          TODO: con calma, decidir qué hacer con 8 links + login en una barra
+          angosta — por ahora se resuelve con scroll horizontal. */}
+      <nav className="fixed inset-x-0 bottom-0 z-50 flex h-[64px] w-full items-center gap-1.5 overflow-x-auto border-t border-(--border) bg-white px-2! shadow-[0_-1px_2px_rgba(27,42,74,0.05)] lg:hidden">
+        {links.map(({ label, href, icon: Icon }) => {
+          const active = pathname === href;
+          return (
+            <Link
+              key={href}
+              href={href}
+              aria-label={label}
+              title={label}
+              className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border transition-all duration-200 ${
+                active
+                  ? 'border-[#1e63b8]/25 bg-[#1e63b8]/10 text-[#164a8c]'
+                  : 'border-transparent bg-[#1b2a4a]/[0.03] text-(--text-secondary) active:bg-[#1e63b8]/10 active:text-[#164a8c]'
+              }`}
+            >
+              <Icon size={17} />
+            </Link>
+          );
+        })}
 
-        <div className="flex flex-col gap-1.5">
-          {links.map(({ label, href, icon: Icon }) => {
-            const active = pathname === href;
-            return (
-              <Link
-                key={href}
-                href={href}
-                aria-label={label}
-                title={label}
-                className={`flex h-9 w-9 items-center justify-center rounded-xl border transition-all duration-200 ${
-                  active
-                    ? 'border-[#1e63b8]/25 bg-[#1e63b8]/10 text-[#164a8c]'
-                    : 'border-transparent bg-[#1b2a4a]/[0.03] text-(--text-secondary) active:bg-[#1e63b8]/10 active:text-[#164a8c]'
-                }`}
-              >
-                <Icon size={17} />
-              </Link>
-            );
-          })}
-        </div>
-
-        <div className="my-1.5! h-px w-8 bg-(--border)" />
+        <div className="mx-1.5! h-8 w-px shrink-0 bg-(--border)" />
 
         <Link
           href={ROUTES.login}
@@ -121,7 +108,7 @@ export function Navbar() {
           <LogIn size={17} />
         </Link>
 
-        <span className="pointer-events-none absolute inset-y-0 right-0 w-[3px] bg-[linear-gradient(180deg,#d52b1e_0%,#e08f1f_42%,#2e7d46_100%)]" />
+        <span className="pointer-events-none absolute inset-x-0 top-0 h-[3px] bg-[linear-gradient(90deg,#d52b1e_0%,#e08f1f_42%,#2e7d46_100%)]" />
       </nav>
     </header>
   );
