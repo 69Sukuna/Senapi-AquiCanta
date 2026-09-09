@@ -38,7 +38,7 @@ export class GruposService {
 
   findAll() {
     return this.prisma.grupo.findMany({
-      where: { estado: 'APROBADO' },
+      where: { estado: 'PARTICIPANTE_FINAL' },
       select: SELECT_PUBLICO,
       orderBy: { nombre: 'asc' },
     });
@@ -46,7 +46,7 @@ export class GruposService {
 
   async findOne(id: string) {
     const grupo = await this.prisma.grupo.findFirst({
-      where: { id, estado: 'APROBADO' },
+      where: { id, estado: 'PARTICIPANTE_FINAL' },
       select: SELECT_PUBLICO,
     });
 

@@ -5,6 +5,7 @@ import { ChevronLeft, Radio, Sparkles, Vote } from 'lucide-react';
 import { TarjetaCategoria, TarjetaParticipanteVotacion } from '@/components/features/votacion';
 import { useNumberTicker, useVotacionSesion } from '@/hooks';
 import { CONTEO_INICIAL_VOTACION_PREVIA, CONTEO_INICIAL_VOTACION_VIVO, PARTICIPANTES_CALIFICACION } from '@/mocks';
+import { VistaGate } from '@/components/VistaGate';
 
 type Modalidad = 'previa' | 'vivo';
 
@@ -51,6 +52,7 @@ export default function VotacionesPage() {
   const categoriaSeleccionada = categorias.find((c) => c.categoria === categoriaActiva) ?? null;
 
   return (
+    <VistaGate clave="votaciones" nombre="Votaciones">
     <main className="tema-votacion">
       <div className="container">
         <div
@@ -200,5 +202,6 @@ export default function VotacionesPage() {
         )}
       </div>
     </main>
+    </VistaGate>
   );
 }

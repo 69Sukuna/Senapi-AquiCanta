@@ -14,10 +14,16 @@ enum Role {
 }
 
 model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  name      String?
-  role      Role     @default(USER)
+  id       String  @id @default(uuid())
+  email    String  @unique
+  // Único además de email — el login del panel admin acepta cualquiera de
+  // los dos como identificador (ver AuthService.validarUsuario).
+  username String? @unique
+  // Hash bcrypt, nunca el password en texto plano.
+  password String
+  name     String?
+  role     Role    @default(USER)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -55,8 +61,9 @@ enum Departamento {
 }
 
 enum EstadoInscripcion {
-  PENDIENTE
-  APROBADO
+  SIN_CONFIRMAR
+  PRESELECCION
+  PARTICIPANTE_FINAL
   RECHAZADO
 }
 
@@ -117,7 +124,7 @@ model Cantante {
   celular2              String?
   aceptaBases           Boolean           @default(false)
   declaracionVoluntaria Boolean           @default(false)
-  estado                EstadoInscripcion @default(PENDIENTE)
+  estado                EstadoInscripcion @default(SIN_CONFIRMAR)
   createdAt             DateTime          @default(now())
   updatedAt             DateTime          @default(now()) @updatedAt
 
@@ -186,7 +193,7 @@ model Grupo {
   celular2              String?
   aceptaBases           Boolean           @default(false)
   declaracionVoluntaria Boolean           @default(false)
-  estado                EstadoInscripcion @default(PENDIENTE)
+  estado                EstadoInscripcion @default(SIN_CONFIRMAR)
   createdAt             DateTime          @default(now())
   updatedAt             DateTime          @default(now()) @updatedAt
 
@@ -223,6 +230,23 @@ model GrupoIntegrante {
   fotoCiReversoUrl String?
 
   @@map("grupo_integrantes")
+}
+
+// Interruptor por vista pública (Inscripciones, Votaciones, Butacas, etc.):
+// el admin puede apagarla desde /adminpanel/vistas sin tocar código ni hacer
+// un deploy — la página sigue existiendo, solo muestra un aviso de "cerrado"
+// en vez de su contenido normal mientras activo = false. `clave` es el mismo
+// segmento de ruta que usa ROUTES en el frontend (ej. "inscripciones",
+// "realidad-virtual"), así una página solo necesita conocer su propia clave.
+model ConfiguracionVista {
+  id          String   @id @default(uuid())
+  clave       String   @unique
+  nombre      String
+  descripcion String?
+  activo      Boolean  @default(true)
+  updatedAt   DateTime @updatedAt
+
+  @@map("configuraciones_vista")
 }
 
 model Song {

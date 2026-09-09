@@ -5,6 +5,7 @@ dotenv.config({ path: path.resolve(process.cwd(), '../../.env') });
 dotenv.config({ path: path.resolve(process.cwd(), '.env') });
 
 import { PrismaClient } from '@prisma/client';
+import * as bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
@@ -306,7 +307,7 @@ async function main() {
           categoriaId,
           // Datos de ejemplo para mostrar en el sitio, no postulaciones
           // reales pendientes de revisión.
-          estado: 'APROBADO',
+          estado: 'PARTICIPANTE_FINAL',
         },
       });
     }
@@ -329,7 +330,7 @@ async function main() {
           categoriaId,
           // Datos de ejemplo para mostrar en el sitio, no postulaciones
           // reales pendientes de revisión.
-          estado: 'APROBADO',
+          estado: 'PARTICIPANTE_FINAL',
           integrantes: {
             create: integrantes.map((integrante) => ({
               ...integrante,
@@ -406,6 +407,53 @@ async function main() {
     console.log('Seed listo: trayecto de prueba "Recorrido de Prueba" creado.');
   } else {
     console.log(`Trayectos ya existentes (${trayectosExistentes}), no se vuelve a sembrar.`);
+  // Interruptores de vistas públicas (/adminpanel/vistas). `clave` coincide
+  // con el segmento de ruta en ROUTES (apps/web/src/lib/routes.ts). Se usa
+  // upsert (no un check de tabla vacía) para que, si en el futuro se agrega
+  // una vista nueva a esta lista, el seed la cree sin duplicar ni pisar el
+  // "activo" que el admin ya haya configurado en las existentes.
+  const VISTAS_BASE = [
+    { clave: 'inscripciones', nombre: 'Inscripciones', descripcion: 'Formulario de inscripción al festival.' },
+    { clave: 'votaciones', nombre: 'Votaciones', descripcion: 'Votación pública por categoría.' },
+    { clave: 'butacas', nombre: 'Butacas', descripcion: 'Reserva de butacas para el evento.' },
+    { clave: 'calificacion-jurado', nombre: 'Calificación del jurado', descripcion: 'Planilla de calificación para jurados.' },
+    { clave: 'realidad-virtual', nombre: 'Realidad Virtual', descripcion: 'Experiencia de realidad aumentada.' },
+  ];
+  for (const vista of VISTAS_BASE) {
+    await prisma.configuracionVista.upsert({
+      where: { clave: vista.clave },
+      update: { nombre: vista.nombre, descripcion: vista.descripcion },
+      create: { ...vista, activo: true },
+    });
+  }
+  console.log(`Seed listo: ${VISTAS_BASE.length} configuraciones de vista aseguradas.`);
+
+  // Usuario admin del panel — solo se crea si no existe todavía (nunca pisa
+  // un password ya cambiado por el admin). Credenciales desde .env; ver
+  // .env.example para los nombres de variable esperados.
+  const adminEmail = process.env.ADMIN_EMAIL;
+  const adminUsername = process.env.ADMIN_USERNAME;
+  const adminPassword = process.env.ADMIN_PASSWORD;
+
+  if (!adminEmail || !adminPassword) {
+    console.warn('ADMIN_EMAIL / ADMIN_PASSWORD no están en .env — no se creó ningún usuario admin.');
+  } else {
+    const adminExistente = await prisma.user.findUnique({ where: { email: adminEmail } });
+    if (adminExistente) {
+      console.log(`Usuario admin "${adminEmail}" ya existe, no se vuelve a crear.`);
+    } else {
+      const passwordHasheado = await bcrypt.hash(adminPassword, 10);
+      await prisma.user.create({
+        data: {
+          email: adminEmail,
+          username: adminUsername || null,
+          password: passwordHasheado,
+          name: 'Administrador',
+          role: 'ADMIN',
+        },
+      });
+      console.log(`Seed listo: usuario admin "${adminEmail}" creado.`);
+    }
   }
 }
 

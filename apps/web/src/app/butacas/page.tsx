@@ -28,6 +28,7 @@ import HeroButacas from './components/HeroButacas';
 import BannerReservaLugares from './components/BannerReservaLugares';
 import FaqButacas from './components/FaqButacas';
 import ComoLlegarButacas from './components/ComoLlegarButacas';
+import { VistaGate } from '@/components/VistaGate';
 
 // El mapa usa trigonometría (Math.sin/cos) para ubicar cada butaca; el motor
 // V8 del server (Node) y el del browser pueden redondear el último bit
@@ -164,6 +165,7 @@ export default function ButacasPage() {
   };
 
   return (
+    <VistaGate clave="butacas" nombre="Butacas">
     <main>
       <HeroButacas />
       <BannerReservaLugares />
@@ -372,6 +374,7 @@ export default function ButacasPage() {
       <ComoLlegarButacas />
       <BannerFechasClave />
     </main>
+    </VistaGate>
   );
 }
 
