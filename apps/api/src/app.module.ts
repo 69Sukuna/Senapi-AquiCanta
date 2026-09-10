@@ -7,6 +7,7 @@ import { CategoriasModule } from './categorias/categorias.module';
 import { CantantesModule } from './cantantes/cantantes.module';
 import { GruposModule } from './grupos/grupos.module';
 import { InscripcionesModule } from './inscripciones/inscripciones.module';
+import { SellosModule } from './sellos/sellos.module';
 import { StorageModule } from './storage/storage.module';
 
 @Module({
@@ -20,6 +21,7 @@ import { StorageModule } from './storage/storage.module';
     CantantesModule,
     GruposModule,
     InscripcionesModule,
+    SellosModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -9,6 +9,7 @@ export const ROUTES = {
   realidadVirtual: '/realidad-virtual',
   votaciones: '/votaciones',
   calificacionJurado: '/calificacion-jurado',
+  sellos: '/sellos',
   login: '/login',
   registro: '/registro',
   perfil: '/perfil',
