@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import Image from 'next/image';
 import {
   PlanillaCalificacion,
   SelectorCategoria,
@@ -11,6 +12,11 @@ import {
 import { useGestionJurado } from '@/hooks';
 import { CATEGORIAS_CONCURSO, JURADO_TITULARES, PARTICIPANTES_CALIFICACION } from '@/mocks';
 import type { CategoriaConcurso } from '@/types';
+
+const gradientBorderStyle = {
+  borderBottom: '4px solid',
+  borderImage: 'linear-gradient(to right, #e30613, #fcee21, #00873e) 1',
+};
 
 export default function CalificacionJuradoPage() {
   const {
@@ -31,8 +37,6 @@ export default function CalificacionJuradoPage() {
   const [categoriaSeleccionada, setCategoriaSeleccionada] = useState<CategoriaConcurso | null>(null);
   const [participanteActivoId, setParticipanteActivoId] = useState<string | null>(null);
 
-  const juezActivo = JURADO_TITULARES.find((juez) => juez.id === juezActivoId);
-
   const participantesDeCategoria = useMemo(
     () => PARTICIPANTES_CALIFICACION.filter((participante) => participante.categoria === categoriaSeleccionada),
     [categoriaSeleccionada],
@@ -47,35 +51,54 @@ export default function CalificacionJuradoPage() {
   };
 
   return (
-    <main className="tema-votacion">
-      <div className="container">
-        <header className="mb-10 flex flex-wrap items-center justify-between gap-3">
+    <main className="overflow-x-hidden bg-(--brand-crema)">
+      {/* ── 1. Bienvenida ────────────────────────────────────────────────── */}
+      <section className="relative overflow-hidden py-16 lg:py-20" style={gradientBorderStyle}>
+        <div className="pointer-events-none absolute top-1/2 left-0 h-[900px] w-[700px] -translate-x-[70%] -translate-y-1/2">
+          <span className="absolute inset-[80px] rounded-[50%] border-[3px] border-(--brand-cafe)/25" />
+          <span className="absolute inset-[110px] rounded-[50%] border-[5px] border-(--brand-cafe)/25" />
+          <span className="absolute inset-[140px] rounded-[50%] border-[7px] border-(--brand-cafe)/25" />
+          <span className="absolute inset-[170px] rounded-[50%] border-[9px] border-(--brand-cafe)/25" />
+        </div>
+
+        <div className="relative mx-auto grid max-w-6xl grid-cols-1 items-center gap-10 px-6 lg:grid-cols-[1.3fr_1fr] lg:px-12">
           <div>
-            <span className="vt-badge">Sesión de jurado</span>
-            <h1 className="mt-4 text-3xl font-extrabold text-[var(--vt-text-primary)]">Gestión del Jurado Calificador</h1>
-            <p className="mt-2 max-w-2xl leading-relaxed text-[var(--vt-text-secondary)]">
-              Cada jurado califica a un participante a la vez, bajo los mismos criterios técnicos y en una escala
-              de 1 a 100 puntos. Una vez emitido el voto, la calificación queda bloqueada.
+            <p className="font-barlow text-2xl font-light text-(--brand-negro)">Bienvenido</p>
+            <h1 className="font-bakbak text-5xl leading-[0.95] font-black text-(--brand-negro) uppercase lg:text-6xl">
+              Jurado
+            </h1>
+            <h1 className="font-gasoek text-5xl leading-[0.95] text-(--brand-cafe) uppercase lg:text-6xl">
+              Calificador
+            </h1>
+            <p className="font-barlow mt-4 max-w-xl text-base leading-relaxed text-(--brand-cafe)">
+              Cada jurado califica a un participante a la vez, bajo los mismos criterios técnicos y en una escala de
+              1 a 100 puntos. Una vez emitido el voto, la calificación queda bloqueada.
             </p>
           </div>
-          <span className="vt-badge">{juezActivo?.nombre ?? '—'}</span>
-        </header>
 
-        <section className="mb-10">
-          <span className="vt-eyebrow">Jurado calificador</span>
-          <div className="mt-4">
-            <SelectorJuez
-              jueces={JURADO_TITULARES}
-              juezActivoId={juezActivoId}
-              onSeleccionar={seleccionarJuez}
-              progreso={progresoJuez}
-              totalParticipantes={PARTICIPANTES_CALIFICACION.length}
-            />
+          <div className="relative mx-auto hidden aspect-square w-full max-w-xs opacity-70 grayscale lg:block">
+            <Image src="/images/logo_aquicanta.png" alt="Aquí Canta Bolivia" fill className="object-contain" />
           </div>
+        </div>
+      </section>
+
+      <div className="mx-auto max-w-6xl px-6 lg:px-12">
+        {/* ── 2. Jurado activo ──────────────────────────────────────────── */}
+        <section className="border-b border-black/10 py-8">
+          <SelectorJuez
+            jueces={JURADO_TITULARES}
+            juezActivoId={juezActivoId}
+            onSeleccionar={seleccionarJuez}
+            progreso={progresoJuez}
+            totalParticipantes={PARTICIPANTES_CALIFICACION.length}
+          />
         </section>
 
-        <section className="mb-10">
-          <span className="vt-eyebrow">1. Elegir categoría</span>
+        {/* ── 3. Elegir categoría ───────────────────────────────────────── */}
+        <section className="py-8">
+          <h2 className="font-barlow text-lg font-bold text-(--brand-negro)">
+            1. <span className="text-(--brand-cafe)">Elija la categoría que desea calificar</span>
+          </h2>
           <div className="mt-4">
             <SelectorCategoria
               categorias={CATEGORIAS_CONCURSO}
@@ -88,11 +111,14 @@ export default function CalificacionJuradoPage() {
           </div>
         </section>
 
-        <section className="mb-10">
-          <span className="vt-eyebrow">2. Elegir participante a calificar</span>
+        {/* ── 4. Elegir participante ────────────────────────────────────── */}
+        <section className="py-8">
+          <h2 className="font-barlow text-lg font-bold text-(--brand-negro)">
+            2. <span className="text-(--brand-cafe)">Elija al participante a calificar</span>
+          </h2>
           <div className="mt-4">
             {!categoriaSeleccionada ? (
-              <p className="vt-card p-5 text-center text-sm text-[var(--vt-text-muted)]">
+              <p className="rounded-2xl border border-black/10 bg-white p-5 text-center font-barlow text-sm text-(--brand-cafe)">
                 Seleccione primero una categoría para ver a sus participantes.
               </p>
             ) : participantesDeCategoria.length > 0 ? (
@@ -103,7 +129,7 @@ export default function CalificacionJuradoPage() {
                 estaEmitido={(participanteId) => estaEmitido(juezActivoId, participanteId)}
               />
             ) : (
-              <p className="vt-card p-5 text-center text-sm text-[var(--vt-text-muted)]">
+              <p className="rounded-2xl border border-black/10 bg-white p-5 text-center font-barlow text-sm text-(--brand-cafe)">
                 Todavía no hay participantes de ejemplo cargados en &ldquo;{categoriaSeleccionada}&rdquo;.
               </p>
             )}
@@ -111,7 +137,7 @@ export default function CalificacionJuradoPage() {
         </section>
 
         {participanteActivo && (
-          <section className="mb-10">
+          <section className="py-8">
             <PlanillaCalificacion
               participante={participanteActivo}
               numero={indiceParticipante + 1}
@@ -128,11 +154,17 @@ export default function CalificacionJuradoPage() {
           </section>
         )}
 
-        <section>
-          <h2 className="mb-5 text-xl font-extrabold text-[var(--vt-text-primary)]">Resultados Consolidados</h2>
+        <section className="py-8">
+          <h2 className="font-bakbak mb-5 text-xl font-black text-(--brand-negro)">Resultados Consolidados</h2>
           <TablaResultadosJurado resultados={resultados} />
         </section>
       </div>
+
+      {/* ── 5. Franja fotográfica ────────────────────────────────────────── */}
+      <section className="relative mt-10 h-72 overflow-hidden lg:h-80" style={gradientBorderStyle}>
+        <Image src="/images/header.jpg" alt="" fill className="object-cover object-center" />
+        <div className="absolute inset-0 bg-(--brand-negro)/70" />
+      </section>
     </main>
   );
 }

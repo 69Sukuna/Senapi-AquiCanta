@@ -38,34 +38,27 @@ export function PlanillaCalificacion({
       <div className="flex flex-col gap-6">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <span className="vt-eyebrow">Planilla digital</span>
-            <h2 className="mt-1 text-2xl font-extrabold text-[var(--vt-text-primary)]">Evaluación artística</h2>
-            <p className="mt-1 text-sm text-[var(--vt-text-secondary)]">
+            <span className="font-barlow text-xs font-bold tracking-[0.2em] text-(--brand-cafe) uppercase">
+              Planilla digital
+            </span>
+            <h2 className="font-bakbak mt-1 text-2xl font-black text-(--brand-negro)">Evaluación Artística</h2>
+            <p className="font-barlow mt-1 text-sm text-(--brand-cafe)">
               Califique al participante según los criterios establecidos.
             </p>
           </div>
           <div className="flex flex-col items-end gap-1">
-            <span className="text-[0.65rem] font-bold uppercase tracking-wider text-[var(--vt-text-muted)]">
+            <span className="font-barlow text-[0.65rem] font-bold tracking-wider text-(--brand-cafe) uppercase">
               Participante
             </span>
-            <span className="text-2xl font-extrabold tabular-nums text-[var(--vt-text-primary)]">
+            <span className="font-barlow text-2xl font-extrabold tabular-nums text-(--brand-negro)">
               {numero}
-              <span className="text-sm font-semibold text-[var(--vt-text-muted)]"> / {totalParticipantes}</span>
+              <span className="text-sm font-semibold text-(--brand-cafe)"> / {totalParticipantes}</span>
             </span>
-            <div className="h-1 w-24 overflow-hidden rounded-full" style={{ background: 'rgba(27,42,74,0.08)' }}>
-              <div
-                className="h-full rounded-full"
-                style={{ width: `${(numero / totalParticipantes) * 100}%`, background: 'var(--vt-gradient-brand)' }}
-              />
-            </div>
           </div>
         </div>
 
-        <div className="vt-card flex flex-col items-center gap-4 px-6 py-8 text-center">
-          <div
-            className="relative h-20 w-20 shrink-0 overflow-hidden rounded-full"
-            style={{ background: 'var(--vt-gradient-brand)' }}
-          >
+        <div className="overflow-hidden rounded-2xl bg-(--brand-cafe) px-6 py-8 text-center text-white shadow-sm">
+          <div className="relative mx-auto h-20 w-20 shrink-0 overflow-hidden rounded-full border-2 border-white/60">
             <Image
               src={participante.imagen}
               alt={participante.nombreArtistico}
@@ -74,26 +67,30 @@ export function PlanillaCalificacion({
               className="object-cover"
             />
           </div>
-          <span className="vt-eyebrow">En competencia</span>
-          <h3 className="text-lg font-extrabold text-[var(--vt-text-primary)]">{participante.nombreArtistico}</h3>
-          <p className="max-w-md text-xs leading-relaxed text-[var(--vt-text-secondary)]">
-            Origen: <span className="text-[var(--vt-text-primary)]">{participante.departamento}</span> · Tema:{' '}
-            <span className="text-[var(--vt-text-primary)]">&ldquo;{participante.obra.titulo}&rdquo;</span>
+          <span className="font-barlow mt-3 block text-xs font-bold tracking-[0.2em] text-white/70 uppercase">
+            En competencia
+          </span>
+          <h3 className="font-bakbak mt-1 text-lg font-black">{participante.nombreArtistico}</h3>
+          <p className="font-barlow mt-2 max-w-md text-xs leading-relaxed text-white/80 mx-auto">
+            Origen: <span className="font-semibold text-white">{participante.departamento}</span> · Tema:{' '}
+            <span className="font-semibold text-white">&ldquo;{participante.obra.titulo}&rdquo;</span>
           </p>
-          <span className="vt-badge mt-1 font-mono text-[0.6rem]">Categoría · {participante.categoria}</span>
+          <span className="font-barlow mt-3 inline-block rounded-full bg-white/15 px-3 py-1 text-[0.6rem] font-bold tracking-wide text-white uppercase">
+            Categoría · {participante.categoria}
+          </span>
         </div>
 
         <div>
           <div className="flex flex-wrap items-end justify-between gap-2">
             <div>
-              <h3 className="text-lg font-extrabold text-[var(--vt-text-primary)]">Rúbrica de calificación</h3>
-              <p className="text-xs text-[var(--vt-text-secondary)]">
+              <h3 className="font-bakbak text-lg font-black text-(--brand-negro)">Rúbrica de calificación</h3>
+              <p className="font-barlow text-xs text-(--brand-cafe)">
                 Baremo oficial de la categoría &ldquo;{participante.categoria}&rdquo;: asigne un puntaje dentro del rango de
                 cada criterio.
               </p>
             </div>
-            <span className="text-xs font-bold tabular-nums text-[var(--vt-mustard-deep)]">
-              {criteriosRespondidos} de {criterios.length} respondidos
+            <span className="font-barlow text-xs font-bold tabular-nums text-(--brand-cafe)">
+              {criteriosRespondidos}/{criterios.length} respondidos
             </span>
           </div>
 
@@ -110,22 +107,24 @@ export function PlanillaCalificacion({
               };
 
               return (
-                <div key={criterio.clave} className="vt-card flex flex-col gap-3 p-5">
+                <div key={criterio.clave} className="flex flex-col gap-3 rounded-2xl border border-black/10 bg-white p-5 shadow-sm">
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-start gap-3">
-                      <span className="mt-0.5 text-[0.65rem] font-bold text-[var(--vt-text-muted)]" aria-hidden="true">
+                      <span className="font-barlow mt-0.5 text-[0.65rem] font-bold text-(--brand-cafe)" aria-hidden="true">
                         C{indice + 1}
                       </span>
                       <div>
-                        <label htmlFor={inputId} className="text-sm font-bold text-[var(--vt-text-primary)]">
+                        <label htmlFor={inputId} className="font-barlow text-sm font-bold text-(--brand-negro)">
                           {criterio.etiqueta}
                         </label>
-                        <p className="mt-1.5 text-xs leading-relaxed text-[var(--vt-text-muted)]">
+                        <p className="font-barlow mt-1.5 text-xs leading-relaxed text-(--brand-cafe)/80">
                           {criterio.descripcion}
                         </p>
                       </div>
                     </div>
-                    <span className="vt-badge shrink-0 text-[0.6rem]">{porcentaje}%</span>
+                    <span className="font-barlow shrink-0 rounded-full bg-(--brand-crema) px-2.5 py-1 text-[0.6rem] font-bold text-(--brand-cafe)">
+                      {porcentaje}%
+                    </span>
                   </div>
 
                   <div className="flex items-center gap-4">
@@ -139,11 +138,11 @@ export function PlanillaCalificacion({
                       disabled={emitido}
                       onChange={manejarCambio}
                       aria-label={`${criterio.etiqueta} para ${participante.nombreArtistico}`}
-                      className="vt-range w-full disabled:cursor-not-allowed disabled:opacity-50"
+                      className="jurado-range w-full disabled:cursor-not-allowed disabled:opacity-50"
                     />
-                    <span className="w-16 shrink-0 text-right text-lg font-extrabold tabular-nums text-[var(--vt-text-primary)]">
+                    <span className="font-barlow w-16 shrink-0 text-right text-lg font-extrabold tabular-nums text-(--brand-negro)">
                       {valor}
-                      <span className="text-xs font-semibold text-[var(--vt-text-muted)]">/{criterio.puntajeMaximo}</span>
+                      <span className="text-xs font-semibold text-(--brand-cafe)">/{criterio.puntajeMaximo}</span>
                     </span>
                   </div>
                 </div>
@@ -153,14 +152,16 @@ export function PlanillaCalificacion({
         </div>
       </div>
 
-      <div className="vt-card static lg:sticky lg:top-6 flex flex-col gap-5 p-6">
+      <div className="static flex flex-col gap-5 rounded-2xl border border-black/10 bg-white p-6 shadow-sm lg:sticky lg:top-6">
         <div className="text-center">
-          <span className="vt-eyebrow">Puntaje final</span>
-          <p className="mt-2 font-mono text-5xl font-extrabold tabular-nums text-[var(--vt-mustard-deep)]">
+          <span className="font-barlow text-xs font-bold tracking-[0.2em] text-(--brand-cafe) uppercase">
+            Puntaje final
+          </span>
+          <p className="font-bakbak mt-2 text-5xl font-black tabular-nums text-(--brand-negro)">
             {total.toFixed(1)}
-            <span className="text-lg font-semibold text-[var(--vt-text-muted)]">/{PUNTAJE_MAXIMO_TOTAL}</span>
+            <span className="font-barlow text-lg font-semibold text-(--brand-cafe)">/{PUNTAJE_MAXIMO_TOTAL}</span>
           </p>
-          <p className="mt-1 text-xs text-[var(--vt-text-muted)]">
+          <p className="font-barlow mt-1 text-xs text-(--brand-cafe)">
             {emitido
               ? 'Calificación emitida'
               : criteriosRespondidos === 0
@@ -169,29 +170,23 @@ export function PlanillaCalificacion({
           </p>
         </div>
 
-        <div className="flex items-center justify-between border-y py-3 text-xs" style={{ borderColor: 'var(--vt-border)' }}>
-          <span className="font-semibold text-[var(--vt-text-muted)]">Criterios evaluados</span>
-          <span className="font-bold tabular-nums text-[var(--vt-text-primary)]">
+        <div className="flex items-center justify-between border-y border-black/10 py-3 text-xs">
+          <span className="font-barlow font-semibold text-(--brand-cafe)">Criterios evaluados</span>
+          <span className="font-barlow font-bold tabular-nums text-(--brand-negro)">
             {criteriosRespondidos}/{criterios.length}
           </span>
         </div>
 
-        <div
-          className="flex items-start gap-2 rounded-xl p-3 text-xs"
-          style={{ background: 'rgba(224,143,31,0.1)', border: '1px solid var(--vt-border)' }}
-        >
-          <ShieldCheck size={16} className="mt-0.5 shrink-0" style={{ color: 'var(--vt-mustard-deep)' }} aria-hidden="true" />
+        <div className="flex items-start gap-2 rounded-xl border border-black/10 bg-(--brand-crema) p-3 text-xs">
+          <ShieldCheck size={16} className="mt-0.5 shrink-0 text-(--brand-cafe)" aria-hidden="true" />
           <div>
-            <p className="font-bold text-[var(--vt-text-primary)]">Su calificación es confidencial</p>
-            <p className="mt-0.5 text-[var(--vt-text-muted)]">Una vez emitida, no podrá modificarse.</p>
+            <p className="font-barlow font-bold text-(--brand-negro)">Su calificación es confidencial</p>
+            <p className="font-barlow mt-0.5 text-(--brand-cafe)">Una vez emitida, no podrá modificarse.</p>
           </div>
         </div>
 
         {emitido ? (
-          <div
-            className="flex items-center justify-center gap-2 rounded-xl px-5 py-4 text-sm font-bold uppercase tracking-wide"
-            style={{ background: 'rgba(224,143,31,0.14)', color: 'var(--vt-mustard-deep)', border: '1px solid var(--vt-border-active)' }}
-          >
+          <div className="flex items-center justify-center gap-2 rounded-xl border border-(--brand-verde)/30 bg-(--brand-verde)/10 px-5 py-4 text-sm font-bold tracking-wide text-(--brand-verde) uppercase">
             <Lock size={16} aria-hidden="true" /> Calificación emitida
           </div>
         ) : (
@@ -200,13 +195,15 @@ export function PlanillaCalificacion({
               type="button"
               onClick={onEmitir}
               disabled={!criteriosCompletos}
-              className={`flex items-center justify-center gap-2 rounded-xl px-5 py-4 text-sm font-bold uppercase tracking-wide transition-opacity disabled:cursor-not-allowed ${
-                criteriosCompletos ? 'vt-btn-vote' : 'vt-btn-disabled'
+              className={`flex items-center justify-center gap-2 rounded-xl px-5 py-4 text-sm font-bold tracking-wide uppercase transition-opacity disabled:cursor-not-allowed ${
+                criteriosCompletos
+                  ? 'bg-(--brand-negro) text-white hover:opacity-90'
+                  : 'bg-black/10 text-(--brand-cafe)/60'
               }`}
             >
               Confirmar y emitir voto <ArrowRight size={16} aria-hidden="true" />
             </button>
-            <p className="text-center text-[0.65rem] text-[var(--vt-text-muted)]">
+            <p className="font-barlow text-center text-[0.65rem] text-(--brand-cafe)">
               Complete todos los criterios para habilitar la emisión.
             </p>
           </>
