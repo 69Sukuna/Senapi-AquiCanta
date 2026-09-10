@@ -7,6 +7,7 @@ import { CategoriasModule } from './categorias/categorias.module';
 import { CantantesModule } from './cantantes/cantantes.module';
 import { GruposModule } from './grupos/grupos.module';
 import { InscripcionesModule } from './inscripciones/inscripciones.module';
+import { StorageModule } from './storage/storage.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { InscripcionesModule } from './inscripciones/inscripciones.module';
       isGlobal: true,
     }),
     PrismaModule,
+    StorageModule,
     CategoriasModule,
     CantantesModule,
     GruposModule,

@@ -15,6 +15,10 @@ build
 dist/
 *.tsbuildinfo
 
+# Fotos de carnet subidas localmente (storage por defecto antes de elegir
+# un proveedor en la nube) — nunca deben llegar al repo.
+apps/api/uploads/
+
 # Turbo
 .turbo
 

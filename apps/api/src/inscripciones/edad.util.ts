@@ -2,7 +2,7 @@
 // AGOSTO 2026): Ñusta e infantiles se miden contra esta fecha, no contra hoy.
 export const FECHA_CORTE_CONVOCATORIA = new Date('2026-09-10T00:00:00Z');
 
-function edadEnFecha(fechaNacimiento: Date, fechaCorte: Date): number {
+export function edadEnFecha(fechaNacimiento: Date, fechaCorte: Date = FECHA_CORTE_CONVOCATORIA): number {
   let edad = fechaCorte.getUTCFullYear() - fechaNacimiento.getUTCFullYear();
   const aunNoCumpleEsteAno =
     fechaCorte.getUTCMonth() < fechaNacimiento.getUTCMonth() ||

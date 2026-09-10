@@ -6,8 +6,10 @@ dotenv.config({ path: path.resolve(process.cwd(), '../../.env') });
 dotenv.config({ path: path.resolve(process.cwd(), '.env') });
 dotenv.config();
 
+import { join } from 'path';
 import { NestFactory } from '@nestjs/core';
 import { Logger, ValidationPipe } from '@nestjs/common';
+import { NestExpressApplication } from '@nestjs/platform-express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 
@@ -43,13 +45,21 @@ async function listenWithRetry(app: import('@nestjs/common').INestApplication, p
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
   // Enable CORS
   app.enableCors({
     origin: '*',
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
   });
+
+  // Sirve los archivos guardados por LocalDiskStorageService en
+  // GET /uploads/** (ver apps/api/src/storage). Se usa el `useStaticAssets`
+  // que ya trae @nestjs/platform-express en vez de @nestjs/serve-static
+  // porque ese paquete no tiene ninguna versión compatible con Express 5
+  // (el que usa este proyecto) — v4 asume la sintaxis de rutas de Express 4
+  // y v12 pide una API de @nestjs/common más nueva que la instalada acá.
+  app.useStaticAssets(join(process.cwd(), 'uploads'), { prefix: '/uploads/' });
 
   // Global validation pipe
   app.useGlobalPipes(
