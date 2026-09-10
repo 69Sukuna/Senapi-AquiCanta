@@ -2,9 +2,11 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 
 // Solo "datos generales" del grupo (ver Anexo 1) + los campos públicos de
-// cada integrante. Nunca se exponen acá celular1/celular2 del grupo, ni
-// ciNumero/ciExtension/edad/whatsapp/direccion de cada integrante — esos
-// son privados y solo se ven en /inscripciones (panel de administración).
+// cada integrante. Nunca se exponen acá celular1/celular2 del grupo,
+// fotosCarnetsGrupalUrls, ni ciNumero/ciExtension/edad/whatsapp/direccion/
+// fotoCiAnversoUrl/fotoCiReversoUrl de cada integrante — esos son privados
+// y solo se ven en /inscripciones (panel de administración). NO agregar
+// esas columnas acá.
 const SELECT_PUBLICO = {
   id: true,
   nombre: true,
@@ -18,6 +20,7 @@ const SELECT_PUBLICO = {
   fotoUrl: true,
   categoriaId: true,
   categoria: true,
+  // NO agregar fotoCiAnversoUrl/fotoCiReversoUrl del integrante acá.
   integrantes: {
     select: {
       id: true,

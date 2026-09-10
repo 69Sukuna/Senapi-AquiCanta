@@ -530,7 +530,9 @@ function construirAnexo3(
   contenido.push(parrafo(FESTIVAL, { after: 0 }));
   contenido.push(parrafo('Presente:', { bold: true, after: 240 }));
 
-  const esExentoProfesional = datos.categoria === 'Especial' || datos.categoria === 'Composición';
+  // El texto oficial del Anexo 3 dice literal "(Omitir este punto para la
+  // categoría: Especial)" — solo Especial, no Composición.
+  const esExentoProfesional = datos.categoria === 'Especial';
 
   contenido.push(
     parrafo(`Yo, ${integrante.nombre || '—'}, con C.I. ${ciCompleto(integrante)}, postulante a la categoría ${datos.categoria}.`, {
@@ -561,35 +563,47 @@ function construirAnexo3(
   return contenido;
 }
 
-// El Anexo 4 no tiene una plantilla original (es la carta física de
-// autorización de participación que exige la convocatoria para categorías
-// infantiles) — se construye desde cero con el mismo estilo de los demás
-// Anexos, capturando los mismos términos: quién autoriza, a quién, y para qué.
-function construirAnexo4(datos: DatosInscripcion): (Paragraph | Table)[] {
+// Texto literal del Anexo 4 oficial ("AUTORIZACIÓN PATERNA / TUTOR LEGAL"),
+// tomado de conv-act.docx — antes no existía la plantilla real y se había
+// redactado desde cero; ahora se reescribe fiel al documento, incluyendo
+// el C.I. del adulto Y el del menor (el oficial pide ambos).
+function construirAnexo4(datos: DatosInscripcion, menor: IntegranteInscripcion): (Paragraph | Table)[] {
   const adulto = datos.adultoResponsable!;
-  const contenido: (Paragraph | Table)[] = [
-    ...tituloAnexo(4, 'AUTORIZACIÓN DE PARTICIPACIÓN DEL/LA MENOR', 34),
-  ];
+  const contenido: (Paragraph | Table)[] = [...tituloAnexo(4, 'AUTORIZACIÓN PATERNA / TUTOR LEGAL', 34)];
 
   contenido.push(parrafo(`Oruro, ${fechaLarga()}`, { align: AlignmentType.RIGHT, after: 240 }));
   contenido.push(parrafo('Señores:', { bold: true, after: 0 }));
   contenido.push(parrafo('Comité Organizador', { after: 0 }));
   contenido.push(parrafo(FESTIVAL, { after: 0 }));
-  contenido.push(parrafo('Presente:', { bold: true, after: 240 }));
+  contenido.push(parrafo('Presente. -', { bold: true, after: 200 }));
+  contenido.push(
+    new Paragraph({
+      alignment: AlignmentType.CENTER,
+      spacing: { after: 200 },
+      children: [
+        new TextRun({
+          text: 'Ref.: AUTORIZACIÓN DE PARTICIPACIÓN PARA MENOR DE EDAD',
+          bold: true,
+          underline: { type: UnderlineType.SINGLE },
+        }),
+      ],
+    }),
+  );
+  contenido.push(parrafo('De mi mayor consideración:', { after: 200 }));
 
   contenido.push(
     parrafo(
-      `Yo, ${adulto.nombre || '—'}, con C.I. ${ciCompleto(adulto)}, celular de contacto ${adulto.celular || '—'}, declaro encontrarme como padre, madre o tutor legal del/la menor ${datos.nombrePostulante || '—'}, postulante a la categoría ${datos.categoria}.`,
+      `Yo, ${adulto.nombre || '—'}, con Carnet de Identidad N° ${ciCompleto(adulto)}, en mi condición de (Padre / Madre / Tutor Legal) del menor de edad ${menor.nombre || '—'}, con Carnet de Identidad N° ${ciCompleto(menor)}; mediante la presente AUTORIZO de manera expresa y voluntaria la participación de mi hijo/a (o representado/a) en el ${FESTIVAL}, dentro de la categoría ${datos.categoria}.`,
       { after: 200 },
     ),
   );
   contenido.push(
     parrafo(
-      `En dicha calidad, autorizo expresamente su participación en el ${FESTIVAL}, asumiendo la responsabilidad que corresponde a un adulto responsable durante su intervención en el certamen, conforme a las bases y condiciones de la convocatoria.`,
+      'Asimismo, declaro conocer y aceptar en su totalidad las bases, condiciones y reglamentos establecidos por el Comité Organizador para el desarrollo del festival.',
       { after: 240 },
     ),
   );
-  contenido.push(parrafo('Sin más que añadir a la presente nota me despido con las consideraciones distinguidas.', { after: 160 }));
+  contenido.push(parrafo('Sin otro particular en particular, me despido con las consideraciones más distinguidas.', { after: 160 }));
   contenido.push(...bloqueFirma());
 
   return contenido;
@@ -622,8 +636,10 @@ export async function generarInscripcionDocx(datos: DatosInscripcion) {
   });
 
   if (datos.adultoResponsable) {
+    // Solo aplica a categorías individuales infantiles (integrantesMax=1),
+    // así que el único integrante ES el/la menor.
     contenido.push(new Paragraph({ children: [], pageBreakBefore: true }));
-    contenido.push(...construirAnexo4(datos));
+    contenido.push(...construirAnexo4(datos, datos.integrantes[0]));
   }
 
   const documento = new Document({
