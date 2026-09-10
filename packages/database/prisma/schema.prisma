@@ -131,6 +131,15 @@ model Cantante {
   adultoResponsableCelular     String?
   autorizaParticipacionAdultoResponsable Boolean @default(false)
 
+  // Foto del carnet de identidad (anverso/reverso) — privada, nunca se
+  // expone en endpoints públicos. No confundir con fotoUrl (foto pública
+  // de perfil del artista).
+  fotoCiAnversoUrl String?
+  fotoCiReversoUrl String?
+  // Foto del carnet del adulto responsable — mismo criterio de privacidad.
+  adultoResponsableFotoCiAnversoUrl String?
+  adultoResponsableFotoCiReversoUrl String?
+
   // Músicos de acompañamiento (categorías individuales que lo permiten).
   acompanantes Acompanante[]
 
@@ -145,6 +154,11 @@ model Acompanante {
   ciNumero    String?
   ciExtension String?
   instrumento String?
+
+  // Foto del carnet de identidad (anverso/reverso) — privada, nunca se
+  // expone en endpoints públicos.
+  fotoCiAnversoUrl String?
+  fotoCiReversoUrl String?
 
   @@map("acompanantes")
 }
@@ -176,6 +190,14 @@ model Grupo {
   createdAt             DateTime          @default(now())
   updatedAt             DateTime          @default(now()) @updatedAt
 
+  // Alternativa a subir la foto del carnet integrante por integrante: un
+  // representante sube una o varias fotos/PDFs con todos los carnets del
+  // grupo juntos (pensado para categorías con muchos integrantes, ej.
+  // Estudiantina/Autóctono, donde pedir anverso+reverso a cada uno es
+  // demasiada carga para llenar desde el celular). Privado, nunca se
+  // expone en endpoints públicos.
+  fotosCarnetsGrupalUrls String[] @default([])
+
   @@map("grupos")
 }
 
@@ -195,6 +217,11 @@ model GrupoIntegrante {
   whatsapp        String?
   direccion       String?
 
+  // Foto del carnet de identidad (anverso/reverso) — privada, nunca se
+  // expone en endpoints públicos.
+  fotoCiAnversoUrl String?
+  fotoCiReversoUrl String?
+
   @@map("grupo_integrantes")
 }
 
@@ -210,4 +237,80 @@ model Song {
   updatedAt   DateTime       @updatedAt
 
   @@map("songs")
+}
+
+// --- Sellos: pasaporte de sellos tipo scouts, genérico para varios eventos ---
+// Trayecto > Evento > PuntoEscaneo (agrupados por `instancia` para permitir
+// "recuperar" un evento en otra fecha/lugar) > EscaneoPunto (por visitante).
+// Rango exige un conjunto específico de Eventos completados.
+
+model Trayecto {
+  id          String   @id @default(uuid())
+  nombre      String
+  descripcion String?
+  imagenUrl   String? // insignia final al completar todo el trayecto
+  activo      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  eventos Evento[]
+  rangos  Rango[]
+
+  @@map("trayectos")
+}
+
+model Evento {
+  id         String   @id @default(uuid())
+  trayectoId String
+  trayecto   Trayecto @relation(fields: [trayectoId], references: [id], onDelete: Cascade)
+  nombre     String
+  orden      Int      @default(0)
+  imagenUrl  String? // insignia al completar el evento
+
+  puntos PuntoEscaneo[]
+  rangos Rango[] // m:n implícito con Rango.eventos
+
+  @@map("eventos")
+}
+
+model PuntoEscaneo {
+  id        String  @id @default(uuid())
+  eventoId  String
+  evento    Evento  @relation(fields: [eventoId], references: [id], onDelete: Cascade)
+  // Etiqueta de la repetición del evento (ej. "Sábado" / "Domingo"). Puntos con
+  // la misma etiqueta forman una ocurrencia; hay que escanearlos todos juntos
+  // para completar el evento por esa vía. null = ocurrencia única sin repetición.
+  instancia String?
+  nombre    String?
+  codigo    String  @unique // valor codificado en el QR/imagen físico
+  imagenUrl String? // imagen que se revela al escanear este punto
+
+  escaneos EscaneoPunto[]
+
+  @@map("puntos_escaneo")
+}
+
+model EscaneoPunto {
+  id          String       @id @default(uuid())
+  // UUID anónimo generado en el navegador (aún no hay login); cuando exista,
+  // este mismo campo puede recibir directamente el id del User.
+  visitorId   String
+  puntoId     String
+  punto       PuntoEscaneo @relation(fields: [puntoId], references: [id], onDelete: Cascade)
+  escaneadoEn DateTime     @default(now())
+
+  @@unique([visitorId, puntoId])
+  @@index([visitorId])
+  @@map("escaneos_punto")
+}
+
+model Rango {
+  id         String   @id @default(uuid())
+  trayectoId String
+  trayecto   Trayecto @relation(fields: [trayectoId], references: [id], onDelete: Cascade)
+  nombre     String
+  orden      Int      @default(0)
+
+  eventos Evento[] // eventos que este rango exige completados
+
+  @@map("rangos")
 }
