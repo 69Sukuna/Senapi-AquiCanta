@@ -36,20 +36,39 @@ function PhoneIcon(props: SVGProps<SVGSVGElement>) {
 export default function RealidadVirtualPage() {
   return (
     <main className="overflow-x-hidden bg-(--brand-crema)">
-      {/* Versión Mobile: se mantiene la experiencia AR actual sin cambios */}
-      <div className="mx-auto max-w-4xl px-6 py-16 md:hidden">
-        <span className="badge badge-gold">Realidad Aumentada</span>
-        <h1 className="mt-4 text-3xl font-extrabold text-[var(--text-primary)] sm:text-4xl">
-          La pintura cobra vida
-        </h1>
-        <p className="mt-2 max-w-2xl text-[var(--text-secondary)]">
-          Apunta tu cámara a la pintura del festival para verla saludarte con voz propia.
-        </p>
-
-        <div className="mt-10">
-          <EscenaPinturaARCliente />
+      {/* Versión Mobile: mismo contenido, con fondos/tipografía/colores de la versión de escritorio */}
+      <section
+        className="relative overflow-hidden bg-(--brand-crema) px-6 py-16 md:hidden"
+        style={gradientBorderStyle}
+      >
+        {/* Anillos decorativos, a juego con la sección equivalente de escritorio */}
+        <div className="pointer-events-none absolute top-0 right-0 h-72 w-72 -translate-y-1/4 translate-x-[35%]">
+          <span className="absolute inset-[35px] rounded-[50%] border-[3px] border-(--brand-cafe)/30" />
+          <span className="absolute inset-[55px] rounded-[50%] border-[4px] border-(--brand-cafe)/30" />
+          <span className="absolute inset-[75px] rounded-[50%] border-[5px] border-(--brand-cafe)/30" />
         </div>
-      </div>
+
+        <div className="relative mx-auto max-w-4xl">
+          <span className="badge badge-gold">Realidad Aumentada</span>
+
+          <h1 className="mt-4 leading-[0.9] tracking-tight">
+            <span className="font-bakbak block text-4xl! text-(--brand-negro) uppercase sm:text-5xl!">
+              La pintura
+            </span>
+            <span className="font-gasoek block text-4xl! text-(--brand-cafe) uppercase sm:text-5xl!">
+              cobra vida
+            </span>
+          </h1>
+
+          <p className="font-barlow mt-4 max-w-2xl text-lg! font-medium leading-relaxed text-(--brand-cafe)">
+            Apunta tu cámara a la pintura del festival para verla saludarte con voz propia.
+          </p>
+
+          <div className="mt-10">
+            <EscenaPinturaARCliente />
+          </div>
+        </div>
+      </section>
 
       {/* Versión Desktop: maquetación dedicada de la página Realidad Virtual */}
       <div className="hidden md:block">
