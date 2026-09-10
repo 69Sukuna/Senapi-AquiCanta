@@ -37,6 +37,11 @@ COPY --from=installer /app/node_modules ./node_modules
 COPY --from=installer /app/apps/api/dist ./apps/api/dist
 COPY --from=installer /app/apps/api/package.json ./apps/api/package.json
 
+# LocalDiskStorageService escribe en <cwd>/uploads/ci (cwd = /app, por el
+# WORKDIR de arriba). Todo lo copiado hasta acá queda como root; sin esto, el
+# usuario sin privilegios de abajo no puede crear esa carpeta al arrancar.
+RUN mkdir -p /app/uploads/ci && chown -R nestjs:nodejs /app/uploads
+
 USER nestjs
 EXPOSE 4000
 
