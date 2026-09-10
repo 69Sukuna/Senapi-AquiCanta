@@ -343,6 +343,70 @@ async function main() {
   } else {
     console.log(`Grupos ya existentes (${gruposExistentes}), no se vuelve a sembrar.`);
   }
+
+  // Trayecto de prueba para la mecánica de Sellos: ejercita los tres casos del
+  // modelo (evento simple, evento con varios puntos obligatorios en la misma
+  // instancia, y recuperación vía una instancia alternativa).
+  const trayectosExistentes = await prisma.trayecto.count();
+  if (trayectosExistentes === 0) {
+    const trayecto = await prisma.trayecto.create({
+      data: {
+        nombre: 'Recorrido de Prueba',
+        descripcion: 'Trayecto de ejemplo para probar la mecánica de Sellos antes de cargar datos reales.',
+        eventos: {
+          create: [
+            {
+              nombre: 'Apertura',
+              orden: 1,
+              puntos: { create: [{ codigo: 'apertura-unico', nombre: 'Apertura del festival' }] },
+            },
+            {
+              nombre: 'Feria de Stands',
+              orden: 2,
+              puntos: {
+                create: [
+                  { codigo: 'feria-sabado-1', instancia: 'Sábado', nombre: 'Stand de artesanías' },
+                  { codigo: 'feria-sabado-2', instancia: 'Sábado', nombre: 'Stand de comida' },
+                  { codigo: 'feria-domingo-1', instancia: 'Domingo', nombre: 'Stand de artesanías' },
+                  { codigo: 'feria-domingo-2', instancia: 'Domingo', nombre: 'Stand de comida' },
+                ],
+              },
+            },
+            {
+              nombre: 'Gala Final',
+              orden: 3,
+              puntos: { create: [{ codigo: 'gala-final-unico', nombre: 'Gala final' }] },
+            },
+          ],
+        },
+      },
+      include: { eventos: true },
+    });
+
+    const eventoPorOrden = new Map(trayecto.eventos.map((evento) => [evento.orden, evento.id]));
+
+    await prisma.rango.create({
+      data: {
+        trayectoId: trayecto.id,
+        nombre: 'Explorador',
+        orden: 1,
+        eventos: { connect: [{ id: eventoPorOrden.get(1) }] },
+      },
+    });
+    await prisma.rango.create({
+      data: {
+        trayectoId: trayecto.id,
+        nombre: 'Coleccionista',
+        orden: 2,
+        eventos: {
+          connect: [1, 2, 3].map((orden) => ({ id: eventoPorOrden.get(orden) })),
+        },
+      },
+    });
+    console.log('Seed listo: trayecto de prueba "Recorrido de Prueba" creado.');
+  } else {
+    console.log(`Trayectos ya existentes (${trayectosExistentes}), no se vuelve a sembrar.`);
+  }
 }
 
 main()

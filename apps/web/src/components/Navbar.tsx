@@ -14,6 +14,7 @@ import {
   Glasses,
   Vote,
   LogIn,
+  Stamp,
 } from 'lucide-react';
 
 const links = [
@@ -25,6 +26,7 @@ const links = [
   { label: 'Realidad Virtual', href: ROUTES.realidadVirtual, icon: Glasses },
   { label: 'Votaciones', href: ROUTES.votaciones, icon: Vote },
   { label: 'Jurado', href: ROUTES.calificacionJurado, icon: Users },
+  { label: 'Sellos', href: ROUTES.sellos, icon: Stamp },
 ];
 
 export function Navbar() {
