@@ -37,6 +37,12 @@ COPY --from=installer /app/node_modules ./node_modules
 COPY --from=installer /app/apps/api/dist ./apps/api/dist
 COPY --from=installer /app/apps/api/package.json ./apps/api/package.json
 
+# El runner es node:22-alpine (no oven/bun), pero prisma/seed.ts es TypeScript
+# y siempre se corrió con `bun prisma/seed.ts` — en vez de compilarlo aparte,
+# se copia el binario de bun desde installer (mismo Alpine/musl, probado que
+# corre tal cual sobre node:22-alpine) solo para ese comando puntual.
+COPY --from=installer /usr/local/bin/bun /usr/local/bin/bun
+
 # LocalDiskStorageService escribe en <cwd>/uploads/ci (cwd = /app, por el
 # WORKDIR de arriba). Todo lo copiado hasta acá queda como root; sin esto, el
 # usuario sin privilegios de abajo no puede crear esa carpeta al arrancar.
@@ -45,5 +51,9 @@ RUN mkdir -p /app/uploads/ci && chown -R nestjs:nodejs /app/uploads
 USER nestjs
 EXPOSE 4000
 
-# Apply pending Prisma migrations against DATABASE_URL, then start the API.
-CMD ["sh", "-c", "node_modules/.bin/prisma migrate deploy --schema=packages/database/prisma/schema.prisma && node apps/api/dist/src/main.js"]
+# 1) Aplica migraciones pendientes. 2) Siembra categorías/vistas/admin — el
+# seed es idempotente (upsert o "ya existe, no lo toco"), así que es seguro
+# correrlo en cada arranque; si igual llegara a fallar (ej. hiccup de red),
+# el "|| echo" evita que tumbe el arranque del API por un paso no crítico.
+# 3) Arranca el servidor.
+CMD ["sh", "-c", "node_modules/.bin/prisma migrate deploy --schema=packages/database/prisma/schema.prisma && (bun packages/database/prisma/seed.ts || echo 'Seed falló (no crítico) — el admin puede no estar creado todavía. Revisa ADMIN_EMAIL/ADMIN_PASSWORD/JWT_SECRET en las variables de entorno.') && node apps/api/dist/src/main.js"]
