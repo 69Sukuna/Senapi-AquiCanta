@@ -130,6 +130,14 @@ body {
   background-image: none;
 }
 
+@media (max-width: 767px) {
+  body {
+    /* Compensa la barra de navegación mobile, que es fija abajo (ver
+       Navbar.tsx) — si no, el contenido de más abajo queda tapado. */
+    padding-bottom: calc(64px + env(safe-area-inset-bottom));
+  }
+}
+
 /* Mismos blobs decorativos que usan las páginas "explorer" (categorías,
    grupo, cantante...), pero fijos a nivel body para que el resto de rutas
    (home, inscripciones, butacas...) comparta el mismo fondo sin
@@ -161,15 +169,6 @@ body::after {
   height: 32rem;
   background: #1e63b8;
   opacity: 0.1;
-}
-
-@media (max-width: 1023px) {
-  body {
-    /* La barra de navegación mobile pasa a estar fija abajo (ver Navbar.tsx)
-       en vez de a la izquierda, para no comerse ancho de pantalla en
-       celulares — antes era padding-left: 84px. */
-    padding-bottom: 64px;
-  }
 }
 
 a {

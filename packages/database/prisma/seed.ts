@@ -407,6 +407,8 @@ async function main() {
     console.log('Seed listo: trayecto de prueba "Recorrido de Prueba" creado.');
   } else {
     console.log(`Trayectos ya existentes (${trayectosExistentes}), no se vuelve a sembrar.`);
+  }
+
   // Interruptores de vistas públicas (/adminpanel/vistas). `clave` coincide
   // con el segmento de ruta en ROUTES (apps/web/src/lib/routes.ts). Se usa
   // upsert (no un check de tabla vacía) para que, si en el futuro se agrega

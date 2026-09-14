@@ -359,6 +359,22 @@ export function InscritoModal({ inscrito, onClose, onActualizado }: InscritoModa
                 </Campo>
               </div>
 
+              <p className="pt-2! text-xs font-bold tracking-[0.08em] text-(--text-secondary) uppercase">
+                Carnet de identidad
+              </p>
+              <div className="flex flex-wrap gap-3">
+                <DocLink url={inscrito.fotoCiAnversoUrl} label="Postulante — anverso" />
+                <DocLink url={inscrito.fotoCiReversoUrl} label="Postulante — reverso" />
+                <DocLink url={inscrito.adultoResponsableFotoCiAnversoUrl} label="Adulto responsable — anverso" />
+                <DocLink url={inscrito.adultoResponsableFotoCiReversoUrl} label="Adulto responsable — reverso" />
+                {!inscrito.fotoCiAnversoUrl &&
+                  !inscrito.fotoCiReversoUrl &&
+                  !inscrito.adultoResponsableFotoCiAnversoUrl &&
+                  !inscrito.adultoResponsableFotoCiReversoUrl && (
+                    <span className="text-xs text-(--text-muted)">Sin fotos de carnet cargadas.</span>
+                  )}
+              </div>
+
               {inscrito.acompanantes.length > 0 && (
                 <div>
                   <p className="pt-2! text-xs font-bold tracking-[0.08em] text-(--text-secondary) uppercase">
@@ -366,9 +382,13 @@ export function InscritoModal({ inscrito, onClose, onActualizado }: InscritoModa
                   </p>
                   <ul className="mt-2! space-y-1 text-sm text-(--text-secondary)">
                     {inscrito.acompanantes.map((a) => (
-                      <li key={a.id}>
-                        {a.nombre}
-                        {a.instrumento ? ` — ${a.instrumento}` : ''}
+                      <li key={a.id} className="flex flex-wrap items-center gap-2">
+                        <span>
+                          {a.nombre}
+                          {a.instrumento ? ` — ${a.instrumento}` : ''}
+                        </span>
+                        <DocLink url={a.fotoCiAnversoUrl} label="carnet anverso" />
+                        <DocLink url={a.fotoCiReversoUrl} label="carnet reverso" />
                       </li>
                     ))}
                   </ul>
@@ -377,21 +397,42 @@ export function InscritoModal({ inscrito, onClose, onActualizado }: InscritoModa
             </>
           )}
 
-          {inscrito.tipo === 'GRUPO' && inscrito.integrantes.length > 0 && (
-            <div>
-              <p className="pt-2! text-xs font-bold tracking-[0.08em] text-(--text-secondary) uppercase">
-                Integrantes ({inscrito.integrantes.length})
-              </p>
-              <ul className="mt-2! space-y-1 text-sm text-(--text-secondary)">
-                {inscrito.integrantes.map((i) => (
-                  <li key={i.id}>
-                    {i.nombre}
-                    {i.nombreReferencia ? ` (${i.nombreReferencia})` : ''}
-                    {i.instrumento ? ` — ${i.instrumento}` : ''}
-                  </li>
-                ))}
-              </ul>
-            </div>
+          {inscrito.tipo === 'GRUPO' && (
+            <>
+              {inscrito.integrantes.length > 0 && (
+                <div>
+                  <p className="pt-2! text-xs font-bold tracking-[0.08em] text-(--text-secondary) uppercase">
+                    Integrantes ({inscrito.integrantes.length})
+                  </p>
+                  <ul className="mt-2! space-y-1 text-sm text-(--text-secondary)">
+                    {inscrito.integrantes.map((i) => (
+                      <li key={i.id} className="flex flex-wrap items-center gap-2">
+                        <span>
+                          {i.nombre}
+                          {i.nombreReferencia ? ` (${i.nombreReferencia})` : ''}
+                          {i.instrumento ? ` — ${i.instrumento}` : ''}
+                        </span>
+                        <DocLink url={i.fotoCiAnversoUrl} label="carnet anverso" />
+                        <DocLink url={i.fotoCiReversoUrl} label="carnet reverso" />
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {inscrito.fotosCarnetsGrupalUrls.length > 0 && (
+                <div>
+                  <p className="pt-2! text-xs font-bold tracking-[0.08em] text-(--text-secondary) uppercase">
+                    Carnets del grupo (archivo conjunto)
+                  </p>
+                  <div className="mt-2! flex flex-wrap gap-3">
+                    {inscrito.fotosCarnetsGrupalUrls.map((url, i) => (
+                      <DocLink key={url} url={url} label={`Archivo ${i + 1}`} />
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
           )}
 
           {error && <p className="text-sm font-semibold text-[#d52b1e]">{error}</p>}
@@ -416,6 +457,20 @@ export function InscritoModal({ inscrito, onClose, onActualizado }: InscritoModa
         </form>
       </div>
     </div>
+  );
+}
+
+function DocLink({ url, label }: { url: string | null; label: string }) {
+  if (!url) return null;
+  return (
+    <a
+      href={url}
+      target="_blank"
+      rel="noreferrer"
+      className="rounded-full border border-(--border) px-3! py-1! text-xs font-semibold text-[#1e63b8] transition-colors duration-200 hover:border-[#1e63b8]/40"
+    >
+      {label}
+    </a>
   );
 }
 

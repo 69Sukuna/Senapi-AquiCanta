@@ -46,8 +46,7 @@ export default async function RealidadVirtualPage() {
     );
   }
 
-  export default function RealidadVirtualPage() {
-    return (
+  return (
       <main className="overflow-x-hidden bg-(--brand-crema)">
         {/* Versión Mobile: mismo contenido, con fondos/tipografía/colores de la versión de escritorio */}
         <section
@@ -258,6 +257,5 @@ export default async function RealidadVirtualPage() {
           </section>
         </div>
       </main>
-    );
-  }
+  );
 }

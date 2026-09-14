@@ -11,6 +11,8 @@ export interface AcompananteItem {
   ciNumero: string | null;
   ciExtension: string | null;
   instrumento: string | null;
+  fotoCiAnversoUrl: string | null;
+  fotoCiReversoUrl: string | null;
 }
 
 export interface IntegranteItem {
@@ -24,6 +26,8 @@ export interface IntegranteItem {
   fechaNacimiento: string | null;
   whatsapp: string | null;
   direccion: string | null;
+  fotoCiAnversoUrl: string | null;
+  fotoCiReversoUrl: string | null;
 }
 
 interface InscritoBase {
@@ -60,11 +64,16 @@ export interface InscritoCantante extends InscritoBase {
   adultoResponsableCiExtension: string | null;
   adultoResponsableCelular: string | null;
   autorizaParticipacionAdultoResponsable: boolean;
+  fotoCiAnversoUrl: string | null;
+  fotoCiReversoUrl: string | null;
+  adultoResponsableFotoCiAnversoUrl: string | null;
+  adultoResponsableFotoCiReversoUrl: string | null;
   acompanantes: AcompananteItem[];
 }
 
 export interface InscritoGrupo extends InscritoBase {
   tipo: 'GRUPO';
+  fotosCarnetsGrupalUrls: string[];
   integrantes: IntegranteItem[];
 }
 
