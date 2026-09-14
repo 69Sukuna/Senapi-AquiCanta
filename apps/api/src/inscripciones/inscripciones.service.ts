@@ -1,12 +1,22 @@
-import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { EstadoInscripcion } from '@repo/database';
-import { PrismaService } from '../prisma/prisma.service';
-import { CrearInscripcionDto } from './dto/crear-inscripcion.dto';
-import { cumpleRangoEdad, edadEnFecha } from './edad.util';
-import { LadoFotoCi, ObjetivoFotoDto, TipoObjetivoFoto } from './dto/subir-fotos.dto';
-import { STORAGE_SERVICE, type StorageService } from '../storage/storage.interface';
-
-export type TipoInscripcion = 'CANTANTE' | 'GRUPO';
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from "@nestjs/common";
+import { EstadoInscripcion } from "@repo/database";
+import { PrismaService } from "../prisma/prisma.service";
+import { CrearInscripcionDto } from "./dto/crear-inscripcion.dto";
+import { edadEnFecha } from "./edad.util";
+import {
+  LadoFotoCi,
+  ObjetivoFotoDto,
+  TipoObjetivoFoto,
+} from "./dto/subir-fotos.dto";
+import {
+  STORAGE_SERVICE,
+  type StorageService,
+} from "../storage/storage.interface";
 
 // No dependemos de los tipos de Multer/Express (no está instalado
 // @types/multer) — solo se necesita esto de cada archivo subido.
@@ -14,6 +24,66 @@ interface ArchivoSubido {
   buffer: Buffer;
   mimetype: string;
   originalname: string;
+}
+
+import { ActualizarInscripcionDto } from "./dto/actualizar-inscripcion.dto";
+import { cumpleRangoEdad } from "./edad.util";
+
+export type TipoInscripcion = "CANTANTE" | "GRUPO";
+
+// Campos de ActualizarInscripcionDto que existen en cada modelo — Cantante y
+// Grupo no comparten todos los campos (ej. ciNumero es solo de Cantante), y
+// Prisma rechaza en tiempo de ejecución cualquier campo ajeno al modelo.
+const CAMPOS_CANTANTE = [
+  "nombre",
+  "pseudonimo",
+  "tituloTema",
+  "autorCompositor",
+  "ritmo",
+  "tiempo",
+  "departamento",
+  "fotoUrl",
+  "videoUrl",
+  "celular1",
+  "celular2",
+  "ciNumero",
+  "ciExtension",
+  "fechaNacimiento",
+  "whatsapp",
+  "direccion",
+  "adultoResponsableNombre",
+  "adultoResponsableCiNumero",
+  "adultoResponsableCiExtension",
+  "adultoResponsableCelular",
+  "autorizaParticipacionAdultoResponsable",
+] as const;
+
+const CAMPOS_GRUPO = [
+  "nombre",
+  "pseudonimo",
+  "tituloTema",
+  "autorCompositor",
+  "ritmo",
+  "tiempo",
+  "departamento",
+  "fotoUrl",
+  "videoUrl",
+  "celular1",
+  "celular2",
+] as const;
+
+function filtrarCampos<T extends readonly string[]>(
+  dto: ActualizarInscripcionDto,
+  campos: T,
+) {
+  const data: Record<string, unknown> = {};
+  for (const campo of campos) {
+    const valor = (dto as Record<string, unknown>)[campo];
+    if (valor === undefined) continue;
+    data[campo] =
+      campo === "fechaNacimiento" ? new Date(valor as string) : valor;
+  }
+  return data;
 }
 
 @Injectable()
@@ -24,12 +94,17 @@ export class InscripcionesService {
   ) {}
 
   async crear(dto: CrearInscripcionDto) {
-    const categoria = await this.prisma.categoria.findUnique({ where: { nombre: dto.categoria } });
+    const categoria = await this.prisma.categoria.findUnique({
+      where: { nombre: dto.categoria },
+    });
     if (!categoria) {
       throw new NotFoundException(`No existe la categoría "${dto.categoria}"`);
     }
 
-    if (dto.integrantes.length < categoria.integrantesMin || dto.integrantes.length > categoria.integrantesMax) {
+    if (
+      dto.integrantes.length < categoria.integrantesMin ||
+      dto.integrantes.length > categoria.integrantesMax
+    ) {
       const rango =
         categoria.integrantesMin === categoria.integrantesMax
           ? `exactamente ${categoria.integrantesMin}`
@@ -48,7 +123,13 @@ export class InscripcionesService {
 
     if (categoria.edadMinima != null || categoria.edadMaxima != null) {
       for (const integrante of dto.integrantes) {
-        if (!cumpleRangoEdad(new Date(integrante.fechaNacimiento), categoria.edadMinima, categoria.edadMaxima)) {
+        if (
+          !cumpleRangoEdad(
+            new Date(integrante.fechaNacimiento),
+            categoria.edadMinima,
+            categoria.edadMaxima,
+          )
+        ) {
           const rango =
             categoria.edadMinima != null && categoria.edadMaxima != null
               ? `entre ${categoria.edadMinima} y ${categoria.edadMaxima} años`
@@ -71,8 +152,11 @@ export class InscripcionesService {
     const esIndividual = categoria.integrantesMax <= 1;
     const postulante = dto.integrantes[0];
     const postulanteEsMenorDeEdad =
-      esIndividual && !!postulante?.fechaNacimiento && edadEnFecha(new Date(postulante.fechaNacimiento)) < 18;
-    const requiereAdultoResponsable = categoria.requiereAdultoResponsable || postulanteEsMenorDeEdad;
+      esIndividual &&
+      !!postulante?.fechaNacimiento &&
+      edadEnFecha(new Date(postulante.fechaNacimiento)) < 18;
+    const requiereAdultoResponsable =
+      categoria.requiereAdultoResponsable || postulanteEsMenorDeEdad;
 
     if (
       requiereAdultoResponsable &&
@@ -82,12 +166,17 @@ export class InscripcionesService {
     ) {
       throw new BadRequestException(
         `La categoría "${dto.categoria}" exige nombre, C.I. y celular de un adulto responsable (padre, madre o tutor legal)${
-          postulanteEsMenorDeEdad && !categoria.requiereAdultoResponsable ? ' porque el/la postulante es menor de edad' : ''
+          postulanteEsMenorDeEdad && !categoria.requiereAdultoResponsable
+            ? " porque el/la postulante es menor de edad"
+            : ""
         }`,
       );
     }
 
-    if (requiereAdultoResponsable && !dto.autorizaParticipacionAdultoResponsable) {
+    if (
+      requiereAdultoResponsable &&
+      !dto.autorizaParticipacionAdultoResponsable
+    ) {
       throw new BadRequestException(
         `La categoría "${dto.categoria}" exige la autorización del adulto responsable para la participación del o la menor`,
       );
@@ -149,7 +238,8 @@ export class InscripcionesService {
         adultoResponsableCiNumero: dto.adultoResponsableCiNumero,
         adultoResponsableCiExtension: dto.adultoResponsableCiExtension,
         adultoResponsableCelular: dto.adultoResponsableCelular,
-        autorizaParticipacionAdultoResponsable: dto.autorizaParticipacionAdultoResponsable ?? false,
+        autorizaParticipacionAdultoResponsable:
+          dto.autorizaParticipacionAdultoResponsable ?? false,
         acompanantes: {
           create: (dto.acompanantes ?? []).map((acompanante) => ({
             nombre: acompanante.nombre,
@@ -176,31 +266,105 @@ export class InscripcionesService {
     ]);
 
     const items = [
-      ...cantantes.map((cantante) => ({ tipo: 'CANTANTE' as const, ...cantante })),
-      ...grupos.map((grupo) => ({ tipo: 'GRUPO' as const, ...grupo })),
+      ...cantantes.map((cantante) => ({
+        tipo: "CANTANTE" as const,
+        ...cantante,
+      })),
+      ...grupos.map((grupo) => ({ tipo: "GRUPO" as const, ...grupo })),
     ];
 
     return items.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
   }
 
+  async obtenerUno(tipo: string, id: string) {
+    const tipoNormalizado = tipo.toUpperCase();
+
+    if (tipoNormalizado === "CANTANTE") {
+      const cantante = await this.prisma.cantante.findUnique({
+        where: { id },
+        include: { categoria: true, acompanantes: true },
+      });
+      if (!cantante) {
+        throw new NotFoundException(`Cantante ${id} no encontrado`);
+      }
+      return { tipo: "CANTANTE" as const, ...cantante };
+    }
+
+    if (tipoNormalizado === "GRUPO") {
+      const grupo = await this.prisma.grupo.findUnique({
+        where: { id },
+        include: { categoria: true, integrantes: true },
+      });
+      if (!grupo) {
+        throw new NotFoundException(`Grupo ${id} no encontrado`);
+      }
+      return { tipo: "GRUPO" as const, ...grupo };
+    }
+
+    throw new BadRequestException(
+      `Tipo de inscripción inválido: "${tipo}" (use CANTANTE o GRUPO)`,
+    );
+  }
+
+  async actualizar(tipo: string, id: string, dto: ActualizarInscripcionDto) {
+    const tipoNormalizado = tipo.toUpperCase();
+
+    if (tipoNormalizado === "CANTANTE") {
+      const cantante = await this.prisma.cantante.findUnique({ where: { id } });
+      if (!cantante) {
+        throw new NotFoundException(`Cantante ${id} no encontrado`);
+      }
+      return this.prisma.cantante.update({
+        where: { id },
+        data: filtrarCampos(dto, CAMPOS_CANTANTE),
+        include: { categoria: true, acompanantes: true },
+      });
+    }
+
+    if (tipoNormalizado === "GRUPO") {
+      const grupo = await this.prisma.grupo.findUnique({ where: { id } });
+      if (!grupo) {
+        throw new NotFoundException(`Grupo ${id} no encontrado`);
+      }
+      return this.prisma.grupo.update({
+        where: { id },
+        data: filtrarCampos(dto, CAMPOS_GRUPO),
+        include: { categoria: true, integrantes: true },
+      });
+    }
+
+    throw new BadRequestException(
+      `Tipo de inscripción inválido: "${tipo}" (use CANTANTE o GRUPO)`,
+    );
+  }
+
   async actualizarEstado(tipo: string, id: string, estado: EstadoInscripcion) {
     const tipoNormalizado = tipo.toUpperCase();
 
-    if (tipoNormalizado === 'CANTANTE') {
+    if (tipoNormalizado === "CANTANTE") {
       return this.actualizarEstadoCantante(id, estado);
     }
-    if (tipoNormalizado === 'GRUPO') {
+    if (tipoNormalizado === "GRUPO") {
       return this.actualizarEstadoGrupo(id, estado);
     }
-    throw new BadRequestException(`Tipo de inscripción inválido: "${tipo}" (use CANTANTE o GRUPO)`);
+    throw new BadRequestException(
+      `Tipo de inscripción inválido: "${tipo}" (use CANTANTE o GRUPO)`,
+    );
   }
 
-  private async actualizarEstadoCantante(id: string, estado: EstadoInscripcion) {
+  private async actualizarEstadoCantante(
+    id: string,
+    estado: EstadoInscripcion,
+  ) {
     const cantante = await this.prisma.cantante.findUnique({ where: { id } });
     if (!cantante) {
       throw new NotFoundException(`Cantante ${id} no encontrado`);
     }
-    return this.prisma.cantante.update({ where: { id }, data: { estado } });
+    return this.prisma.cantante.update({
+      where: { id },
+      data: { estado },
+      include: { categoria: true, acompanantes: true },
+    });
   }
 
   private async actualizarEstadoGrupo(id: string, estado: EstadoInscripcion) {
@@ -208,7 +372,11 @@ export class InscripcionesService {
     if (!grupo) {
       throw new NotFoundException(`Grupo ${id} no encontrado`);
     }
-    return this.prisma.grupo.update({ where: { id }, data: { estado } });
+    return this.prisma.grupo.update({
+      where: { id },
+      data: { estado },
+      include: { categoria: true, integrantes: true },
+    });
   }
 
   // Fotos del carnet de identidad (anverso/reverso) de cada participante —
@@ -217,18 +385,30 @@ export class InscripcionesService {
   // Acompanante/GrupoIntegrante, así que cada foto puede apuntar a su
   // registro exacto. Anti-fraude (CAPTCHA, C.I. duplicado, rate limit)
   // queda pendiente para una pasada aparte, no entra acá todavía.
-  async subirFotos(tipo: string, id: string, archivos: ArchivoSubido[], objetivos: ObjetivoFotoDto[]) {
+  async subirFotos(
+    tipo: string,
+    id: string,
+    archivos: ArchivoSubido[],
+    objetivos: ObjetivoFotoDto[],
+  ) {
     if (archivos.length !== objetivos.length) {
-      throw new BadRequestException('La cantidad de archivos no coincide con la cantidad de objetivos');
+      throw new BadRequestException(
+        "La cantidad de archivos no coincide con la cantidad de objetivos",
+      );
     }
 
     const tipoNormalizado = tipo.toUpperCase();
-    if (tipoNormalizado !== 'CANTANTE' && tipoNormalizado !== 'GRUPO') {
-      throw new BadRequestException(`Tipo de inscripción inválido: "${tipo}" (use CANTANTE o GRUPO)`);
+    if (tipoNormalizado !== "CANTANTE" && tipoNormalizado !== "GRUPO") {
+      throw new BadRequestException(
+        `Tipo de inscripción inválido: "${tipo}" (use CANTANTE o GRUPO)`,
+      );
     }
 
-    if (tipoNormalizado === 'CANTANTE') {
-      const cantante = await this.prisma.cantante.findUnique({ where: { id }, include: { acompanantes: true } });
+    if (tipoNormalizado === "CANTANTE") {
+      const cantante = await this.prisma.cantante.findUnique({
+        where: { id },
+        include: { acompanantes: true },
+      });
       if (!cantante) {
         throw new NotFoundException(`Cantante ${id} no encontrado`);
       }
@@ -239,13 +419,24 @@ export class InscripcionesService {
         const archivo = archivos[i];
 
         if (objetivo.tipo === TipoObjetivoFoto.POSTULANTE) {
-          const url = await this.storageService.guardarArchivo(archivo.buffer, archivo.originalname, archivo.mimetype);
+          const url = await this.storageService.guardarArchivo(
+            archivo.buffer,
+            archivo.originalname,
+            archivo.mimetype,
+          );
           await this.prisma.cantante.update({
             where: { id },
-            data: objetivo.lado === LadoFotoCi.REVERSO ? { fotoCiReversoUrl: url } : { fotoCiAnversoUrl: url },
+            data:
+              objetivo.lado === LadoFotoCi.REVERSO
+                ? { fotoCiReversoUrl: url }
+                : { fotoCiAnversoUrl: url },
           });
         } else if (objetivo.tipo === TipoObjetivoFoto.ADULTO_RESPONSABLE) {
-          const url = await this.storageService.guardarArchivo(archivo.buffer, archivo.originalname, archivo.mimetype);
+          const url = await this.storageService.guardarArchivo(
+            archivo.buffer,
+            archivo.originalname,
+            archivo.mimetype,
+          );
           await this.prisma.cantante.update({
             where: { id },
             data:
@@ -254,23 +445,40 @@ export class InscripcionesService {
                 : { adultoResponsableFotoCiAnversoUrl: url },
           });
         } else if (objetivo.tipo === TipoObjetivoFoto.ACOMPANANTE) {
-          if (!objetivo.id || !cantante.acompanantes.some((a) => a.id === objetivo.id)) {
-            throw new BadRequestException(`El acompañante "${objetivo.id}" no pertenece a este postulante`);
+          if (
+            !objetivo.id ||
+            !cantante.acompanantes.some((a) => a.id === objetivo.id)
+          ) {
+            throw new BadRequestException(
+              `El acompañante "${objetivo.id}" no pertenece a este postulante`,
+            );
           }
-          const url = await this.storageService.guardarArchivo(archivo.buffer, archivo.originalname, archivo.mimetype);
+          const url = await this.storageService.guardarArchivo(
+            archivo.buffer,
+            archivo.originalname,
+            archivo.mimetype,
+          );
           await this.prisma.acompanante.update({
             where: { id: objetivo.id },
-            data: objetivo.lado === LadoFotoCi.REVERSO ? { fotoCiReversoUrl: url } : { fotoCiAnversoUrl: url },
+            data:
+              objetivo.lado === LadoFotoCi.REVERSO
+                ? { fotoCiReversoUrl: url }
+                : { fotoCiAnversoUrl: url },
           });
         } else {
-          throw new BadRequestException(`El objetivo "${objetivo.tipo}" no es válido para un Cantante`);
+          throw new BadRequestException(
+            `El objetivo "${objetivo.tipo}" no es válido para un Cantante`,
+          );
         }
         guardadas++;
       }
       return { guardadas };
     }
 
-    const grupo = await this.prisma.grupo.findUnique({ where: { id }, include: { integrantes: true } });
+    const grupo = await this.prisma.grupo.findUnique({
+      where: { id },
+      include: { integrantes: true },
+    });
     if (!grupo) {
       throw new NotFoundException(`Grupo ${id} no encontrado`);
     }
@@ -281,22 +489,40 @@ export class InscripcionesService {
       const archivo = archivos[i];
 
       if (objetivo.tipo === TipoObjetivoFoto.INTEGRANTE) {
-        if (!objetivo.id || !grupo.integrantes.some((integrante) => integrante.id === objetivo.id)) {
-          throw new BadRequestException(`El integrante "${objetivo.id}" no pertenece a este grupo`);
+        if (
+          !objetivo.id ||
+          !grupo.integrantes.some((integrante) => integrante.id === objetivo.id)
+        ) {
+          throw new BadRequestException(
+            `El integrante "${objetivo.id}" no pertenece a este grupo`,
+          );
         }
-        const url = await this.storageService.guardarArchivo(archivo.buffer, archivo.originalname, archivo.mimetype);
+        const url = await this.storageService.guardarArchivo(
+          archivo.buffer,
+          archivo.originalname,
+          archivo.mimetype,
+        );
         await this.prisma.grupoIntegrante.update({
           where: { id: objetivo.id },
-          data: objetivo.lado === LadoFotoCi.REVERSO ? { fotoCiReversoUrl: url } : { fotoCiAnversoUrl: url },
+          data:
+            objetivo.lado === LadoFotoCi.REVERSO
+              ? { fotoCiReversoUrl: url }
+              : { fotoCiAnversoUrl: url },
         });
       } else if (objetivo.tipo === TipoObjetivoFoto.GRUPO_CARNETS_BULK) {
-        const url = await this.storageService.guardarArchivo(archivo.buffer, archivo.originalname, archivo.mimetype);
+        const url = await this.storageService.guardarArchivo(
+          archivo.buffer,
+          archivo.originalname,
+          archivo.mimetype,
+        );
         await this.prisma.grupo.update({
           where: { id },
           data: { fotosCarnetsGrupalUrls: { push: url } },
         });
       } else {
-        throw new BadRequestException(`El objetivo "${objetivo.tipo}" no es válido para un Grupo`);
+        throw new BadRequestException(
+          `El objetivo "${objetivo.tipo}" no es válido para un Grupo`,
+        );
       }
       guardadas++;
     }

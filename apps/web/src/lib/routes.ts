@@ -19,5 +19,6 @@ export const ROUTES = {
     inscritos: '/adminpanel/inscritos',
     categorias: '/adminpanel/categorias',
     resultados: '/adminpanel/resultados',
+    vistas: '/adminpanel/vistas',
   },
 } as const;
