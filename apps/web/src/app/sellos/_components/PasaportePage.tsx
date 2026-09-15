@@ -2,9 +2,13 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
-import { Camera, CheckCircle2, Lock, Sparkles, X } from 'lucide-react';
+import { CheckCircle2, ChevronDown, ChevronUp, Lock, Sparkles, X } from 'lucide-react';
 import { useVisitorId } from '@/hooks/useVisitorId';
 import { EscanerQRCliente } from './EscanerQRCliente';
+import { TarjetaBienvenida } from './TarjetaBienvenida';
+import { RielProgreso } from './RielProgreso';
+import { MedallasRango } from './MedallasRango';
+import { MisEstadisticas } from './MisEstadisticas';
 
 // Sello por defecto mientras los puntos no tengan una imagen propia cargada
 // (`PuntoEscaneo.imagenUrl`) — se muestra en el modal de "sello conseguido".
@@ -39,6 +43,14 @@ interface RangoProgreso {
   alcanzado: boolean;
 }
 
+interface MedallaProgreso {
+  id: string;
+  nombre: string;
+  descripcion: string;
+  umbral: number;
+  alcanzada: boolean;
+}
+
 interface TrayectoProgreso {
   id: string;
   nombre: string;
@@ -57,8 +69,14 @@ interface ResultadoEscaneo {
   rangos: RangoProgreso[];
 }
 
+interface TrayectoBasico {
+  id: string;
+  nombre: string;
+  descripcion: string | null;
+}
+
 interface PasaportePageProps {
-  trayectoId: string;
+  trayectos: TrayectoBasico[];
 }
 
 const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
@@ -88,12 +106,12 @@ function BarraProgreso({ porcentaje, tono = 'green' }: { porcentaje: number; ton
 // propio) y una silueta bloqueada mientras falte por escanear.
 function ColeccionSellos({ puntos }: { puntos: PuntoProgreso[] }) {
   return (
-    <div className="flex flex-wrap gap-2!">
+    <div className="grid grid-cols-2 gap-3!">
       {puntos.map((punto) => (
         <div
           key={punto.id}
           title={punto.nombre ?? undefined}
-          className={`flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 ${
+          className={`relative flex aspect-square items-center justify-center overflow-hidden rounded-2xl border-2 ${
             punto.escaneado ? 'border-(--accent-gold) bg-(--bg-card)' : 'border-dashed border-(--border) bg-(--bg-card-hover)'
           }`}
         >
@@ -101,12 +119,17 @@ function ColeccionSellos({ puntos }: { puntos: PuntoProgreso[] }) {
             <Image
               src={punto.imagenUrl ?? SELLO_GENERICO_URL}
               alt={punto.nombre ?? 'Sello conseguido'}
-              width={44}
-              height={44}
-              className="h-full w-full object-contain"
+              fill
+              sizes="120px"
+              className="object-cover"
+              // La imagen de un punto la carga el admin como una URL externa
+              // cualquiera — `unoptimized` evita que rompa toda la página
+              // cuando el dominio no está en next.config.ts (no se puede
+              // pedir de antemano que precargue cada dominio posible).
+              unoptimized={Boolean(punto.imagenUrl)}
             />
           ) : (
-            <Lock className="text-(--text-muted)" size={16} />
+            <Lock className="text-(--text-muted)" size={20} />
           )}
         </div>
       ))}
@@ -114,9 +137,137 @@ function ColeccionSellos({ puntos }: { puntos: PuntoProgreso[] }) {
   );
 }
 
-export function PasaportePage({ trayectoId }: PasaportePageProps) {
+// La tarjeta de Recorrido de UN trayecto: banner de completo (si aplica),
+// eventos/puntos colapsables y sus estadísticas — todo lo que SÍ es
+// específico de ese trayecto (a diferencia de Bienvenida/Riel/Medallas, que
+// son generales y se pintan una sola vez en el padre).
+function RecorridoTrayecto({ progreso }: { progreso: TrayectoProgreso }) {
+  const [eventosAbiertos, setEventosAbiertos] = useState(true);
+
+  const totalEventos = progreso.eventos.length;
+  const eventosCompletados = progreso.eventos.filter((e) => e.completado).length;
+  const rangoFinal = rangoMasAlto(progreso.rangos);
+  const todosLosPuntos = progreso.eventos.flatMap((e) => e.grupos.flatMap((g) => g.puntos));
+
+  return (
+    <div>
+      {progreso.completo && (
+        <div className="glass-panel mb-8! flex items-center gap-4! rounded-2xl! border-(--border-active)! p-6!">
+          <Sparkles className="shrink-0 text-(--accent-gold)" size={32} />
+          <div>
+            <p className="font-bold text-(--text-primary)">
+              {rangoFinal ? `¡Ahora eres ${rangoFinal.nombre}!` : '¡Trayecto completo!'}
+            </p>
+            <p className="text-sm text-(--text-secondary)">Conseguiste todos los sellos de &quot;{progreso.nombre}&quot;.</p>
+          </div>
+        </div>
+      )}
+
+      {/* La imagen del trayecto va acá, junto al título de la sección — es lo
+          primero que se ve al desplazarse por la página, así sirve para
+          ubicar de un vistazo cada trayecto en vez de perderse dentro de la
+          tarjeta colapsable de abajo. */}
+      <div className="mb-4! flex items-center justify-between gap-4!">
+        <h2 className="text-xl font-bold text-(--text-primary)">{progreso.nombre}</h2>
+        {progreso.imagenUrl && (
+          <Image
+            src={progreso.imagenUrl}
+            alt={progreso.nombre}
+            width={96}
+            height={96}
+            className="h-24 w-24 shrink-0 rounded-xl object-cover"
+            unoptimized
+          />
+        )}
+      </div>
+
+      <div className="glass-panel rounded-2xl! p-5!">
+        <button
+          onClick={() => setEventosAbiertos((v) => !v)}
+          className="flex w-full items-center justify-between gap-4! text-left"
+        >
+          <div className="min-w-0">
+            <p className="font-bold text-(--text-primary)">{progreso.nombre}</p>
+            {progreso.descripcion && (
+              <p className="line-clamp-2 text-sm text-(--text-secondary)">{progreso.descripcion}</p>
+            )}
+          </div>
+          <div className="flex shrink-0 items-center gap-3!">
+            <span className="text-sm text-(--text-secondary)">
+              {eventosCompletados}/{totalEventos}
+            </span>
+            {eventosAbiertos ? (
+              <ChevronUp className="text-(--text-muted)" size={20} />
+            ) : (
+              <ChevronDown className="text-(--text-muted)" size={20} />
+            )}
+          </div>
+        </button>
+
+        {eventosAbiertos && (
+          <div className="mt-5! grid grid-cols-1 gap-6! border-t border-(--border) pt-5! md:grid-cols-[1fr_auto]">
+            {/* Columna izquierda: cada evento con sus grupos (texto + barra) */}
+            <div className="flex flex-col gap-5!">
+              {progreso.eventos.map((evento) => (
+                <div key={evento.id}>
+                  <div className="mb-2! flex items-center gap-2!">
+                    <p className="font-bold text-(--text-primary)">{evento.nombre}</p>
+                    {evento.completado ? (
+                      <CheckCircle2 className="shrink-0 text-(--accent-green)" size={14} />
+                    ) : (
+                      <Lock className="shrink-0 text-(--text-muted)" size={13} />
+                    )}
+                  </div>
+
+                  <div className="flex flex-col gap-3!">
+                    {evento.grupos.map((grupo, i) => {
+                      const escaneados = grupo.puntos.filter((p) => p.escaneado).length;
+                      const total = grupo.puntos.length;
+                      const porcentaje = total > 0 ? Math.round((escaneados / total) * 100) : 0;
+                      // Con un solo punto sin instancia, se usa su propio
+                      // nombre como etiqueta (ej. "Punto de escaneo en la
+                      // clausura") en vez del genérico "Puntos de escaneo".
+                      const etiqueta =
+                        grupo.instancia ?? (grupo.puntos.length === 1 ? grupo.puntos[0].nombre : null) ?? 'Puntos de escaneo';
+                      return (
+                        <div key={grupo.instancia ?? i} className="flex items-center gap-3!">
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center justify-between gap-2! text-sm">
+                              <span className="truncate text-(--text-secondary)">{etiqueta}</span>
+                              <span className={grupo.completo ? 'font-semibold text-(--accent-green)' : 'text-(--text-muted)'}>
+                                {escaneados}/{total}
+                              </span>
+                            </div>
+                            <BarraProgreso porcentaje={porcentaje} tono={grupo.completo ? 'green' : 'blue'} />
+                          </div>
+                          {grupo.completo ? (
+                            <CheckCircle2 className="shrink-0 text-(--accent-green)" size={16} />
+                          ) : (
+                            <Lock className="shrink-0 text-(--text-muted)" size={16} />
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Columna derecha: colección de sellos de todo el trayecto */}
+            <div className="md:w-52">
+              <ColeccionSellos puntos={todosLosPuntos} />
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+export function PasaportePage({ trayectos }: PasaportePageProps) {
   const visitorId = useVisitorId();
-  const [progreso, setProgreso] = useState<TrayectoProgreso | null>(null);
+  const [progresos, setProgresos] = useState<Record<string, TrayectoProgreso>>({});
+  const [medallasGlobales, setMedallasGlobales] = useState<MedallaProgreso[]>([]);
   const [cargando, setCargando] = useState(true);
   const [escaneando, setEscaneando] = useState(false);
   const [resultado, setResultado] = useState<ResultadoEscaneo | null>(null);
@@ -125,31 +276,63 @@ export function PasaportePage({ trayectoId }: PasaportePageProps) {
   // de caída se repita, incluso si se vuelve a escanear el mismo punto.
   const resultadoSeqRef = useRef(0);
 
-  const cargarProgreso = useCallback(async () => {
+  // Un solo escáner para todos los trayectos: el código no dice a cuál
+  // pertenece hasta que la API lo resuelve, así que al confirmar un escaneo
+  // se refresca el progreso de TODOS (no solo el que estaba abierto), por si
+  // el punto escaneado pertenece a otro trayecto que este visitante también
+  // sigue — y también las medallas globales, porque cuentan sellos de
+  // cualquier trayecto.
+  const cargarProgresos = useCallback(async () => {
     if (!visitorId) return;
     try {
-      const res = await fetch(`${apiUrl}/sellos/trayectos/${trayectoId}/progreso/${visitorId}`, { cache: 'no-store' });
-      if (res.ok) setProgreso(await res.json());
+      const [resultados, medallas] = await Promise.all([
+        Promise.all(
+          trayectos.map((t) =>
+            fetch(`${apiUrl}/sellos/trayectos/${t.id}/progreso/${visitorId}`, { cache: 'no-store' }).then((res) =>
+              res.ok ? (res.json() as Promise<TrayectoProgreso>) : null,
+            ),
+          ),
+        ),
+        fetch(`${apiUrl}/sellos/medallas/${visitorId}`, { cache: 'no-store' }).then((res) =>
+          res.ok ? (res.json() as Promise<MedallaProgreso[]>) : [],
+        ),
+      ]);
+      const mapa: Record<string, TrayectoProgreso> = {};
+      trayectos.forEach((t, i) => {
+        const p = resultados[i];
+        if (p) mapa[t.id] = p;
+      });
+      setProgresos(mapa);
+      setMedallasGlobales(medallas);
     } catch {
       // Sin conexión: el pasaporte simplemente no se actualiza, se reintenta
       // en el próximo escaneo o recarga de página.
     } finally {
       setCargando(false);
     }
-  }, [trayectoId, visitorId]);
+  }, [trayectos, visitorId]);
 
   useEffect(() => {
-    cargarProgreso();
-  }, [cargarProgreso]);
+    cargarProgresos();
+  }, [cargarProgresos]);
+
+  // `handleDetectado` a propósito NO llama a `cargarProgresos` — se hace
+  // recién acá, al cerrar el modal de "sello conseguido", para que el
+  // visitante pueda VER al tren moverse en el Riel en vez de que ya esté en
+  // su posición nueva (detrás del modal) desde antes de cerrarlo.
+  const cerrarResultado = useCallback(() => {
+    setResultado(null);
+    cargarProgresos();
+  }, [cargarProgresos]);
 
   useEffect(() => {
     if (!resultado) return;
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setResultado(null);
+      if (e.key === 'Escape') cerrarResultado();
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [resultado]);
+  }, [resultado, cerrarResultado]);
 
   const handleDetectado = useCallback(
     async (codigo: string) => {
@@ -171,15 +354,14 @@ export function PasaportePage({ trayectoId }: PasaportePageProps) {
         const data: ResultadoEscaneo = await res.json();
         resultadoSeqRef.current += 1;
         setResultado(data);
-        await cargarProgreso();
       } catch {
         setErrorEscaneo('No pudimos registrar el escaneo. Intenta de nuevo.');
       }
     },
-    [visitorId, cargarProgreso],
+    [visitorId],
   );
 
-  if (cargando || !progreso) {
+  if (cargando) {
     return (
       <div className="mt-12! rounded-2xl border border-dashed border-(--border) p-10! text-center text-(--text-muted)">
         Cargando tu pasaporte…
@@ -187,125 +369,107 @@ export function PasaportePage({ trayectoId }: PasaportePageProps) {
     );
   }
 
-  const totalEventos = progreso.eventos.length;
-  const eventosCompletados = progreso.eventos.filter((e) => e.completado).length;
-  const porcentajeTrayecto = totalEventos > 0 ? Math.round((eventosCompletados / totalEventos) * 100) : 0;
-  const rangoFinal = rangoMasAlto(progreso.rangos);
+  // "Mis estadísticas", los pills de Rango de la Bienvenida, el Riel y las
+  // Medallas son información GENERAL del visitante — se agregan across TODOS
+  // los trayectos que sigue (o, en el caso del Riel/Medallas, directamente
+  // no dependen de ningún trayecto en particular, ver `medallasGlobales`).
+  //
+  // "Trayectos visitados" cuenta TRAYECTOS (frikicon, Recorrido de Prueba...),
+  // no los Eventos internos de cada uno (Apertura, Feria de Stands...) — esos
+  // ya se ven dentro de la propia tarjeta de Recorrido de cada trayecto. Un
+  // trayecto cuenta como "visitado" con al menos 1 sello escaneado ahí,
+  // aunque no esté completo todavía.
+  const todosLosProgresos = Object.values(progresos);
+  const totalTrayectos = trayectos.length;
+  const trayectosVisitados = todosLosProgresos.filter((p) =>
+    p.eventos.some((e) => e.grupos.some((g) => g.puntos.some((punto) => punto.escaneado))),
+  ).length;
+  const totalPuntos = todosLosProgresos.reduce(
+    (acc, p) => acc + p.eventos.flatMap((e) => e.grupos.flatMap((g) => g.puntos)).length,
+    0,
+  );
+  const sellosEscaneados = todosLosProgresos.reduce(
+    (acc, p) => acc + p.eventos.flatMap((e) => e.grupos.flatMap((g) => g.puntos)).filter((punto) => punto.escaneado).length,
+    0,
+  );
+  // Rangos combinados de TODOS los trayectos — ya no hay un "principal" del
+  // que elegir cuáles mostrar en los pills de la Bienvenida.
+  const todosLosRangos = todosLosProgresos.flatMap((p) => p.rangos);
+  const rangosAlcanzados = todosLosRangos.filter((r) => r.alcanzado).length;
+  // El Riel representa el mismo progreso "general" que las Medallas — sus
+  // paradas son los umbrales de sellos, no los eventos de un trayecto en
+  // particular. Se reutiliza RielProgreso tal cual (misma forma de datos).
+  const paradasRiel = medallasGlobales.map((medalla, i) => ({
+    id: medalla.id,
+    nombre: medalla.nombre,
+    orden: i,
+    completado: medalla.alcanzada,
+  }));
 
   return (
-    <div className="mt-12!">
-      {progreso.completo && (
-        <div className="glass-panel mb-8! flex items-center gap-4! rounded-2xl! border-(--border-active)! p-6!">
-          <Sparkles className="shrink-0 text-(--accent-gold)" size={32} />
-          <div>
-            <p className="font-bold text-(--text-primary)">
-              {rangoFinal ? `¡Ahora eres ${rangoFinal.nombre}!` : '¡Trayecto completo!'}
-            </p>
-            <p className="text-sm text-(--text-secondary)">Conseguiste todos los sellos de &quot;{progreso.nombre}&quot;.</p>
-          </div>
-        </div>
-      )}
-
-      <div className="glass-panel mb-8! rounded-2xl! p-5!">
-        <div className="flex items-center justify-between gap-3!">
-          <span className="text-sm font-semibold text-(--text-primary)">Progreso del recorrido</span>
-          <span className="text-sm font-semibold text-(--accent-green)">
-            {eventosCompletados}/{totalEventos} eventos
-          </span>
-        </div>
-        <div className="mt-3!">
-          <BarraProgreso porcentaje={porcentajeTrayecto} />
-        </div>
-      </div>
-
-      {progreso.rangos.length > 0 && (
-        <div className="mb-10! flex flex-wrap gap-3!">
-          {progreso.rangos.map((rango) => (
-            <span
-              key={rango.id}
-              className={`badge ${rango.alcanzado ? 'badge-gold' : 'border border-(--border) text-(--text-muted)'}`}
-            >
-              {rango.alcanzado ? <CheckCircle2 size={14} /> : <Lock size={14} />}
-              {rango.nombre}
-            </span>
-          ))}
-        </div>
-      )}
-
-      <div className="mb-8! flex items-center justify-between gap-4!">
-        <h2 className="text-xl font-bold text-(--text-primary)">Eventos del recorrido</h2>
-        <button
-          onClick={() => {
+    <div className="sellos-cafe mt-12!">
+      <div className="mb-8!">
+        <TarjetaBienvenida
+          rangos={todosLosRangos}
+          onEscanear={() => {
             setErrorEscaneo(null);
             setEscaneando(true);
           }}
-          className="inline-flex shrink-0 items-center gap-2! rounded-lg bg-[#1e63b8] px-5! py-2.5! text-sm font-semibold text-white shadow-md shadow-[#1e63b8]/30 transition-all hover:bg-[#164a8c]"
-        >
-          <Camera size={16} />
-          Escanear
-        </button>
+        />
       </div>
 
-      <div className="grid grid-cols-1 gap-5! sm:grid-cols-2">
-        {progreso.eventos.map((evento) => (
-          <div key={evento.id} className="glass-panel rounded-2xl! p-5!">
-            <div className="flex items-start justify-between gap-3!">
-              <h3 className="font-bold text-(--text-primary)">{evento.nombre}</h3>
-              {evento.completado ? (
-                <CheckCircle2 className="shrink-0 text-(--accent-green)" size={20} />
-              ) : (
-                <Lock className="shrink-0 text-(--text-muted)" size={18} />
-              )}
-            </div>
+      <div className="mb-8!">
+        <RielProgreso eventos={paradasRiel} />
+      </div>
 
-            <div className="mt-4! flex flex-col gap-3!">
-              {evento.grupos.map((grupo, i) => {
-                const escaneados = grupo.puntos.filter((p) => p.escaneado).length;
-                const total = grupo.puntos.length;
-                const porcentaje = total > 0 ? Math.round((escaneados / total) * 100) : 0;
-                return (
-                  <div key={grupo.instancia ?? i} className="flex flex-col gap-1.5!">
-                    <div className="flex items-center justify-between gap-2! text-sm">
-                      <span className="text-(--text-secondary)">{grupo.instancia ?? 'Puntos de escaneo'}</span>
-                      <span className={grupo.completo ? 'font-semibold text-(--accent-green)' : 'text-(--text-muted)'}>
-                        {escaneados}/{total}
-                      </span>
-                    </div>
-                    <BarraProgreso porcentaje={porcentaje} tono={grupo.completo ? 'green' : 'blue'} />
-                    <div className="mt-1!">
-                      <ColeccionSellos puntos={grupo.puntos} />
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+      <div className="mb-8!">
+        <MedallasRango medallas={medallasGlobales} />
+      </div>
+
+      <div className="mb-8!">
+        <MisEstadisticas
+          items={[
+            { etiqueta: 'Trayectos visitados', actual: trayectosVisitados, total: totalTrayectos },
+            { etiqueta: 'Sellos escaneados', actual: sellosEscaneados, total: totalPuntos },
+            { etiqueta: 'Rangos desbloqueados', actual: rangosAlcanzados, total: todosLosRangos.length },
+          ]}
+        />
+      </div>
+
+      {trayectos.map((t, i) => {
+        const progreso = progresos[t.id];
+        if (!progreso) return null;
+        return (
+          <div key={t.id} className={i > 0 ? 'mt-16! border-t border-(--border) pt-16!' : ''}>
+            <RecorridoTrayecto progreso={progreso} />
           </div>
-        ))}
-      </div>
+        );
+      })}
 
       {escaneando && <EscanerQRCliente onDetectado={handleDetectado} onCerrar={() => setEscaneando(false)} />}
 
       {resultado && (
         <div
           className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 p-6!"
-          onClick={() => setResultado(null)}
+          onClick={cerrarResultado}
         >
           <div className="glass-panel w-full max-w-md rounded-2xl! p-8! text-center" onClick={(e) => e.stopPropagation()}>
             <button
-              onClick={() => setResultado(null)}
+              onClick={cerrarResultado}
               className="ml-auto! flex h-9 w-9 items-center justify-center rounded-full border border-(--border) text-(--text-secondary) hover:bg-(--bg-card-hover)"
               aria-label="Cerrar"
             >
               <X size={18} />
             </button>
             <div key={resultadoSeqRef.current} className="relative mx-auto! mb-4! flex h-72 w-72 items-center justify-center">
-              <span className="sello-onda absolute h-64 w-64 rounded-full border-4 border-(--accent-gold)" />
+              <span className="sello-onda pointer-events-none absolute h-64 w-64 rounded-full border-4 border-(--accent-gold)" />
               <Image
                 src={resultado.punto.imagenUrl ?? SELLO_GENERICO_URL}
                 alt="Sello conseguido"
                 width={320}
                 height={320}
                 className="sello-caida relative h-64 w-64 object-contain drop-shadow-xl"
+                unoptimized={Boolean(resultado.punto.imagenUrl)}
               />
             </div>
             <p className="font-bold text-(--text-primary)">
@@ -321,8 +485,8 @@ export function PasaportePage({ trayectoId }: PasaportePageProps) {
               </p>
             )}
             <button
-              onClick={() => setResultado(null)}
-              className="mt-6! inline-flex w-full items-center justify-center rounded-lg bg-[#1e63b8] px-5! py-2.5! text-sm font-semibold text-white shadow-md shadow-[#1e63b8]/30 transition-all hover:bg-[#164a8c]"
+              onClick={cerrarResultado}
+              className="mt-6! inline-flex w-full items-center justify-center rounded-full bg-(--text-primary) px-5! py-2.5! text-sm font-bold tracking-wide text-white uppercase transition-opacity hover:opacity-90"
             >
               Continuar
             </button>

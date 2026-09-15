@@ -108,6 +108,20 @@
   --border: rgba(83, 71, 65, 0.2);
 }
 
+/* Pasaporte de Sellos: mismo problema/solución que el formulario de arriba
+   — sobreescribe los tokens genéricos (azul índigo) por tonos de café/negro
+   de marca, para que coincida con la maqueta (que es toda café/negro/gris,
+   sin azul). El "en progreso" (antes azul) pasa a un café translúcido. */
+.sellos-cafe {
+  --text-primary: var(--brand-negro);
+  --text-secondary: rgba(83, 71, 65, 0.75);
+  --text-muted: rgba(83, 71, 65, 0.58);
+  --border: rgba(83, 71, 65, 0.2);
+  --border-active: rgba(83, 71, 65, 0.45);
+  --accent-green: var(--brand-cafe);
+  --accent-blue: rgba(83, 71, 65, 0.45);
+}
+
 @layer base {
   * {
     box-sizing: border-box;
@@ -126,7 +140,6 @@ body {
   font-family: var(--font-main);
   min-height: 100vh;
   line-height: 1.6;
-  overflow-x: hidden;
   background-image: none;
 }
 
@@ -135,6 +148,22 @@ body {
     /* Compensa la barra de navegación mobile, que es fija abajo (ver
        Navbar.tsx) — si no, el contenido de más abajo queda tapado. */
     padding-bottom: calc(64px + env(safe-area-inset-bottom));
+  }
+}
+
+/* Compensa el nav de escritorio, que es `fixed` (ver Navbar.tsx) — al salir
+   del flujo del documento, si no reservamos este espacio arriba el contenido
+   de cada página empieza tapado detrás de la barra. Los valores (80px/96px)
+   son la altura real del nav en cada breakpoint (h-20 y lg:h-24). */
+@media (min-width: 768px) {
+  body {
+    padding-top: 80px;
+  }
+}
+
+@media (min-width: 1024px) {
+  body {
+    padding-top: 96px;
   }
 }
 
