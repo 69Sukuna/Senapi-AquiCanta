@@ -27,26 +27,21 @@ export default async function CategoriasPage() {
       <div className="pointer-events-none absolute top-1/3 -right-40 h-[32rem] w-[32rem] rounded-full bg-[#1e63b8] opacity-[0.1] blur-3xl" />
 
       <div className="relative mx-auto! max-w-7xl px-6! py-16! sm:px-10! lg:py-20!">
-        <span className="badge badge-gold inline-flex! w-fit">
-          <span className="pulse-dot" />
-          Aqui Canta Bolivia
-        </span>
+        <p className="font-barlow text-xs font-semibold tracking-[0.25em] text-(--brand-cafe) uppercase sm:text-sm">
+          XXXIII Versión del Festival Nacional de la Canción Boliviana
+        </p>
 
-        <h1 className="mt-2! text-[clamp(2.25rem,5vw,3.75rem)] leading-[1.5] font-extrabold tracking-tight text-(--text-primary)">
-          Categorías del concurso
+        <h1 className="font-bakbak mt-2! text-[clamp(2.75rem,7vw,5.5rem)] leading-[0.95] text-(--brand-negro)">
+          Categorías
         </h1>
-        <p className="mt-2! max-w-2xl text-base text-(--text-secondary) sm:text-lg">
-          Elige una categoría para ver a los participantes inscritos.
+        <p className="font-barlow mt-4! max-w-2xl text-base font-medium text-(--brand-cafe) sm:text-lg">
+          Elige una categoría para ver sus requisitos, criterios de calificación y premios.
         </p>
 
         {categorias.length > 0 ? (
           <div className="mt-12! grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {categorias.map((categoria) => (
-              <CategoriaCard
-                key={categoria.id}
-                id={categoria.id}
-                nombre={categoria.nombre}
-              />
+              <CategoriaCard key={categoria.id} nombre={categoria.nombre} />
             ))}
           </div>
         ) : (

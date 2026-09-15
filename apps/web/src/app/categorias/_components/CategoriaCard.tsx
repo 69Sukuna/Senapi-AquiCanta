@@ -1,34 +1,46 @@
-import Link from 'next/link';
+'use client';
+
+import { useState } from 'react';
+import { CategoriaModal } from './CategoriaModal';
 
 interface CategoriaCardProps {
-  id: string;
   nombre: string;
 }
 
-// Paleta reutilizada de .tema-votacion (globals.css): rojo carmesí + mostaza.
-// Se aplica acá vía valores arbitrarios de Tailwind para no tocar el CSS
-// compartido — coordinar con el equipo si esto se vuelve un patrón común.
-//
-// Ojo con `p-6!`: el globals.css actual tiene reglas viejas (`* { margin:0;
-// padding:0 }`, `a { color: inherit }`) fuera de cualquier @layer, y en CSS
-// una regla sin capa siempre le gana a las utilidades de Tailwind (que sí
-// están en capas), sin importar especificidad. El sufijo `!` de Tailwind v4
-// fuerza !important para ganar esa pelea. Aplica solo a margin/padding y a
-// color/subrayado puesto directo sobre un <a>; todo lo demás no se ve afectado.
-export function CategoriaCard({ id, nombre }: CategoriaCardProps) {
+// Tarjeta oscura (paleta y tipografías de la home: font-bakbak/font-barlow,
+// gradiente de marca rojo→amarillo→verde). Sin `!` porque no toca margin/
+// padding fuera de capa ni color de <a> — ver el comentario del mismo tipo
+// en CategoriaModal.tsx si esto se vuelve a necesitar acá.
+export function CategoriaCard({ nombre }: CategoriaCardProps) {
+  const [abierta, setAbierta] = useState(false);
+
   return (
-    <Link
-      href={`/categorias/${id}`}
-      className="group relative flex flex-col justify-between gap-5 overflow-hidden rounded-3xl border border-(--border) bg-white p-6! shadow-[0_1px_2px_rgba(27,42,74,0.06),0_10px_24px_-12px_rgba(27,42,74,0.14)] transition-all duration-300 hover:-translate-y-1.5 hover:border-[#1e63b8]/35 hover:shadow-[0_20px_45px_-15px_rgba(27,42,74,0.22)]"
-    >
-      <span className="absolute inset-x-0 top-0 h-1 bg-[linear-gradient(90deg,#d52b1e_0%,#e08f1f_42%,#2e7d46_100%)] opacity-70 transition-opacity duration-300 group-hover:opacity-100" />
+    <>
+      <button
+        type="button"
+        onClick={() => setAbierta(true)}
+        className="group relative flex min-h-56 w-full flex-col justify-between overflow-hidden rounded-[28px] bg-(--brand-negro) p-6 text-left shadow-[0_18px_40px_-20px_rgba(0,0,0,0.55)] transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_28px_60px_-18px_rgba(0,0,0,0.65)] sm:min-h-64"
+      >
+        {/* Barra de gradiente de marca, se agranda al pasar el mouse */}
+        <span className="absolute inset-x-0 top-0 h-2 bg-[linear-gradient(90deg,#e30613_0%,#fcee21_50%,#00873e_100%)] transition-all duration-300 group-hover:h-3" />
 
-      <h3 className="text-lg leading-snug font-bold text-(--text-primary)">{nombre}</h3>
+        {/* Resplandor de color detrás del título, solo visible al hover */}
+        <span className="pointer-events-none absolute -top-12 -right-12 h-40 w-40 rounded-full bg-(--brand-amarillo) opacity-0 blur-3xl transition-opacity duration-500 group-hover:opacity-25" />
 
-      <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#1e63b8] transition-transform duration-300 group-hover:translate-x-1.5">
-        Ver participantes
-        <span aria-hidden="true">→</span>
-      </span>
-    </Link>
+        <div className="relative">
+          <span className="font-barlow text-[11px] font-semibold tracking-[0.25em] text-white/50 uppercase">
+            Categoría
+          </span>
+          <h3 className="font-bakbak mt-3 text-2xl leading-[1.05] text-white sm:text-[1.65rem]">{nombre}</h3>
+        </div>
+
+        <span className="font-barlow relative inline-flex items-center gap-1.5 text-sm font-semibold tracking-wide text-(--brand-amarillo) transition-transform duration-300 group-hover:translate-x-1.5">
+          Ver detalles
+          <span aria-hidden="true">→</span>
+        </span>
+      </button>
+
+      {abierta && <CategoriaModal nombre={nombre} onClose={() => setAbierta(false)} />}
+    </>
   );
 }
