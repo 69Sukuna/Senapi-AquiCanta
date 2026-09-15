@@ -54,13 +54,18 @@ export function Navbar() {
   const pathname = usePathname();
 
   return (
-    <header>
+    // sticky va en <header>, no en cada <nav> — el contenedor de un sticky
+    // es su padre inmediato, y <header> sin esto se achica al alto exacto
+    // del nav visible (display:none no ocupa espacio), dejándole cero
+    // margen para "pegarse": se despegaba apenas se scrolleaba un pixel.
+    // body sí es alto (toda la página), así que sticky en header funciona.
+    <header className="sticky top-0 z-50">
       {/* Escritorio — logo centrado entre dos grupos de links, como en el
           diseño de referencia. Empieza en md (768px), no en lg (1024px):
           con la barra inferior de antes, una ventana apenas más chica que
           el escritorio ya caía a la vista mobile — acá el texto/gaps se
           achican un poco entre md y lg para que la fila siga entrando. */}
-      <nav className="fixed inset-x-0 top-0 z-50 hidden h-20 items-center justify-between gap-2 bg-(--brand-negro) px-4! md:flex lg:h-24 lg:px-8!">
+      <nav className="relative hidden h-20 items-center justify-between gap-2 bg-(--brand-negro) px-4! md:flex lg:h-24 lg:px-8!">
         <div className="flex min-w-0 items-center gap-0.5 lg:gap-1">
           {LINKS_IZQUIERDA.map((link) => (
             <NavLink key={link.href} {...link} activo={pathname === link.href} />
@@ -98,7 +103,7 @@ export function Navbar() {
 
       {/* Mobile — franja superior solo de marca (el logo) + barra de
           botones fija abajo con los links, como pide la referencia. */}
-      <nav className="sticky top-0 z-50 flex h-14 items-center justify-center bg-(--brand-negro) md:hidden">
+      <nav className="relative flex h-14 items-center justify-center bg-(--brand-negro) md:hidden">
         <Link href={ROUTES.home} className="flex items-center">
           <Image
             src="/images/LOGOS/LOGO ACB BLANCO.svg"
