@@ -151,22 +151,6 @@ body {
   }
 }
 
-/* Compensa el nav de escritorio, que es `fixed` (ver Navbar.tsx) — al salir
-   del flujo del documento, si no reservamos este espacio arriba el contenido
-   de cada página empieza tapado detrás de la barra. Los valores (80px/96px)
-   son la altura real del nav en cada breakpoint (h-20 y lg:h-24). */
-@media (min-width: 768px) {
-  body {
-    padding-top: 80px;
-  }
-}
-
-@media (min-width: 1024px) {
-  body {
-    padding-top: 96px;
-  }
-}
-
 /* Mismos blobs decorativos que usan las páginas "explorer" (categorías,
    grupo, cantante...), pero fijos a nivel body para que el resto de rutas
    (home, inscripciones, butacas...) comparta el mismo fondo sin
