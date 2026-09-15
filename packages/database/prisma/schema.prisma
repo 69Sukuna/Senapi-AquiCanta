@@ -272,7 +272,7 @@ model Trayecto {
   id          String   @id @default(uuid())
   nombre      String
   descripcion String?
-  imagenUrl   String? // insignia final al completar todo el trayecto
+  imagenUrl   String? // imagen representativa del trayecto, se muestra en su propia tarjeta
   activo      Boolean  @default(true)
   createdAt   DateTime @default(now())
 
@@ -337,4 +337,20 @@ model Rango {
   eventos Evento[] // eventos que este rango exige completados
 
   @@map("rangos")
+}
+
+// Escalón de reconocimiento por CANTIDAD TOTAL de sellos escaneados por el
+// visitante — sin importar de qué Trayecto vengan (a propósito: es un
+// reconocimiento general, no del recorrido de un evento en particular).
+// Por eso NO cuelga de ningún Trayecto — es una sola lista global, editable
+// desde el panel de administración igual que ConfiguracionVista.
+model Medalla {
+  id          String @id @default(uuid())
+  nombre      String // ej. "Aficionado"
+  descripcion String // ej. "Consigue tu primer sello"
+  umbral      Int // cantidad mínima de sellos escaneados para desbloquearla
+  orden       Int      @default(0)
+  imagenUrl   String? // arte de la medalla; null = usa el arte fijo por posición que ya tiene la vista de cliente
+
+  @@map("medallas")
 }

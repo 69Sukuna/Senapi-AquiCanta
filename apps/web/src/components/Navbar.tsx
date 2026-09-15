@@ -60,7 +60,7 @@ export function Navbar() {
           con la barra inferior de antes, una ventana apenas más chica que
           el escritorio ya caía a la vista mobile — acá el texto/gaps se
           achican un poco entre md y lg para que la fila siga entrando. */}
-      <nav className="sticky top-0 z-50 hidden h-20 items-center justify-between gap-2 bg-(--brand-negro) px-4! md:flex lg:h-24 lg:px-8!">
+      <nav className="fixed inset-x-0 top-0 z-50 hidden h-20 items-center justify-between gap-2 bg-(--brand-negro) px-4! md:flex lg:h-24 lg:px-8!">
         <div className="flex min-w-0 items-center gap-0.5 lg:gap-1">
           {LINKS_IZQUIERDA.map((link) => (
             <NavLink key={link.href} {...link} activo={pathname === link.href} />

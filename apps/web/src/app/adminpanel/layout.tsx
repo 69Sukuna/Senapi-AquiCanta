@@ -1,9 +1,23 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { ROUTES } from '@/lib/routes';
 import { fetchUsuarioActual, logout, type UsuarioAutenticado } from '@/lib/auth';
+
+// Pestañas para moverse entre las secciones del panel sin volver al índice
+// (/adminpanel). Viven acá, en el layout, para aparecer en todas las
+// sub-rutas — cada page.tsx de sección no tiene que repetirlas.
+const SECCIONES = [
+  { href: ROUTES.admin.root, label: 'Inicio' },
+  { href: ROUTES.admin.inscritos, label: 'Inscritos' },
+  { href: ROUTES.admin.vistas, label: 'Vistas' },
+  { href: ROUTES.admin.sellos, label: 'Sellos' },
+  { href: ROUTES.admin.categorias, label: 'Categorías' },
+  { href: ROUTES.admin.resultados, label: 'Resultados' },
+  { href: ROUTES.admin.usuarios, label: 'Usuarios' },
+];
 
 // Envuelve TODAS las rutas /adminpanel/* (Next.js aplica un layout.tsx a
 // todo lo anidado bajo su carpeta) — un solo lugar para exigir sesión de
@@ -57,6 +71,26 @@ export default function AdminPanelLayout({ children }: { children: React.ReactNo
           Cerrar sesión
         </button>
       </div>
+
+      <div className="flex gap-2 overflow-x-auto border-b border-(--border) bg-(--bg-secondary) px-6! py-3!">
+        {SECCIONES.map(({ href, label }) => {
+          const activo = pathname === href;
+          return (
+            <Link
+              key={href}
+              href={href}
+              className={`shrink-0 rounded-lg border px-4! py-2! text-sm font-semibold whitespace-nowrap transition-colors duration-200 ${
+                activo
+                  ? 'border-(--border-active) bg-[rgba(30,99,184,0.1)] text-(--text-primary)'
+                  : 'border-transparent text-(--text-secondary) hover:bg-(--bg-card-hover) hover:text-(--text-primary)'
+              }`}
+            >
+              {label}
+            </Link>
+          );
+        })}
+      </div>
+
       {children}
     </div>
   );

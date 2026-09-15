@@ -1,7 +1,17 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { Prisma } from '@repo/database';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { Medalla, Prisma } from '@repo/database';
 import { PrismaService } from '../prisma/prisma.service';
 import { EscanearPuntoDto } from './dto/escanear-punto.dto';
+import { CrearTrayectoDto } from './dto/admin/crear-trayecto.dto';
+import { ActualizarTrayectoDto } from './dto/admin/actualizar-trayecto.dto';
+import { CrearEventoDto } from './dto/admin/crear-evento.dto';
+import { ActualizarEventoDto } from './dto/admin/actualizar-evento.dto';
+import { CrearPuntoDto } from './dto/admin/crear-punto.dto';
+import { ActualizarPuntoDto } from './dto/admin/actualizar-punto.dto';
+import { CrearRangoDto } from './dto/admin/crear-rango.dto';
+import { ActualizarRangoDto } from './dto/admin/actualizar-rango.dto';
+import { CrearMedallaDto } from './dto/admin/crear-medalla.dto';
+import { ActualizarMedallaDto } from './dto/admin/actualizar-medalla.dto';
 
 const CATALOGO_TRAYECTO_INCLUDE = {
   eventos: {
@@ -18,6 +28,21 @@ const CATALOGO_TRAYECTO_INCLUDE = {
   },
 };
 
+// Igual al catálogo público, pero con los datos completos que solo el panel
+// de administración necesita: el `codigo` de cada punto (el público lo omite
+// a propósito, es el secreto del QR físico) y el `nombre` de los eventos que
+// exige cada Rango (el público solo necesita el `id` para calcular alcanzado).
+const CATALOGO_TRAYECTO_ADMIN_INCLUDE = {
+  eventos: {
+    orderBy: { orden: 'asc' as const },
+    include: { puntos: true },
+  },
+  rangos: {
+    orderBy: { orden: 'asc' as const },
+    include: { eventos: { select: { id: true, nombre: true } } },
+  },
+};
+
 type TrayectoConDetalle = Prisma.TrayectoGetPayload<{ include: typeof CATALOGO_TRAYECTO_INCLUDE }>;
 
 @Injectable()
@@ -27,7 +52,7 @@ export class SellosService {
   listarTrayectos() {
     return this.prisma.trayecto.findMany({
       where: { activo: true },
-      orderBy: { createdAt: 'asc' },
+      orderBy: { createdAt: 'desc' },
       include: CATALOGO_TRAYECTO_INCLUDE,
     });
   }
@@ -114,6 +139,24 @@ export class SellosService {
     return this.construirProgreso(trayecto, new Set(escaneos.map((e) => e.puntoId)));
   }
 
+  // Medallas: reconocimiento GLOBAL por cantidad TOTAL de sellos escaneados
+  // por el visitante — a propósito, no filtra por trayecto (a diferencia de
+  // `progreso`, que sí es por trayecto porque Eventos/Rangos sí lo son).
+  async medallasGlobales(visitorId: string) {
+    const [medallas, totalEscaneados] = await Promise.all([
+      this.prisma.medalla.findMany({ orderBy: { orden: 'asc' } }),
+      this.prisma.escaneoPunto.count({ where: { visitorId } }),
+    ]);
+
+    return medallas.map((medalla) => ({
+      id: medalla.id,
+      nombre: medalla.nombre,
+      descripcion: medalla.descripcion,
+      umbral: medalla.umbral,
+      alcanzada: totalEscaneados >= medalla.umbral,
+    }));
+  }
+
   async escanear(dto: EscanearPuntoDto) {
     const punto = await this.prisma.puntoEscaneo.findUnique({
       where: { codigo: dto.codigo },
@@ -144,5 +187,213 @@ export class SellosService {
       trayecto: { id: progreso.id, nombre: progreso.nombre, imagenUrl: progreso.imagenUrl, completo: progreso.completo },
       rangos: progreso.rangos,
     };
+  }
+
+  // ── Administración ──────────────────────────────────────────────────────
+  // Todo lo de acá abajo es exclusivo del panel de administración (guardado
+  // por JwtAuthGuard + RolesGuard en SellosAdminController) — no lo usa la
+  // vista pública. Devuelve siempre el registro con el include "admin"
+  // (que incluye el `codigo` de los puntos y el `nombre` de los eventos de
+  // cada Rango) para que el frontend pueda reemplazar el ítem en su estado
+  // local sin volver a pedir todo el árbol.
+
+  listarTrayectosAdmin() {
+    return this.prisma.trayecto.findMany({
+      orderBy: { createdAt: 'asc' },
+      include: CATALOGO_TRAYECTO_ADMIN_INCLUDE,
+    });
+  }
+
+  private trayectoAdminOrThrow(id: string) {
+    return this.prisma.trayecto.findUniqueOrThrow({ where: { id }, include: CATALOGO_TRAYECTO_ADMIN_INCLUDE }).catch(() => {
+      throw new NotFoundException(`Trayecto ${id} no encontrado`);
+    });
+  }
+
+  crearTrayecto(dto: CrearTrayectoDto) {
+    return this.prisma.trayecto
+      .create({ data: dto })
+      .then((t) => this.trayectoAdminOrThrow(t.id));
+  }
+
+  async actualizarTrayecto(id: string, dto: ActualizarTrayectoDto) {
+    await this.trayectoAdminOrThrow(id);
+    await this.prisma.trayecto.update({ where: { id }, data: dto });
+    return this.trayectoAdminOrThrow(id);
+  }
+
+  async eliminarTrayecto(id: string) {
+    await this.trayectoAdminOrThrow(id);
+    await this.prisma.trayecto.delete({ where: { id } });
+  }
+
+  async crearEvento(trayectoId: string, dto: CrearEventoDto) {
+    await this.trayectoAdminOrThrow(trayectoId);
+    // El orden ya no lo escribe el admin a mano — un evento nuevo siempre se
+    // agrega al final; para reordenar existe `reordenarEventos`.
+    const orden = (await this.prisma.evento.count({ where: { trayectoId } })) + 1;
+    const evento = await this.prisma.evento.create({ data: { ...dto, orden, trayectoId } });
+    return this.trayectoAdminOrThrow(evento.trayectoId);
+  }
+
+  // Recibe los ids en el orden final deseado (como quedaron tras arrastrar o
+  // apretar subir/bajar en el panel) y renumera 1..N en una transacción — así
+  // el orden queda siempre secuencial sin huecos, sin importar el estado
+  // previo en la base.
+  async reordenarEventos(trayectoId: string, ids: string[]) {
+    await this.trayectoAdminOrThrow(trayectoId);
+    await this.prisma.$transaction(
+      ids.map((id, i) => this.prisma.evento.update({ where: { id }, data: { orden: i + 1 } })),
+    );
+    return this.trayectoAdminOrThrow(trayectoId);
+  }
+
+  private async eventoOrThrow(id: string) {
+    const evento = await this.prisma.evento.findUnique({ where: { id } });
+    if (!evento) throw new NotFoundException(`Evento ${id} no encontrado`);
+    return evento;
+  }
+
+  async actualizarEvento(id: string, dto: ActualizarEventoDto) {
+    const evento = await this.eventoOrThrow(id);
+    await this.prisma.evento.update({ where: { id }, data: dto });
+    return this.trayectoAdminOrThrow(evento.trayectoId);
+  }
+
+  async eliminarEvento(id: string) {
+    const evento = await this.eventoOrThrow(id);
+    await this.prisma.evento.delete({ where: { id } });
+    return this.trayectoAdminOrThrow(evento.trayectoId);
+  }
+
+  private async puntoTrayectoId(eventoId: string) {
+    const evento = await this.eventoOrThrow(eventoId);
+    return evento.trayectoId;
+  }
+
+  async crearPunto(eventoId: string, dto: CrearPuntoDto) {
+    const trayectoId = await this.puntoTrayectoId(eventoId);
+    try {
+      await this.prisma.puntoEscaneo.create({ data: { ...dto, eventoId } });
+    } catch (error) {
+      throw this.aConflictoSiCodigoDuplicado(error);
+    }
+    return this.trayectoAdminOrThrow(trayectoId);
+  }
+
+  private async puntoOrThrow(id: string) {
+    const punto = await this.prisma.puntoEscaneo.findUnique({ where: { id }, include: { evento: true } });
+    if (!punto) throw new NotFoundException(`Punto de escaneo ${id} no encontrado`);
+    return punto;
+  }
+
+  async actualizarPunto(id: string, dto: ActualizarPuntoDto) {
+    const punto = await this.puntoOrThrow(id);
+    try {
+      await this.prisma.puntoEscaneo.update({ where: { id }, data: dto });
+    } catch (error) {
+      throw this.aConflictoSiCodigoDuplicado(error);
+    }
+    return this.trayectoAdminOrThrow(punto.evento.trayectoId);
+  }
+
+  async eliminarPunto(id: string) {
+    const punto = await this.puntoOrThrow(id);
+    await this.prisma.puntoEscaneo.delete({ where: { id } });
+    return this.trayectoAdminOrThrow(punto.evento.trayectoId);
+  }
+
+  // El código va escrito en un QR físico — si dos puntos terminan con el
+  // mismo, Prisma rechaza el create/update con P2025 (unique constraint);
+  // se traduce a un 409 con mensaje claro en vez del 500 genérico.
+  private aConflictoSiCodigoDuplicado(error: unknown) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+      return new ConflictException('Ese código ya está en uso, prueba otro.');
+    }
+    return error;
+  }
+
+  async crearRango(trayectoId: string, dto: CrearRangoDto) {
+    await this.trayectoAdminOrThrow(trayectoId);
+    // Igual que Evento: el orden se agrega al final, se reordena aparte.
+    const orden = (await this.prisma.rango.count({ where: { trayectoId } })) + 1;
+    await this.prisma.rango.create({
+      data: {
+        nombre: dto.nombre,
+        orden,
+        trayectoId,
+        eventos: { connect: dto.eventoIds.map((id) => ({ id })) },
+      },
+    });
+    return this.trayectoAdminOrThrow(trayectoId);
+  }
+
+  async reordenarRangos(trayectoId: string, ids: string[]) {
+    await this.trayectoAdminOrThrow(trayectoId);
+    await this.prisma.$transaction(
+      ids.map((id, i) => this.prisma.rango.update({ where: { id }, data: { orden: i + 1 } })),
+    );
+    return this.trayectoAdminOrThrow(trayectoId);
+  }
+
+  private async rangoOrThrow(id: string) {
+    const rango = await this.prisma.rango.findUnique({ where: { id } });
+    if (!rango) throw new NotFoundException(`Rango ${id} no encontrado`);
+    return rango;
+  }
+
+  async actualizarRango(id: string, dto: ActualizarRangoDto) {
+    const rango = await this.rangoOrThrow(id);
+    const { eventoIds, ...resto } = dto;
+    await this.prisma.rango.update({
+      where: { id },
+      data: {
+        ...resto,
+        ...(eventoIds ? { eventos: { set: eventoIds.map((eventoId) => ({ id: eventoId })) } } : {}),
+      },
+    });
+    return this.trayectoAdminOrThrow(rango.trayectoId);
+  }
+
+  async eliminarRango(id: string) {
+    const rango = await this.rangoOrThrow(id);
+    await this.prisma.rango.delete({ where: { id } });
+    return this.trayectoAdminOrThrow(rango.trayectoId);
+  }
+
+  // Medalla ya no cuelga de ningún trayecto (ver comentario en el schema) —
+  // estos métodos operan directo sobre la tabla, sin pasar por
+  // `trayectoAdminOrThrow`.
+  listarMedallasAdmin() {
+    return this.prisma.medalla.findMany({ orderBy: { orden: 'asc' } });
+  }
+
+  async crearMedallaGlobal(dto: CrearMedallaDto): Promise<Medalla> {
+    // Igual que Evento/Rango: se agrega al final, se reordena aparte.
+    const orden = (await this.prisma.medalla.count()) + 1;
+    return this.prisma.medalla.create({ data: { ...dto, orden } });
+  }
+
+  async reordenarMedallas(ids: string[]) {
+    await this.prisma.$transaction(
+      ids.map((id, i) => this.prisma.medalla.update({ where: { id }, data: { orden: i + 1 } })),
+    );
+    return this.listarMedallasAdmin();
+  }
+
+  private async medallaOrThrow(id: string) {
+    const medalla = await this.prisma.medalla.findUnique({ where: { id } });
+    if (!medalla) throw new NotFoundException(`Medalla ${id} no encontrada`);
+    return medalla;
+  }
+
+  async actualizarMedalla(id: string, dto: ActualizarMedallaDto) {
+    await this.medallaOrThrow(id);
+    return this.prisma.medalla.update({ where: { id }, data: dto });
+  }
+
+  async eliminarMedalla(id: string) {
+    await this.medallaOrThrow(id);
+    await this.prisma.medalla.delete({ where: { id } });
   }
 }

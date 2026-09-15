@@ -20,6 +20,12 @@ export class SellosController {
     return this.sellosService.progreso(id, visitorId);
   }
 
+  @Get('medallas/:visitorId')
+  @ApiOperation({ summary: 'Medallas globales de un visitante — por cantidad TOTAL de sellos, sin importar el trayecto' })
+  medallas(@Param('visitorId') visitorId: string) {
+    return this.sellosService.medallasGlobales(visitorId);
+  }
+
   @Post('escanear')
   @ApiOperation({ summary: 'Registrar el escaneo de un punto (QR/imagen) por un visitante' })
   escanear(@Body() dto: EscanearPuntoDto) {

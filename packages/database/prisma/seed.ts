@@ -404,9 +404,30 @@ async function main() {
         },
       },
     });
+
     console.log('Seed listo: trayecto de prueba "Recorrido de Prueba" creado.');
   } else {
     console.log(`Trayectos ya existentes (${trayectosExistentes}), no se vuelve a sembrar.`);
+  }
+
+  // Medallas: reconocimiento GLOBAL por cantidad total de sellos escaneados
+  // por el visitante — a diferencia de Rango (exige eventos específicos de UN
+  // trayecto), no cuelgan de ningún trayecto en particular, así que se
+  // siembran aparte, condicionadas a que no exista ninguna todavía.
+  const medallasExistentes = await prisma.medalla.count();
+  if (medallasExistentes === 0) {
+    const MEDALLAS_BASE = [
+      { nombre: 'Aficionado', descripcion: 'Consigue tu primer sello', umbral: 1, orden: 1 },
+      { nombre: 'Aprendiz', descripcion: 'Consigue 5 sellos', umbral: 5, orden: 2 },
+      { nombre: 'Mentor', descripcion: 'Consigue 15 sellos', umbral: 15, orden: 3 },
+      { nombre: 'Gran Maestro', descripcion: 'Consigue más de 30 sellos', umbral: 30, orden: 4 },
+    ];
+    for (const medalla of MEDALLAS_BASE) {
+      await prisma.medalla.create({ data: medalla });
+    }
+    console.log('Seed listo: medallas globales creadas.');
+  } else {
+    console.log(`Medallas ya existentes (${medallasExistentes}), no se vuelven a sembrar.`);
   }
 
   // Interruptores de vistas públicas (/adminpanel/vistas). `clave` coincide
