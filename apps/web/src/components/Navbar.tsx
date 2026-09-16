@@ -4,6 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { ROUTES } from '@/lib/routes';
+import { FEATURE_FLAGS } from '@/lib/featureFlags';
 import {
   Home,
   LayoutGrid,
@@ -20,20 +21,22 @@ import {
 // Split en dos grupos a propósito, para armar el layout de escritorio con el
 // logo centrado entre ambos (ver diseño de referencia) — en mobile se
 // vuelven a unir en una sola fila de íconos en la barra inferior.
+// .filter(Boolean) para poder "comentar" una pestaña con un `false &&`
+// en vez de borrarla — ver lib/featureFlags.ts.
 const LINKS_IZQUIERDA = [
   { label: 'Inicio', href: ROUTES.home, icon: Home },
   { label: 'Categorías', href: ROUTES.categorias, icon: LayoutGrid },
-  { label: 'Participantes', href: ROUTES.participante, icon: Mic },
+  FEATURE_FLAGS.participantes && { label: 'Participantes', href: ROUTES.participante, icon: Mic },
   { label: 'Inscripciones', href: ROUTES.inscripciones, icon: FileText },
-];
+].filter(Boolean) as { label: string; href: string; icon: typeof Home }[];
 
 const LINKS_DERECHA = [
   { label: 'Butacas', href: ROUTES.butacas, icon: Armchair },
   { label: 'Realidad Virtual', href: ROUTES.realidadVirtual, icon: Glasses },
   { label: 'Votaciones', href: ROUTES.votaciones, icon: Vote },
-  { label: 'Jurado', href: ROUTES.calificacionJurado, icon: Users },
+  FEATURE_FLAGS.jurado && { label: 'Jurado', href: ROUTES.calificacionJurado, icon: Users },
   { label: 'Sellos', href: ROUTES.sellos, icon: Stamp },
-];
+].filter(Boolean) as { label: string; href: string; icon: typeof Home }[];
 
 const TODOS_LOS_LINKS = [...LINKS_IZQUIERDA, ...LINKS_DERECHA];
 
