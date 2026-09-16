@@ -23,6 +23,9 @@ import {
   type Butaca,
   type NivelPrecio,
 } from '@/lib/asientos';
+import { useUsuario } from '@/hooks/useUsuario';
+import { BotonLoginGoogle } from '@/components/BotonLoginGoogle';
+import type { VisitanteAutenticado } from '@/lib/authVisitante';
 import BannerFechasClave from '@/components/BannerFechasClave';
 import HeroButacas from '../components/HeroButacas';
 import BannerReservaLugares from '../components/BannerReservaLugares';
@@ -54,6 +57,10 @@ interface Reserva {
   email: string;
   telefono: string;
   butacaIds: string[];
+  // Id del Visitante logueado que hizo la reserva (si estaba logueado) —
+  // sigue siendo local a este navegador, esto solo identifica de qué
+  // cuenta salió, no la sincroniza a ningún backend todavía.
+  userId?: string;
 }
 
 function leerReservas(): Reserva[] {
@@ -69,6 +76,7 @@ function leerReservas(): Reserva[] {
 type Pestana = 'reserva' | 'mis-asientos';
 
 export function ButacasContent() {
+  const { usuario, loginConGoogle } = useUsuario();
   const [pestana, setPestana] = useState<Pestana>('reserva');
 
   // Mapa generado una sola vez: sectores/aforos vienen del plano del teatro,
@@ -149,6 +157,7 @@ export function ButacasContent() {
       id: crypto.randomUUID(),
       fecha: new Date().toISOString(),
       ...datos,
+      userId: usuario?.id,
       butacaIds: [...seleccionadas],
     };
     const actualizadas = [...leerReservas(), nueva];
@@ -172,7 +181,7 @@ export function ButacasContent() {
       <div className="flex flex-wrap items-center justify-between gap-3 pb-3">
         <div>
           <span className="font-barlow inline-flex w-fit items-center gap-2 rounded-full border border-(--brand-negro)/20 bg-(--brand-crema) px-4! py-1.5! text-xs font-semibold tracking-wide text-(--brand-cafe) uppercase mb-2!">
-            <Armchair size={14} /> Teatro Internacional de Oruro
+            <Armchair size={14} /> Teatro Internacional Oruro
           </span>
           <h1 className="font-bakbak text-3xl md:text-4xl font-black text-(--brand-cafe)">
             BUTACAS
@@ -364,7 +373,13 @@ export function ButacasContent() {
       )}
 
       {modalAbierto && (
-        <ModalReserva seleccionList={seleccionList} onClose={() => setModalAbierto(false)} onConfirmar={confirmarReserva} />
+        <ModalReserva
+          seleccionList={seleccionList}
+          usuario={usuario}
+          onClose={() => setModalAbierto(false)}
+          onConfirmar={confirmarReserva}
+          onLoginGoogle={() => loginConGoogle()}
+        />
       )}
       </div>
 
@@ -452,17 +467,18 @@ function MisAsientos({
 
 function ModalReserva({
   seleccionList,
+  usuario,
   onClose,
   onConfirmar,
+  onLoginGoogle,
 }: {
   seleccionList: Butaca[];
+  usuario: VisitanteAutenticado | null;
   onClose: () => void;
   onConfirmar: (datos: { nombre: string; email: string; telefono: string }) => void;
+  onLoginGoogle: () => void;
 }) {
-  const [nombre, setNombre] = useState('');
-  const [email, setEmail] = useState('');
   const [telefono, setTelefono] = useState('');
-  const [error, setError] = useState<string | null>(null);
   // Cuántas butacas se confirmaron, capturado en el momento del submit — el
   // padre vacía la selección apenas confirma, así que seleccionList.length
   // ya sería 0 para cuando se pinta la pantalla de éxito.
@@ -470,16 +486,8 @@ function ModalReserva({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!nombre.trim() || !email.trim()) {
-      setError('Completá tu nombre y email para reservar.');
-      return;
-    }
-    if (!/^\S+@\S+\.\S+$/.test(email.trim())) {
-      setError('Ese email no parece válido.');
-      return;
-    }
-    setError(null);
-    onConfirmar({ nombre: nombre.trim(), email: email.trim(), telefono: telefono.trim() });
+    if (!usuario) return;
+    onConfirmar({ nombre: usuario.name ?? '', email: usuario.email, telefono: telefono.trim() });
     setCantidadConfirmada(seleccionList.length);
   };
 
@@ -538,55 +546,46 @@ function ModalReserva({
               </ul>
             </div>
 
-            <form onSubmit={handleSubmit} className="flex flex-col gap-3 px-5 py-4">
-              {error && (
-                <div className="flex items-start gap-2 rounded-lg border border-[#d52b1e]/30 bg-[#d52b1e]/8 px-3 py-2 text-xs text-[#b82419]">
-                  <Info size={14} className="mt-0.5 shrink-0" />
-                  {error}
+            {!usuario ? (
+              <div className="flex flex-col items-center gap-3 px-5 py-8 text-center">
+                <span className="flex h-12 w-12 items-center justify-center rounded-full bg-[#1b2a4a]/5 text-(--text-muted)">
+                  <Info size={20} />
+                </span>
+                <p className="max-w-64 text-sm text-(--text-secondary)">
+                  Iniciá sesión con Google para confirmar tu reserva — así sabemos a quién contactar.
+                </p>
+                <div className="w-full px-1">
+                  <BotonLoginGoogle onClick={onLoginGoogle} />
                 </div>
-              )}
+              </div>
+            ) : (
+              <form onSubmit={handleSubmit} className="flex flex-col gap-3 px-5 py-4">
+                <div className="rounded-lg bg-[#1b2a4a]/5 px-3 py-2 text-sm text-(--text-secondary)">
+                  Reservando como <span className="font-semibold text-(--text-primary)">{usuario.name || usuario.email}</span>
+                  <br />
+                  <span className="text-xs">{usuario.email}</span>
+                </div>
 
-              <label className="flex flex-col gap-1 text-sm">
-                <span className="text-(--text-secondary)">Nombre completo</span>
-                <input
-                  type="text"
-                  value={nombre}
-                  onChange={(e) => setNombre(e.target.value)}
-                  placeholder="Ej. María Pérez"
-                  className="rounded-lg border border-(--border) bg-(--bg-primary) px-3 py-2 text-(--text-primary) placeholder:text-(--text-muted) outline-none focus:border-[#1e63b8]/60"
-                />
-              </label>
+                <label className="flex flex-col gap-1 text-sm">
+                  <span className="text-(--text-secondary)">Teléfono (opcional)</span>
+                  <input
+                    type="tel"
+                    value={telefono}
+                    onChange={(e) => setTelefono(e.target.value)}
+                    placeholder="Ej. 700 00000"
+                    className="rounded-lg border border-(--border) bg-(--bg-primary) px-3 py-2 text-(--text-primary) placeholder:text-(--text-muted) outline-none focus:border-[#1e63b8]/60"
+                  />
+                </label>
 
-              <label className="flex flex-col gap-1 text-sm">
-                <span className="text-(--text-secondary)">Email</span>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="vos@ejemplo.com"
-                  className="rounded-lg border border-(--border) bg-(--bg-primary) px-3 py-2 text-(--text-primary) placeholder:text-(--text-muted) outline-none focus:border-[#1e63b8]/60"
-                />
-              </label>
-
-              <label className="flex flex-col gap-1 text-sm">
-                <span className="text-(--text-secondary)">Teléfono (opcional)</span>
-                <input
-                  type="tel"
-                  value={telefono}
-                  onChange={(e) => setTelefono(e.target.value)}
-                  placeholder="Ej. 700 00000"
-                  className="rounded-lg border border-(--border) bg-(--bg-primary) px-3 py-2 text-(--text-primary) placeholder:text-(--text-muted) outline-none focus:border-[#1e63b8]/60"
-                />
-              </label>
-
-              <button
-                type="submit"
-                className="mt-1 w-full cursor-pointer rounded-lg bg-[#d52b1e] px-6 py-2.5 font-semibold text-white transition-colors hover:brightness-110"
-              >
-                Confirmar reserva
-              </button>
-              <p className="text-center text-xs text-(--text-muted)">Se guarda solo en este navegador, todavía no hay backend.</p>
-            </form>
+                <button
+                  type="submit"
+                  className="mt-1 w-full cursor-pointer rounded-lg bg-[#d52b1e] px-6 py-2.5 font-semibold text-white transition-colors hover:brightness-110"
+                >
+                  Confirmar reserva
+                </button>
+                <p className="text-center text-xs text-(--text-muted)">Se guarda solo en este navegador, todavía no hay backend.</p>
+              </form>
+            )}
           </>
         )}
       </div>

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { Users } from 'lucide-react';
 import { fetchAdmin } from '@/lib/auth';
 import { TrayectoForm } from './TrayectoForm';
 import { EventosTab } from './EventosTab';
@@ -82,6 +83,12 @@ export function SellosAdminExplorer() {
         <button type="button" onClick={() => setCreandoTrayecto((v) => !v)} className={botonSecundario}>
           {creandoTrayecto ? 'Cancelar' : '+ Nuevo trayecto'}
         </button>
+        {trayectoActivo && (
+          <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-(--text-secondary)">
+            <Users className="h-4 w-4" />
+            {trayectoActivo.visitantesUnicos} {trayectoActivo.visitantesUnicos === 1 ? 'persona escaneó' : 'personas escanearon'} este trayecto
+          </span>
+        )}
       </div>
 
       {creandoTrayecto && (

@@ -1,4 +1,4 @@
-// Generador del mapa de zonas del Teatro Internacional de Oruro.
+// Generador del mapa de zonas del Teatro Internacional Oruro.
 //
 // Las 24 formas de zona y las 3 formas del escenario son las reales, trazadas
 // a mano por el usuario sobre el plano oficial (no una aproximación

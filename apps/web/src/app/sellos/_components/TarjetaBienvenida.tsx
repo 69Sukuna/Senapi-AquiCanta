@@ -10,14 +10,30 @@ interface RangoProgreso {
 interface TarjetaBienvenidaProps {
   rangos: RangoProgreso[];
   onEscanear: () => void;
-  // Todavía no hay login — cuando exista, pasar nombre/avatar reales acá.
-  nombre?: string;
+  // Sellos sigue funcionando anónimo por defecto — `usuario` es opcional,
+  // solo cambia el nombre mostrado y ofrece loguearse para no perder el
+  // progreso al cambiar de dispositivo.
+  usuario?: { name: string | null } | null;
+  onLoginGoogle?: () => void;
 }
 
-export function TarjetaBienvenida({ rangos, onEscanear, nombre = 'Visitante' }: TarjetaBienvenidaProps) {
+export function TarjetaBienvenida({ rangos, onEscanear, usuario, onLoginGoogle }: TarjetaBienvenidaProps) {
+  const nombre = usuario?.name || 'Visitante';
+
   return (
     <div className="glass-panel rounded-2xl! p-5!">
-      <p className="text-sm text-(--text-secondary)">¡Bienvenido!</p>
+      <div className="flex items-center justify-between gap-2!">
+        <p className="text-sm text-(--text-secondary)">¡Bienvenido!</p>
+        {!usuario && onLoginGoogle && (
+          <button
+            type="button"
+            onClick={onLoginGoogle}
+            className="text-xs font-semibold text-(--accent-blue) underline underline-offset-2"
+          >
+            Iniciar sesión con Google
+          </button>
+        )}
+      </div>
 
       <div className="flex flex-wrap items-center justify-between gap-3!">
         <p className="font-bakbak truncate text-2xl text-(--text-primary)">{nombre}</p>

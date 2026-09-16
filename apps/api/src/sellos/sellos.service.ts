@@ -136,7 +136,14 @@ export class SellosService {
       select: { puntoId: true },
     });
 
-    return this.construirProgreso(trayecto, new Set(escaneos.map((e) => e.puntoId)));
+    const progreso = this.construirProgreso(trayecto, new Set(escaneos.map((e) => e.puntoId)));
+
+    // Solo se calcula (y se expone) si el admin activó `mostrarConteoVisitantes`
+    // para este trayecto — si no, el cliente no debe ver este dato.
+    return {
+      ...progreso,
+      visitantesUnicos: trayecto.mostrarConteoVisitantes ? await this.contarVisitantesUnicos(trayectoId) : null,
+    };
   }
 
   // Medallas: reconocimiento GLOBAL por cantidad TOTAL de sellos escaneados
@@ -155,6 +162,39 @@ export class SellosService {
       umbral: medalla.umbral,
       alcanzada: totalEscaneados >= medalla.umbral,
     }));
+  }
+
+  // Fusiona el progreso anónimo (localStorage) de un visitante recién
+  // logueado con su cuenta real. Si algún punto ya estaba escaneado bajo
+  // AMBOS ids (ej. lo escaneó anónimo en un celular y ya de nuevo logueado
+  // en otro), se descarta el duplicado del anónimo en vez de chocar con el
+  // unique [visitorId, puntoId].
+  async vincularVisitante(userId: string, visitorIdAnonimo: string) {
+    if (userId === visitorIdAnonimo) return;
+
+    await this.prisma.$transaction(async (tx) => {
+      const escaneosAnonimos = await tx.escaneoPunto.findMany({
+        where: { visitorId: visitorIdAnonimo },
+        select: { id: true, puntoId: true },
+      });
+      if (escaneosAnonimos.length === 0) return;
+
+      const escaneosDelUsuario = await tx.escaneoPunto.findMany({
+        where: { visitorId: userId },
+        select: { puntoId: true },
+      });
+      const puntosYaEscaneados = new Set(escaneosDelUsuario.map((e) => e.puntoId));
+
+      const idsAReasignar = escaneosAnonimos.filter((e) => !puntosYaEscaneados.has(e.puntoId)).map((e) => e.id);
+      const idsADescartar = escaneosAnonimos.filter((e) => puntosYaEscaneados.has(e.puntoId)).map((e) => e.id);
+
+      if (idsAReasignar.length > 0) {
+        await tx.escaneoPunto.updateMany({ where: { id: { in: idsAReasignar } }, data: { visitorId: userId } });
+      }
+      if (idsADescartar.length > 0) {
+        await tx.escaneoPunto.deleteMany({ where: { id: { in: idsADescartar } } });
+      }
+    });
   }
 
   async escanear(dto: EscanearPuntoDto) {
@@ -197,17 +237,40 @@ export class SellosService {
   // cada Rango) para que el frontend pueda reemplazar el ítem en su estado
   // local sin volver a pedir todo el árbol.
 
-  listarTrayectosAdmin() {
-    return this.prisma.trayecto.findMany({
+  async listarTrayectosAdmin() {
+    const trayectos = await this.prisma.trayecto.findMany({
       orderBy: { createdAt: 'asc' },
       include: CATALOGO_TRAYECTO_ADMIN_INCLUDE,
     });
+
+    return Promise.all(
+      trayectos.map(async (trayecto) => ({
+        ...trayecto,
+        visitantesUnicos: await this.contarVisitantesUnicos(trayecto.id),
+      })),
+    );
   }
 
-  private trayectoAdminOrThrow(id: string) {
-    return this.prisma.trayecto.findUniqueOrThrow({ where: { id }, include: CATALOGO_TRAYECTO_ADMIN_INCLUDE }).catch(() => {
-      throw new NotFoundException(`Trayecto ${id} no encontrado`);
+  // Cantidad de visitantes DISTINTOS que escanearon al menos un punto de
+  // cualquier evento de este trayecto (no la cantidad de escaneos en total).
+  private async contarVisitantesUnicos(trayectoId: string): Promise<number> {
+    const escaneos = await this.prisma.escaneoPunto.findMany({
+      where: { punto: { evento: { trayectoId } } },
+      distinct: ['visitorId'],
+      select: { visitorId: true },
     });
+
+    return escaneos.length;
+  }
+
+  private async trayectoAdminOrThrow(id: string) {
+    const trayecto = await this.prisma.trayecto
+      .findUniqueOrThrow({ where: { id }, include: CATALOGO_TRAYECTO_ADMIN_INCLUDE })
+      .catch(() => {
+        throw new NotFoundException(`Trayecto ${id} no encontrado`);
+      });
+
+    return { ...trayecto, visitantesUnicos: await this.contarVisitantesUnicos(id) };
   }
 
   crearTrayecto(dto: CrearTrayectoDto) {

@@ -40,8 +40,14 @@ export interface TrayectoAdmin {
   descripcion: string | null;
   imagenUrl: string | null;
   activo: boolean;
+  // Si la vista pública muestra `visitantesUnicos` en la tarjeta de este
+  // trayecto (el panel admin siempre lo ve, sin importar este valor).
+  mostrarConteoVisitantes: boolean;
   eventos: EventoAdmin[];
   rangos: RangoAdmin[];
+  // Cantidad de visitantes DISTINTOS que escanearon al menos un punto de
+  // cualquier evento de este trayecto.
+  visitantesUnicos: number;
 }
 
 export type PestanaSellos = 'trayecto' | 'eventos' | 'rangos' | 'medallas';

@@ -1,22 +1,11 @@
 import type { SVGProps } from 'react';
 import Image from 'next/image';
-import Link from 'next/link';
-import { ROUTES } from '@/lib/routes';
+import { MapPin } from 'lucide-react';
 
 function FacebookIcon(props: SVGProps<SVGSVGElement>) {
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" {...props}>
       <path d="M13.5 21v-7.75h2.6l.4-3.02h-3v-1.93c0-.87.24-1.47 1.5-1.47h1.6V4.14C15.9 4.06 15 4 13.94 4c-2.24 0-3.78 1.37-3.78 3.88v2.17H7.55v3.02h2.61V21h3.34z" />
-    </svg>
-  );
-}
-
-function InstagramIcon(props: SVGProps<SVGSVGElement>) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" {...props}>
-      <rect x="3" y="3" width="18" height="18" rx="5" />
-      <circle cx="12" cy="12" r="4" />
-      <circle cx="17.2" cy="6.8" r="1" fill="currentColor" stroke="none" />
     </svg>
   );
 }
@@ -38,6 +27,18 @@ function WhatsAppIcon(props: SVGProps<SVGSVGElement>) {
   );
 }
 
+// Logos de las entidades que auspician el festival. `logo: null` = todavía
+// no tenemos el archivo — se muestra un espacio reservado en su lugar.
+// Para activarlo: poner el archivo en public/images/LOGOS/ y completar la
+// ruta acá (mismo patrón que ORGANIZA más abajo).
+const AUSPICIAN = [
+  // logoGrande: el archivo de GAMO trae harto margen transparente propio,
+  // así que con el padding normal del chip se ve chico — se le achica el
+  // padding para compensar.
+  { nombre: 'Gobierno Autónomo Municipal de Oruro', logo: '/images/LOGOS/GAMO.png' as string | null, logoGrande: true },
+  { nombre: 'Consejo Departamental de Culturas Oruro', logo: '/images/LOGOS/ConsejoDep.png' as string | null, logoGrande: false },
+];
+
 const SOCIAL_LINKS = [
   {
     label: 'Facebook',
@@ -46,98 +47,142 @@ const SOCIAL_LINKS = [
     icon: FacebookIcon,
   },
   {
-    label: 'Instagram',
-    handle: 'cultura_y_turismo_gador',
-    href: 'https://www.instagram.com/cultura_y_turismo_gador/',
-    icon: InstagramIcon,
-  },
-  {
     label: 'TikTok',
-    handle: 'cultura_y_turismo_oruro',
+    handle: 'Cultura y Turismo Oruro',
     href: 'https://www.tiktok.com/@cultura_y_turismo_oruro',
     icon: TikTokIcon,
   },
 ];
 
-const WHATSAPP_NUMBERS = ['59164775274', '59171856225', '59176153717'];
+const WHATSAPP_NUMBERS = ['59173816398', '59164775274', '59176153717'];
 
-// Mini mapa del sitio — mismas rutas que el Navbar, para que footer y menú
-// naveguen de forma consistente entre páginas.
+const UBICACION = {
+  nombre: 'Teatro Internacional Oruro',
+  direccion: 'Urbanización CORDEOR, tras el surtidor QV2',
+  mapsHref: 'https://www.google.com/maps/dir/?api=1&destination=Teatro+Internacional+Oruro,+Bolivia',
+};
 
+// Chip blanco alrededor de cada logo: sin esto, un logo con fondo oscuro o
+// transparente se pierde contra el negro del footer. `compacto` reduce el
+// padding interno para logos cuyo propio archivo ya trae margen, que si no
+// se ven chicos dentro del círculo.
+function LogoChip({ children, compacto = false }: { children: React.ReactNode; compacto?: boolean }) {
+  return (
+    <span
+      className={`flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-(--brand-blanco) shadow-[0_0_0_1px_rgba(255,255,255,0.08)] ${compacto ? 'p-0.5!' : 'p-2!'}`}
+    >
+      {children}
+    </span>
+  );
+}
+
+function LogoPendiente() {
+  return (
+    <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full border border-dashed border-white/30 text-[9px] font-semibold tracking-wide text-white/40 uppercase">
+      Logo
+    </span>
+  );
+}
+
+function SectionHeading({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="text-xs font-bold tracking-[0.22em] text-(--brand-rojo) uppercase">{children}</span>
+  );
+}
 
 export function Footer() {
   return (
-    <footer className="relative border-t border-(--border) bg-white px-6! pt-10! pb-10! text-sm text-(--text-muted)">
-      {/* Cinta tricolor: mismo detalle del Navbar, cerrando la página por abajo */}
+    <footer className="relative bg-(--brand-negro) px-6! pt-12! pb-10! text-sm text-white/70">
+      {/* Cinta tricolor: mismo detalle del Navbar, cerrando la página por arriba del footer */}
       <span className="pointer-events-none absolute inset-x-0 top-0 h-[3px] bg-[linear-gradient(90deg,#d52b1e_0%,#e08f1f_42%,#2e7d46_100%)]" />
 
-      <div className="mx-auto flex max-w-5xl flex-col items-center gap-8">
-        {/* Evento + organizador */}
-        <div className="flex flex-col items-center gap-6 sm:flex-row sm:gap-10">
-          <Image
-            src="/images/logo_aquicanta.png"
-            alt="Aquí Canta Bolivia"
-            width={1204}
-            height={880}
-            className="h-16 w-auto"
-          />
+      <div className="mx-auto flex max-w-5xl flex-col items-center gap-10">
+        
+        
 
-          <span className="hidden h-12 w-px bg-(--border) sm:block" />
-
-          <div className="flex items-center gap-3">
-            <Image
-              src="/images/secretaria_logo.png"
-              alt="Secretaría Departamental de Cultura y Turismo de Oruro"
-              width={1200}
-              height={1200}
-              className="h-14 w-14 shrink-0 rounded-full object-contain"
-            />
-            <div className="flex flex-col">
-              <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-(--text-muted)">Organiza</span>
-              <span className="text-sm font-semibold text-(--text-secondary)">Secretaría de Cultura y Turismo — Oruro</span>
+        {/* Auspicia — mismo modelo que Organiza: logo circular + etiqueta
+            chica arriba y nombre en negrita abajo, en fila. */}
+        <div className="flex flex-col items-center gap-6 sm:flex-row sm:flex-wrap sm:justify-center sm:gap-10">
+          {AUSPICIAN.map(({ nombre, logo, logoGrande }) => (
+            <div key={nombre} className="flex items-center gap-3">
+              {logo ? (
+                <LogoChip compacto={logoGrande}>
+                  <Image src={logo} alt={nombre} width={200} height={200} className="h-full w-full rounded-full object-contain" />
+                </LogoChip>
+              ) : (
+                <LogoPendiente />
+              )}
+              <div className="flex flex-col">
+               
+                <span className="text-sm font-semibold text-white">{nombre}</span>
+              </div>
             </div>
+          ))}
+        </div>
+
+        <div className="h-px w-full max-w-md bg-white/10" />
+
+        {/* Más información: redes + ubicación — a la izquierda en mobile
+            (centrado se veía raro con textos largos partidos en 2 líneas),
+            centrado en fila desde sm como antes. */}
+        <div className="flex w-full flex-col items-start gap-6 sm:w-auto sm:items-center">
+          <SectionHeading>Enlaces de Interes</SectionHeading>
+
+          <div className="flex flex-col items-start gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-center sm:gap-6">
+            {SOCIAL_LINKS.map(({ label, handle, href, icon: Icon }) => (
+              <a
+                key={label}
+                href={href}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-2.5 text-white/80 transition-colors duration-300 hover:text-(--accent-crimson-light)"
+              >
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/20">
+                  <Icon className="h-4 w-4" />
+                </span>
+                <span className="text-sm font-medium">{handle}</span>
+              </a>
+            ))}
+
+            <a
+              href={UBICACION.mapsHref}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-2.5 text-white/80 transition-colors duration-300 hover:text-(--accent-crimson-light)"
+            >
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/20">
+                <MapPin className="h-4 w-4" />
+              </span>
+              <span className="flex flex-col text-left text-sm font-medium">
+                <span>{UBICACION.nombre}</span>
+                <span className="text-xs font-normal text-white/50">{UBICACION.direccion}</span>
+              </span>
+            </a>
           </div>
         </div>
 
-        <div className="h-px w-full max-w-md bg-(--border)" />
+        <div className="h-px w-full max-w-md bg-white/10" />
 
-        <span className="text-xs font-semibold tracking-[0.2em] text-(--text-muted) uppercase">
-          Más Información
-        </span>
-
-        <div className="flex flex-col items-center gap-3 sm:flex-row sm:flex-wrap sm:justify-center sm:gap-6">
-          {SOCIAL_LINKS.map(({ label, handle, href, icon: Icon }) => (
-            <a
-              key={label}
-              href={href}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-2.5 text-(--text-secondary) transition-colors duration-300 hover:text-[#1e63b8]"
-            >
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-(--border)">
-                <Icon className="h-4 w-4" />
-              </span>
-              <span className="text-sm font-medium">{handle}</span>
-            </a>
-          ))}
+        {/* Informaciones (contacto) */}
+        <div className="flex flex-col items-center gap-4">
+          <SectionHeading>Informaciones</SectionHeading>
+          <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
+            {WHATSAPP_NUMBERS.map((number) => (
+              <a
+                key={number}
+                href={`https://wa.me/${number}`}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-2 text-white/80 transition-colors hover:text-(--accent-crimson-light)"
+              >
+                <WhatsAppIcon className="h-4 w-4" />+{number.slice(0, 3)} {number.slice(3)}
+              </a>
+            ))}
+          </div>
         </div>
 
-        <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
-          {WHATSAPP_NUMBERS.map((number) => (
-            <a
-              key={number}
-              href={`https://wa.me/${number}`}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-2 text-(--text-secondary) transition-colors hover:text-[#2e7d46]"
-            >
-              <WhatsAppIcon className="h-4 w-4" />+{number.slice(0, 3)} {number.slice(3)}
-            </a>
-          ))}
-        </div>
-
-        <p className="text-center text-(--text-muted)">
-          © {new Date().getFullYear()} Aqui Canta Bolivia — Festival Nacional de la Canción Boliviana
+        <p className="text-center text-white/40">
+          © {new Date().getFullYear()} Oruro Es...
         </p>
       </div>
     </footer>

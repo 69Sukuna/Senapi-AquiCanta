@@ -16,6 +16,7 @@ export function TrayectoForm({ trayecto, onActualizado, onEliminado }: TrayectoF
   const [descripcion, setDescripcion] = useState(trayecto.descripcion ?? '');
   const [imagenUrl, setImagenUrl] = useState(trayecto.imagenUrl ?? '');
   const [activo, setActivo] = useState(trayecto.activo);
+  const [mostrarConteoVisitantes, setMostrarConteoVisitantes] = useState(trayecto.mostrarConteoVisitantes);
   const [guardando, setGuardando] = useState(false);
   const [eliminando, setEliminando] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -35,6 +36,7 @@ export function TrayectoForm({ trayecto, onActualizado, onEliminado }: TrayectoF
           descripcion: descripcion || null,
           imagenUrl: imagenUrl || null,
           activo,
+          mostrarConteoVisitantes,
         }),
       });
       if (!res.ok) throw new Error('No se pudo guardar');
@@ -80,6 +82,16 @@ export function TrayectoForm({ trayecto, onActualizado, onEliminado }: TrayectoF
       <label className="flex w-fit items-center gap-2 text-sm font-semibold text-(--text-secondary)">
         <input type="checkbox" checked={activo} onChange={(e) => setActivo(e.target.checked)} className="h-4 w-4" />
         Trayecto activo (visible en /sellos)
+      </label>
+
+      <label className="flex w-fit items-center gap-2 text-sm font-semibold text-(--text-secondary)">
+        <input
+          type="checkbox"
+          checked={mostrarConteoVisitantes}
+          onChange={(e) => setMostrarConteoVisitantes(e.target.checked)}
+          className="h-4 w-4"
+        />
+        Mostrar a los visitantes cuánta gente escaneó este trayecto
       </label>
 
       {error && <p className="text-sm font-semibold text-[#d52b1e]">{error}</p>}

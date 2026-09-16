@@ -161,7 +161,7 @@ export default async function RealidadVirtualPage() {
                   <div className="flex items-center text-(--brand-negro)">
                     <CameraIcon className="h-7 w-7 shrink-0" />
                     <span className="font-barlow text-xl font-normal tracking-wide uppercase lg:text-2xl!">
-                      Teatro Internacional de Oruro
+                      Teatro Internacional Oruro
                     </span>
                   </div>
 

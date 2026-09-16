@@ -2,8 +2,10 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
-import { CheckCircle2, ChevronDown, ChevronUp, Lock, Sparkles, X } from 'lucide-react';
+import { CheckCircle2, ChevronDown, ChevronUp, Lock, Sparkles, Users, X } from 'lucide-react';
 import { useVisitorId } from '@/hooks/useVisitorId';
+import { useUsuario } from '@/hooks/useUsuario';
+import { fetchVisitante } from '@/lib/authVisitante';
 import { EscanerQRCliente } from './EscanerQRCliente';
 import { TarjetaBienvenida } from './TarjetaBienvenida';
 import { RielProgreso } from './RielProgreso';
@@ -59,6 +61,8 @@ interface TrayectoProgreso {
   completo: boolean;
   eventos: EventoProgreso[];
   rangos: RangoProgreso[];
+  // null = el admin no activó mostrar este dato para este trayecto.
+  visitantesUnicos: number | null;
 }
 
 interface ResultadoEscaneo {
@@ -168,7 +172,15 @@ function RecorridoTrayecto({ progreso }: { progreso: TrayectoProgreso }) {
           ubicar de un vistazo cada trayecto en vez de perderse dentro de la
           tarjeta colapsable de abajo. */}
       <div className="mb-4! flex items-center justify-between gap-4!">
-        <h2 className="text-xl font-bold text-(--text-primary)">{progreso.nombre}</h2>
+        <div>
+          <h2 className="text-xl font-bold text-(--text-primary)">{progreso.nombre}</h2>
+          {progreso.visitantesUnicos !== null && (
+            <p className="mt-1! flex items-center gap-1.5 text-sm text-(--text-secondary)">
+              <Users size={14} />
+              {progreso.visitantesUnicos} {progreso.visitantesUnicos === 1 ? 'persona escaneó' : 'personas escanearon'} este recorrido
+            </p>
+          )}
+        </div>
         {progreso.imagenUrl && (
           <Image
             src={progreso.imagenUrl}
@@ -265,7 +277,13 @@ function RecorridoTrayecto({ progreso }: { progreso: TrayectoProgreso }) {
 }
 
 export function PasaportePage({ trayectos }: PasaportePageProps) {
-  const visitorId = useVisitorId();
+  const visitorIdAnonimo = useVisitorId();
+  const { usuario, loginConGoogle } = useUsuario();
+  // Una vez logueado, todo el pasaporte pasa a usar el id real de la cuenta
+  // en vez del UUID anónimo — ver el efecto de "vincular" más abajo, que
+  // fusiona el progreso que haya quedado bajo el UUID anónimo.
+  const visitorId = usuario?.id ?? visitorIdAnonimo;
+  const vinculadoRef = useRef(false);
   const [progresos, setProgresos] = useState<Record<string, TrayectoProgreso>>({});
   const [medallasGlobales, setMedallasGlobales] = useState<MedallaProgreso[]>([]);
   const [cargando, setCargando] = useState(true);
@@ -315,6 +333,27 @@ export function PasaportePage({ trayectos }: PasaportePageProps) {
   useEffect(() => {
     cargarProgresos();
   }, [cargarProgresos]);
+
+  // Al pasar de anónimo a logueado, fusiona el progreso que haya quedado
+  // bajo el UUID anónimo con la cuenta real — una sola vez por sesión
+  // (vinculadoRef), y solo cuando realmente hay algo que fusionar (un
+  // usuario recién creado y este UUID anónimo son distintos).
+  useEffect(() => {
+    if (!usuario || !visitorIdAnonimo || vinculadoRef.current) return;
+    if (usuario.id === visitorIdAnonimo) return;
+    vinculadoRef.current = true;
+
+    fetchVisitante('/sellos/vincular', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ visitorIdAnonimo }),
+    })
+      .then(() => cargarProgresos())
+      .catch(() => {
+        // Si falla, el progreso anónimo simplemente queda sin fusionar por
+        // ahora — no es crítico, el visitante puede seguir usando su cuenta.
+      });
+  }, [usuario, visitorIdAnonimo, cargarProgresos]);
 
   // `handleDetectado` a propósito NO llama a `cargarProgresos` — se hace
   // recién acá, al cerrar el modal de "sello conseguido", para que el
@@ -408,32 +447,40 @@ export function PasaportePage({ trayectos }: PasaportePageProps) {
 
   return (
     <div className="sellos-cafe mt-12!">
-      <div className="mb-8!">
-        <TarjetaBienvenida
-          rangos={todosLosRangos}
-          onEscanear={() => {
-            setErrorEscaneo(null);
-            setEscaneando(true);
-          }}
-        />
-      </div>
+      {/* Escanear un QR es una acción de celular en el festival — en desktop
+          este bloque (bienvenida+botón Escanear, riel, medallas, stats) no
+          tiene sentido, así que queda solo para mobile. Las tarjetas de cada
+          trayecto de más abajo sí siguen visibles en desktop. */}
+      <div className="md:hidden">
+        <div className="mb-8!">
+          <TarjetaBienvenida
+            rangos={todosLosRangos}
+            usuario={usuario}
+            onLoginGoogle={() => loginConGoogle()}
+            onEscanear={() => {
+              setErrorEscaneo(null);
+              setEscaneando(true);
+            }}
+          />
+        </div>
 
-      <div className="mb-8!">
-        <RielProgreso eventos={paradasRiel} />
-      </div>
+        <div className="mb-8!">
+          <RielProgreso eventos={paradasRiel} />
+        </div>
 
-      <div className="mb-8!">
-        <MedallasRango medallas={medallasGlobales} />
-      </div>
+        <div className="mb-8!">
+          <MedallasRango medallas={medallasGlobales} />
+        </div>
 
-      <div className="mb-8!">
-        <MisEstadisticas
-          items={[
-            { etiqueta: 'Trayectos visitados', actual: trayectosVisitados, total: totalTrayectos },
-            { etiqueta: 'Sellos escaneados', actual: sellosEscaneados, total: totalPuntos },
-            { etiqueta: 'Rangos desbloqueados', actual: rangosAlcanzados, total: todosLosRangos.length },
-          ]}
-        />
+        <div className="mb-8!">
+          <MisEstadisticas
+            items={[
+              { etiqueta: 'Trayectos visitados', actual: trayectosVisitados, total: totalTrayectos },
+              { etiqueta: 'Sellos escaneados', actual: sellosEscaneados, total: totalPuntos },
+              { etiqueta: 'Rangos desbloqueados', actual: rangosAlcanzados, total: todosLosRangos.length },
+            ]}
+          />
+        </div>
       </div>
 
       {trayectos.map((t, i) => {

@@ -20,4 +20,9 @@ export class CrearTrayectoDto {
   @IsOptional()
   @IsBoolean()
   activo?: boolean;
+
+  @ApiPropertyOptional({ default: false, description: 'Si la vista pública muestra la cantidad de visitantes que escanearon este trayecto' })
+  @IsOptional()
+  @IsBoolean()
+  mostrarConteoVisitantes?: boolean;
 }

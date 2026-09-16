@@ -1,7 +1,7 @@
 import Image from 'next/image';
 
-const MAPS_EMBED_URL = 'https://www.google.com/maps?q=Teatro+Internacional+de+Oruro,+Bolivia&output=embed';
-const MAPS_DIRECTIONS_URL = 'https://www.google.com/maps/dir/?api=1&destination=Teatro+Internacional+de+Oruro,+Bolivia';
+const MAPS_EMBED_URL = 'https://www.google.com/maps?q=Teatro+Internacional+Oruro,+Bolivia&output=embed';
+const MAPS_DIRECTIONS_URL = 'https://www.google.com/maps/dir/?api=1&destination=Teatro+Internacional+Oruro,+Bolivia';
 
 const gradientBorderStyle = {
   borderBottom: '4px solid',
@@ -15,7 +15,7 @@ export default function ComoLlegarButacas() {
         {/* Bloque superior: foto con corte diagonal + texto centrado */}
         <div className="grid grid-cols-1 items-center md:grid-cols-2">
           <div className="relative h-72 w-full overflow-hidden sm:h-96 md:h-[420px] md:[clip-path:polygon(0_0,100%_0,82%_100%,0_100%)]">
-            <Image src="/images/palco.jpg" alt="Teatro Internacional de Oruro" fill className="object-cover object-center" />
+            <Image src="/images/palco.jpg" alt="Teatro Internacional Oruro" fill className="object-cover object-center" />
           </div>
 
           <div className="flex flex-col items-start justify-start p-8 text-start md:items-center md:p-12">
@@ -45,7 +45,7 @@ export default function ComoLlegarButacas() {
             className="absolute inset-0 h-full w-full border-0"
             loading="lazy"
             referrerPolicy="no-referrer-when-downgrade"
-            title="Ubicación del Teatro Internacional de Oruro"
+            title="Ubicación del Teatro Internacional Oruro"
           />
         </div>
       </div>

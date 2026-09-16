@@ -27,7 +27,11 @@ export default async function SellosPage() {
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-(--bg-primary)">
-      <SellosHero />
+      {/* En mobile se va directo al banner "Próximos Sellos" — el Hero
+          decorativo es contenido de escritorio. */}
+      <div className="hidden md:block">
+        <SellosHero />
+      </div>
       {trayectos.length > 0 && <ProximoEventoBanner />}
 
       <div className="pointer-events-none absolute -top-32 -left-32 h-[28rem] w-[28rem] rounded-full bg-[#f0a83e] opacity-[0.14] blur-3xl" />
