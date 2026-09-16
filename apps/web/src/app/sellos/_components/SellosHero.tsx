@@ -42,8 +42,11 @@ export function SellosHero() {
             </p>
           </div>
 
-          {/* Columna Imagen Celular: Pegada arriba y abajo */}
-          <div className="relative h-full w-full min-h-[450px] sm:absolute sm:right-6 sm:top-0 sm:bottom-0 sm:h-full sm:w-[45%] lg:right-12">
+          {/* Columna Imagen Celular: centrada verticalmente, con una altura
+              acotada — antes ocupaba TODO el alto de la sección (top-0 a
+              bottom-0), y con `object-contain` eso hacía que el sello se
+              escalara hasta llenar ese espacio enorme, viéndose gigante. */}
+          <div className="relative h-full w-full min-h-[450px] sm:absolute sm:top-1/2 sm:right-6 sm:h-[60%] sm:max-h-[420px] sm:w-[40%] sm:-translate-y-1/2 lg:right-12">
             <Image
               src="/sellos/B_ACB BADGE SELLO.png"
               alt="Sello presntación"

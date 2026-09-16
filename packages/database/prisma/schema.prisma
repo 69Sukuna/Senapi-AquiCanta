@@ -32,6 +32,23 @@ model User {
   @@map("users")
 }
 
+// Identidad de los visitantes que se loguean con Google (Sellos, Butacas) —
+// a propósito NO es lo mismo que `User` (esa es del panel admin/artistas).
+// Sin `password` ni `role`: no hay ningún campo de privilegio que escalar,
+// y el JWT de un visitante se firma con un secreto distinto al de `User`
+// (ver VisitanteJwtStrategy), así que un token nunca sirve para el otro.
+model Visitante {
+  id        String   @id @default(uuid())
+  googleId  String   @unique
+  email     String   @unique
+  name      String?
+  avatarUrl String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("visitantes")
+}
+
 model ArtistProfile {
   id        String   @id @default(uuid())
   userId    String   @unique
@@ -274,7 +291,11 @@ model Trayecto {
   descripcion String?
   imagenUrl   String? // imagen representativa del trayecto, se muestra en su propia tarjeta
   activo      Boolean  @default(true)
-  createdAt   DateTime @default(now())
+  // Controla si la vista pública muestra la cantidad de visitantes distintos
+  // que ya escanearon algún sello de este trayecto (el panel admin siempre
+  // la ve, sin importar este valor).
+  mostrarConteoVisitantes Boolean  @default(false)
+  createdAt               DateTime @default(now())
 
   eventos Evento[]
   rangos  Rango[]

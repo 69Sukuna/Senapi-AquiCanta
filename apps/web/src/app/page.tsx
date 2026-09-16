@@ -6,9 +6,9 @@ import { CountdownTimer } from '@/components/CountdownTimer';
 const CONVOCATORIA_URL =
   'https://drive.google.com/file/d/1ggcf9PPSnQ-7jc0mTFxQqr27Q5ExGJSZ/view?usp=drive_link';
 const MAPS_EMBED_URL =
-  'https://www.google.com/maps?q=Teatro+Internacional+de+Oruro,+Bolivia&output=embed';
+  'https://www.google.com/maps?q=Teatro+Internacional+Oruro,+Bolivia&output=embed';
 const MAPS_DIRECTIONS_URL =
-  'https://www.google.com/maps/dir/?api=1&destination=Teatro+Internacional+de+Oruro,+Bolivia';
+  'https://www.google.com/maps/dir/?api=1&destination=Teatro+Internacional+Oruro,+Bolivia';
 
 const gradientBorderStyle = {
   borderBottom: '4px solid',
@@ -83,8 +83,9 @@ export default function Home() {
 
         {/* Versión Mobile: Centrada, exactamente como el mockup */}
         <div className="relative mx-auto max-w-xl px-6 text-center md:hidden">
-          <h2 className="font-bakbak text-3xl font-black text-(--brand-negro)">
-            Convocatoria
+          <h2 className="font-bakbak text-(--brand-negro)">
+            <span className="block text-4xl! font-black">Convocatoria</span>
+            <span className="mt-1! block text-base! font-semibold">Preselecciones Departamentales Presenciales</span>
           </h2>
           <div className="font-barlow mt-4 space-y-3.5 text-sm font-medium leading-relaxed text-(--brand-cafe)">
             <p>
@@ -138,8 +139,11 @@ export default function Home() {
           </div>
 
           <div className="flex flex-col items-center justify-end! pl-10 text-center">
-            <h3 className="font-bakbak text-3xl! font-black text-(--brand-negro) lg:text-6xl!">
-              Convocatoria
+            <h3 className="font-bakbak text-(--brand-negro)">
+              <span className="block text-4xl! font-black lg:text-7xl!">Convocatoria</span>
+              <span className="mt-1! block text-lg! font-semibold lg:text-2xl!">
+                Preselecciones Departamentales Presenciales
+              </span>
             </h3>
             <a
               href={CONVOCATORIA_URL}
@@ -167,36 +171,36 @@ export default function Home() {
         <div className="relative mx-auto flex flex-col items-center gap-4 px-6 text-center md:hidden">
           <div>
             <span className="font-bakbak block text-lg font-bold tracking-wide text-white uppercase">
-              Reserva ahora tus
+              Participa del evento presencial con tu propia
             </span>
             <span className="font-bakbak block text-3xl font-black text-white">
-              BUTACAS
+              BUTACA
             </span>
           </div>
-          <Link
+          {/*<Link
             href={ROUTES.butacas}
             className="font-bakbak rounded-full border border-white bg-transparent px-8 py-2 text-sm font-bold text-white! transition-all duration-200 hover:bg-white hover:text-[#b3141a]!"
           >
             Reservar
-          </Link>
+          </Link>*/}
         </div>
 
         {/* Versión Desktop: Fila horizontal */}
         <div className="relative mx-auto hidden max-w-6xl items-center justify-around px-8 md:flex lg:px-12">
           <div>
             <span className="font-bakbak text-2xl! font-bold tracking-wide text-white uppercase lg:text-4xl!">
-              Reserva ahora tus<br />
+              Participa del evento presencial con tu propia<br />
             </span>
             <span className="font-bakbak text-4xl! font-black text-white lg:text-7xl!">
-              BUTACAS
+              BUTACA
             </span>
           </div>
-          <Link
+          {/*<Link
             href={ROUTES.butacas}
             className="font-bakbak rounded-2xl! border border-white bg-transparent px-[50px]! py-[10px]! text-4xl! font-bold text-(--brand-blanco)! transition-all duration-200 hover:bg-white hover:text-(--brand-negro)!"
           >
             Reservar
-          </Link>
+          </Link>*/}
         </div>
       </section>
 
@@ -375,7 +379,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── 7. ¿Cómo llegar? (Teatro Internacional de Oruro) ───────────── */}
+      {/* ── 7. ¿Cómo llegar? (Teatro Internacional Oruro) ───────────── */}
       <section className="relative overflow-hidden bg-(--brand-blanco)" style={gradientBorderStyle}>
         <Image
           src="/images/FONDOS/FC_4.jpg"
@@ -392,7 +396,7 @@ export default function Home() {
             <div className="relative h-72 sm:h-96 md:h-[420px] w-full overflow-hidden md:[clip-path:polygon(0_0,100%_0,82%_100%,0_100%)]">
               <Image
                 src="/images/palco.jpg"
-                alt="Teatro Internacional de Oruro"
+                alt="Teatro Internacional Oruro"
                 fill
                 className="object-cover object-center"
               />
@@ -429,7 +433,7 @@ export default function Home() {
               className="absolute inset-0 h-full w-full border-0"
               loading="lazy"
               referrerPolicy="no-referrer-when-downgrade"
-              title="Ubicación del Teatro Internacional de Oruro"
+              title="Ubicación del Teatro Internacional Oruro"
             />
           </div>
         </div>
@@ -448,38 +452,10 @@ export default function Home() {
         <div className="relative mx-auto flex max-w-4xl items-center justify-center gap-3 px-6 text-center text-white sm:gap-10 sm:px-10 md:gap-16">
           <div className="flex flex-col items-center">
             <span className="font-bakbak text-5xl leading-none sm:text-7xl lg:text-8xl">
-              13
-            </span>
-            <span className="font-barlow mt-1.5 text-[11px] font-extrabold tracking-[0.18em] uppercase text-white/90 sm:text-sm">
-              CATEGORÍAS
+              13 CATEGORÍAS
             </span>
           </div>
 
-          <span className="font-bakbak -mt-4 text-3xl font-light text-white/40 sm:text-5xl lg:text-6xl">
-            /
-          </span>
-
-          <div className="flex flex-col items-center">
-            <span className="font-bakbak text-5xl leading-none sm:text-7xl lg:text-8xl">
-              80
-            </span>
-            <span className="font-barlow mt-1.5 text-[11px] font-extrabold tracking-[0.18em] uppercase text-white/90 sm:text-sm">
-              PARTICIPANTES
-            </span>
-          </div>
-
-          <span className="font-bakbak -mt-4 text-3xl font-light text-white/40 sm:text-5xl lg:text-6xl">
-            /
-          </span>
-
-          <div className="flex flex-col items-center">
-            <span className="font-bakbak text-5xl leading-none sm:text-7xl lg:text-8xl">
-              5
-            </span>
-            <span className="font-barlow mt-1.5 text-[11px] font-extrabold tracking-[0.18em] uppercase text-white/90 sm:text-sm">
-              JURADOS
-            </span>
-          </div>
         </div>
       </section>
     </main >

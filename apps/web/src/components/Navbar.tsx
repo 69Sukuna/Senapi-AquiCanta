@@ -31,9 +31,9 @@ const LINKS_IZQUIERDA = [
 ].filter(Boolean) as { label: string; href: string; icon: typeof Home }[];
 
 const LINKS_DERECHA = [
-  { label: 'Butacas', href: ROUTES.butacas, icon: Armchair },
+  FEATURE_FLAGS.butacas && { label: 'Butacas', href: ROUTES.butacas, icon: Armchair },
   { label: 'Realidad Virtual', href: ROUTES.realidadVirtual, icon: Glasses },
-  { label: 'Votaciones', href: ROUTES.votaciones, icon: Vote },
+  FEATURE_FLAGS.votaciones && { label: 'Votaciones', href: ROUTES.votaciones, icon: Vote },
   FEATURE_FLAGS.jurado && { label: 'Jurado', href: ROUTES.calificacionJurado, icon: Users },
   { label: 'Sellos', href: ROUTES.sellos, icon: Stamp },
 ].filter(Boolean) as { label: string; href: string; icon: typeof Home }[];

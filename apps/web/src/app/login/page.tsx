@@ -5,8 +5,10 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Eye, EyeOff } from 'lucide-react';
 import { PageHero } from '@/components/PageHero';
 import { PageShell } from '@/components/PageShell';
+import { BotonLoginGoogle } from '@/components/BotonLoginGoogle';
 import { ROUTES } from '@/lib/routes';
 import { login } from '@/lib/auth';
+import { useUsuario } from '@/hooks/useUsuario';
 
 function FormularioLogin() {
   const router = useRouter();
@@ -38,7 +40,7 @@ function FormularioLogin() {
   }
 
   return (
-    <form onSubmit={onSubmit} className="mt-10! space-y-4">
+    <form onSubmit={onSubmit} className="space-y-4">
       <label className="flex flex-col gap-1 text-sm font-semibold text-(--text-secondary)">
         Correo o nombre de usuario
         <input
@@ -87,12 +89,45 @@ function FormularioLogin() {
   );
 }
 
+function SeccionLoginVisitante() {
+  const searchParams = useSearchParams();
+  const { loginConGoogle } = useUsuario();
+  const next = searchParams.get('next');
+
+  return <BotonLoginGoogle onClick={() => loginConGoogle(next ?? undefined)} />;
+}
+
+function ContenidoLogin() {
+  const [mostrarAdmin, setMostrarAdmin] = useState(false);
+
+  return (
+    <div className="mt-10! space-y-4">
+      <SeccionLoginVisitante />
+
+      {mostrarAdmin ? (
+        <FormularioLogin />
+      ) : (
+        <button
+          type="button"
+          onClick={() => setMostrarAdmin(true)}
+          className="block w-full text-center text-sm font-semibold text-(--text-muted) underline"
+        >
+          ¿Sos del equipo organizador? Ingresá acá
+        </button>
+      )}
+    </div>
+  );
+}
+
 export default function LoginPage() {
   return (
     <PageShell maxWidth="max-w-md">
-      <PageHero title="Iniciar sesión" description="Acceso al panel de administración de Aqui Canta Bolivia." />
+      <PageHero
+        title="Iniciar sesión"
+        description="Iniciá sesión con Google para guardar tu progreso en Sellos y tus reservas en Butacas."
+      />
       <Suspense fallback={null}>
-        <FormularioLogin />
+        <ContenidoLogin />
       </Suspense>
     </PageShell>
   );

@@ -1,5 +1,7 @@
 import { Module } from "@nestjs/common";
+import { APP_GUARD } from "@nestjs/core";
 import { ConfigModule } from "@nestjs/config";
+import { ThrottlerGuard, ThrottlerModule } from "@nestjs/throttler";
 import { AppController } from "./app.controller";
 import { AppService } from "./app.service";
 import { PrismaModule } from "./prisma/prisma.module";
@@ -11,15 +13,21 @@ import { SellosModule } from "./sellos/sellos.module";
 import { StorageModule } from "./storage/storage.module";
 import { ConfiguracionVistaModule } from "./configuracion-vista/configuracion-vista.module";
 import { AuthModule } from "./auth/auth.module";
+import { VisitantesModule } from "./visitantes/visitantes.module";
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
     }),
+    // Límite global por IP (120 req/min) — no existía ninguna protección de
+    // este tipo antes; rutas puntuales (login con Google, vincular sellos)
+    // se endurecen aparte con @Throttle() en su propio controller.
+    ThrottlerModule.forRoot([{ ttl: 60_000, limit: 120 }]),
     PrismaModule,
     StorageModule,
     AuthModule,
+    VisitantesModule,
     CategoriasModule,
     CantantesModule,
     GruposModule,
@@ -28,6 +36,6 @@ import { AuthModule } from "./auth/auth.module";
     ConfiguracionVistaModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, { provide: APP_GUARD, useClass: ThrottlerGuard }],
 })
 export class AppModule {}

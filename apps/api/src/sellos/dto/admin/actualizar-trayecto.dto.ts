@@ -21,4 +21,9 @@ export class ActualizarTrayectoDto {
   @IsOptional()
   @IsBoolean()
   activo?: boolean;
+
+  @ApiPropertyOptional({ description: 'Si la vista pública muestra la cantidad de visitantes que escanearon este trayecto' })
+  @IsOptional()
+  @IsBoolean()
+  mostrarConteoVisitantes?: boolean;
 }
