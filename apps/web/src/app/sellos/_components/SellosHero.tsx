@@ -46,9 +46,9 @@ export function SellosHero() {
           <div className="relative h-full w-full min-h-[450px] sm:absolute sm:right-6 sm:top-0 sm:bottom-0 sm:h-full sm:w-[45%] lg:right-12">
             <Image
               src="/sellos/B_ACB BADGE SELLO.png"
-              alt="Sello de Aquí Canta Bolivia"
+              alt="Sello presntación"
               fill
-              className="object-cover object-center sm:object-contain sm:object-center drop-shadow-2xl"
+              className="object-contain object-center drop-shadow-2xl"
             />
           </div>
 

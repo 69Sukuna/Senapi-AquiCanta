@@ -1,3 +1,5 @@
+import { notFound } from 'next/navigation';
+import { FEATURE_FLAGS } from '@/lib/featureFlags';
 import { ParticipantesExplorer } from './_components/ParticipantesExplorer';
 
 interface Cantante {
@@ -69,6 +71,10 @@ async function getCategorias(): Promise<Categoria[]> {
 }
 
 export default async function ParticipantesPage() {
+  if (!FEATURE_FLAGS.participantes) {
+    notFound();
+  }
+
   const [cantantes, grupos, categorias] = await Promise.all([getCantantes(), getGrupos(), getCategorias()]);
 
   // Catálogo unificado: solistas y grupos conviven en una sola lista, cada
