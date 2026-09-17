@@ -280,7 +280,7 @@ function RecorridoTrayecto({ progreso }: { progreso: TrayectoProgreso }) {
 
 export function PasaportePage({ trayectos }: PasaportePageProps) {
   const visitorIdAnonimo = useVisitorId();
-  const { usuario, cargando: cargandoUsuario, loginConGoogle } = useUsuario();
+  const { usuario, cargando: cargandoUsuario, loginConGoogle, logout } = useUsuario();
   // Una vez logueado, todo el pasaporte pasa a usar el id real de la cuenta
   // en vez del UUID anónimo — ver el efecto de "vincular" más abajo, que
   // fusiona el progreso que haya quedado bajo el UUID anónimo.
@@ -471,6 +471,7 @@ export function PasaportePage({ trayectos }: PasaportePageProps) {
         <TarjetaBienvenida
           rangos={todosLosRangos}
           usuario={usuario}
+          onLogout={logout}
           onEscanear={() => {
             setErrorEscaneo(null);
             setEscaneando(true);

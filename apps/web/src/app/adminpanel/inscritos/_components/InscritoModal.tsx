@@ -25,8 +25,6 @@ interface FormularioGeneral {
   ritmo: string;
   tiempo: string;
   departamento: string;
-  videoUrl: string;
-  fotoUrl: string;
   celular1: string;
   celular2: string;
 }
@@ -55,8 +53,6 @@ function aFormularioGeneral(inscrito: Inscrito): FormularioGeneral {
     ritmo: inscrito.ritmo ?? '',
     tiempo: inscrito.tiempo ?? '',
     departamento: inscrito.departamento ?? '',
-    videoUrl: inscrito.videoUrl ?? '',
-    fotoUrl: inscrito.fotoUrl ?? '',
     celular1: inscrito.celular1 ?? '',
     celular2: inscrito.celular2 ?? '',
   };
@@ -130,8 +126,6 @@ export function InscritoModal({ inscrito, onClose, onActualizado }: InscritoModa
       ritmo: general.ritmo || null,
       tiempo: general.tiempo || null,
       departamento: general.departamento || null,
-      videoUrl: general.videoUrl || null,
-      fotoUrl: general.fotoUrl || null,
       celular1: general.celular1 || null,
       celular2: general.celular2 || null,
     };
@@ -314,6 +308,17 @@ export function InscritoModal({ inscrito, onClose, onActualizado }: InscritoModa
             </Campo>
           </div>
 
+          {/* Video/foto son lo que mandó el postulante al inscribirse — de
+              solo lectura, igual que los demás documentos (carnet, etc.).
+              No tiene sentido que el admin las reescriba a mano acá. */}
+          <div className="flex flex-wrap items-center gap-3">
+            <DocLink url={inscrito.videoUrl} label="Ver video enviado" />
+            <DocLink url={inscrito.fotoUrl} label="Ver foto enviada" />
+            {!inscrito.videoUrl && !inscrito.fotoUrl && (
+              <span className="text-xs text-(--text-muted)">No envió video ni foto.</span>
+            )}
+          </div>
+
           <p className="pt-2! text-xs font-bold tracking-[0.08em] text-(--text-secondary) uppercase">
             Contacto y logística
           </p>
@@ -331,20 +336,6 @@ export function InscritoModal({ inscrito, onClose, onActualizado }: InscritoModa
                   </option>
                 ))}
               </select>
-            </Campo>
-            <Campo label="Video (URL)">
-              <input
-                value={general.videoUrl}
-                onChange={(e) => setGeneral({ ...general, videoUrl: e.target.value })}
-                className="w-full rounded-xl border border-(--border) bg-white px-3! py-2! text-sm text-(--text-primary) outline-none transition-colors duration-200 focus:border-[#1e63b8]/50"
-              />
-            </Campo>
-            <Campo label="Foto (URL)">
-              <input
-                value={general.fotoUrl}
-                onChange={(e) => setGeneral({ ...general, fotoUrl: e.target.value })}
-                className="w-full rounded-xl border border-(--border) bg-white px-3! py-2! text-sm text-(--text-primary) outline-none transition-colors duration-200 focus:border-[#1e63b8]/50"
-              />
             </Campo>
             <Campo label="Celular de contacto">
               <input
