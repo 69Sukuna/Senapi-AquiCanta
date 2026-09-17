@@ -3,6 +3,13 @@ import type { EstadoInscripcion } from '@/lib/estadoInscripcion';
 export interface CategoriaRef {
   id: string;
   nombre: string;
+  integrantesMin: number;
+  integrantesMax: number;
+  acompanantesMax: number;
+  edadMinima: number | null;
+  edadMaxima: number | null;
+  duracionMaximaMinutos: number;
+  requiereAdultoResponsable: boolean;
 }
 
 export interface AcompananteItem {
@@ -68,6 +75,8 @@ export interface InscritoCantante extends InscritoBase {
   fotoCiReversoUrl: string | null;
   adultoResponsableFotoCiAnversoUrl: string | null;
   adultoResponsableFotoCiReversoUrl: string | null;
+  // Solo categoría Ñusta.
+  planPromocionUrl: string | null;
   acompanantes: AcompananteItem[];
 }
 

@@ -83,9 +83,9 @@ export default function Home() {
 
         {/* Versión Mobile: Centrada, exactamente como el mockup */}
         <div className="relative mx-auto max-w-xl px-6 text-center md:hidden">
-          <h2 className="font-bakbak text-(--brand-negro)">
-            <span className="block text-4xl! font-black">Convocatoria</span>
-            <span className="mt-1! block text-base! font-semibold">Preselecciones Departamentales Presenciales</span>
+          <h2 className="font-bakbak uppercase text-(--brand-negro)">
+            <span className="block text-5xl! font-black">Convocatoria</span>
+            <span className="mt-1! block text-xl! font-semibold">Preselecciones Departamentales Presenciales</span>
           </h2>
           <div className="font-barlow mt-4 space-y-3.5 text-sm font-medium leading-relaxed text-(--brand-cafe)">
             <p>
@@ -139,9 +139,9 @@ export default function Home() {
           </div>
 
           <div className="flex flex-col items-center justify-end! pl-10 text-center">
-            <h3 className="font-bakbak text-(--brand-negro)">
-              <span className="block text-4xl! font-black lg:text-7xl!">Convocatoria</span>
-              <span className="mt-1! block text-lg! font-semibold lg:text-2xl!">
+            <h3 className="font-bakbak uppercase text-(--brand-negro)">
+              <span className="block text-5xl! font-black lg:text-6xl!">Convocatoria</span>
+              <span className="mt-1! block text-xl! font-semibold lg:text-3xl!">
                 Preselecciones Departamentales Presenciales
               </span>
             </h3>

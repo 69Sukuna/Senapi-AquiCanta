@@ -152,4 +152,22 @@ export class SellosAdminController {
   eliminarMedalla(@Param('id') id: string) {
     return this.sellosService.eliminarMedalla(id);
   }
+
+  @Get('visitantes')
+  @ApiOperation({ summary: 'Ranking de visitantes logueados por cantidad total de sellos escaneados' })
+  listarVisitantes() {
+    return this.sellosService.listarVisitantesAdmin();
+  }
+
+  @Get('reportes/eventos')
+  @ApiOperation({ summary: 'Por cada evento, cuántos visitantes logueados lo completaron' })
+  reportePorEvento() {
+    return this.sellosService.reportePorEvento();
+  }
+
+  @Get('reportes/trayectos')
+  @ApiOperation({ summary: 'Por cada trayecto, cuántos visitantes logueados lo completaron ENTERO' })
+  reportePorTrayecto() {
+    return this.sellosService.reportePorTrayecto();
+  }
 }

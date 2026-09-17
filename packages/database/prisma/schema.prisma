@@ -164,6 +164,10 @@ model Cantante {
   adultoResponsableFotoCiAnversoUrl String?
   adultoResponsableFotoCiReversoUrl String?
 
+  // Solo categoría Ñusta: PDF del "plan de promoción del festival" que la
+  // convocatoria exige presentar, a ejecutar en caso de resultar coronada.
+  planPromocionUrl String?
+
   // Músicos de acompañamiento (categorías individuales que lo permiten).
   acompanantes Acompanante[]
 

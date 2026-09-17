@@ -1,9 +1,10 @@
 import {
   BadRequestException,
+  UploadedFile,
   UploadedFiles,
   UseInterceptors,
 } from "@nestjs/common";
-import { FilesInterceptor } from "@nestjs/platform-express";
+import { FileInterceptor, FilesInterceptor } from "@nestjs/platform-express";
 import { plainToInstance } from "class-transformer";
 import { validateSync } from "class-validator";
 import { ObjetivoFotoDto } from "./dto/subir-fotos.dto";
@@ -153,5 +154,32 @@ export class InscripcionesController {
       fotos ?? [],
       objetivos,
     );
+  }
+
+  @Post(":tipo/:id/plan-promocion")
+  @ApiOperation({
+    summary:
+      'PDF del plan de promoción del festival (solo categoría "Ñusta")',
+  })
+  @UseInterceptors(
+    FileInterceptor("archivo", {
+      limits: { fileSize: LIMITE_ARCHIVO_BYTES },
+      fileFilter: (_req, file, callback) => {
+        callback(null, file.mimetype === "application/pdf");
+      },
+    }),
+  )
+  async subirPlanPromocion(
+    @Param("tipo") tipo: string,
+    @Param("id") id: string,
+    @UploadedFile()
+    archivo: { buffer: Buffer; mimetype: string; originalname: string },
+  ) {
+    if (!archivo) {
+      throw new BadRequestException(
+        'Falta el archivo ("archivo") o no es un PDF',
+      );
+    }
+    return this.inscripcionesService.subirPlanPromocion(tipo, id, archivo);
   }
 }

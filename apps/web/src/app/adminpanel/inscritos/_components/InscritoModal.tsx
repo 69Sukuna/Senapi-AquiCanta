@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { DEPARTAMENTOS } from '@/lib/departamentos';
 import { ORDEN_ESTADOS, ESTADOS_INSCRIPCION, type EstadoInscripcion } from '@/lib/estadoInscripcion';
 import { fetchAdmin } from '@/lib/auth';
+import { edadEnFecha } from '@/lib/edad';
 import { EstadoBadge } from './EstadoBadge';
 import type { Inscrito } from './tipos';
 
@@ -38,6 +39,13 @@ interface FormularioCantante {
   direccion: string;
 }
 
+interface FormularioAdulto {
+  nombre: string;
+  ciNumero: string;
+  ciExtension: string;
+  celular: string;
+}
+
 function aFormularioGeneral(inscrito: Inscrito): FormularioGeneral {
   return {
     nombre: inscrito.nombre,
@@ -67,6 +75,26 @@ function aFormularioCantante(inscrito: Inscrito): FormularioCantante {
   };
 }
 
+function aFormularioAdulto(inscrito: Inscrito): FormularioAdulto {
+  if (inscrito.tipo !== 'CANTANTE') {
+    return { nombre: '', ciNumero: '', ciExtension: '', celular: '' };
+  }
+  return {
+    nombre: inscrito.adultoResponsableNombre ?? '',
+    ciNumero: inscrito.adultoResponsableCiNumero ?? '',
+    ciExtension: inscrito.adultoResponsableCiExtension ?? '',
+    celular: inscrito.adultoResponsableCelular ?? '',
+  };
+}
+
+// Edad al 10-sep-2026 (mismo corte que usa el formulario de inscripción) —
+// para que el admin pueda verificar de un vistazo si el postulante cumple
+// el rango de edad de su categoría, sin tener que calcularlo a mano.
+function edadTexto(fechaNacimiento: string | null): string | null {
+  if (!fechaNacimiento) return null;
+  return `${edadEnFecha(new Date(fechaNacimiento))} años al 10-sep-2026`;
+}
+
 const formateadorFechaHora = new Intl.DateTimeFormat('es-BO', {
   day: '2-digit',
   month: 'short',
@@ -79,6 +107,7 @@ const formateadorFechaHora = new Intl.DateTimeFormat('es-BO', {
 export function InscritoModal({ inscrito, onClose, onActualizado }: InscritoModalProps) {
   const [general, setGeneral] = useState<FormularioGeneral>(() => aFormularioGeneral(inscrito));
   const [cantanteInfo, setCantanteInfo] = useState<FormularioCantante>(() => aFormularioCantante(inscrito));
+  const [adultoInfo, setAdultoInfo] = useState<FormularioAdulto>(() => aFormularioAdulto(inscrito));
   const [estadoSeleccionado, setEstadoSeleccionado] = useState<EstadoInscripcion>(inscrito.estado);
   const [guardandoDatos, setGuardandoDatos] = useState(false);
   const [guardandoEstado, setGuardandoEstado] = useState(false);
@@ -113,6 +142,10 @@ export function InscritoModal({ inscrito, onClose, onActualizado }: InscritoModa
       payload.whatsapp = cantanteInfo.whatsapp || null;
       payload.direccion = cantanteInfo.direccion || null;
       if (cantanteInfo.fechaNacimiento) payload.fechaNacimiento = cantanteInfo.fechaNacimiento;
+      payload.adultoResponsableNombre = adultoInfo.nombre || null;
+      payload.adultoResponsableCiNumero = adultoInfo.ciNumero || null;
+      payload.adultoResponsableCiExtension = adultoInfo.ciExtension || null;
+      payload.adultoResponsableCelular = adultoInfo.celular || null;
     }
 
     try {
@@ -175,12 +208,20 @@ export function InscritoModal({ inscrito, onClose, onActualizado }: InscritoModa
         </button>
 
         <span className="badge badge-gold inline-flex! w-fit">
-          {inscrito.tipo === 'CANTANTE' ? 'Solista' : 'Grupo'} · {inscrito.categoria.nombre}
+          {inscrito.tipo === 'CANTANTE' ? 'Individual' : 'Grupal'} · {inscrito.categoria.nombre}
         </span>
         <h2 className="mt-2! text-2xl font-extrabold text-(--text-primary)">{inscrito.nombre}</h2>
         <p className="mt-1! font-mono text-xs text-(--text-muted)">
           ID: {inscrito.id} · Inscrito el {formateadorFechaHora.format(new Date(inscrito.createdAt))}
         </p>
+        <div className="mt-2! flex flex-wrap gap-x-4 gap-y-1 text-xs">
+          <span className={inscrito.aceptaBases ? 'font-semibold text-[#2e7d46]' : 'font-semibold text-[#d52b1e]'}>
+            {inscrito.aceptaBases ? '✓' : '✕'} Aceptó las bases de la convocatoria
+          </span>
+          <span className={inscrito.declaracionVoluntaria ? 'font-semibold text-[#2e7d46]' : 'font-semibold text-[#d52b1e]'}>
+            {inscrito.declaracionVoluntaria ? '✓' : '✕'} Declaración voluntaria (Anexo 3)
+          </span>
+        </div>
 
         {/* Estado — único campo que decide qué se ve públicamente */}
         <div className="mt-5! rounded-xl border border-(--border) p-4!">
@@ -225,7 +266,7 @@ export function InscritoModal({ inscrito, onClose, onActualizado }: InscritoModa
 
         {/* Datos generales editables */}
         <form onSubmit={guardarDatos} className="mt-5! space-y-4">
-          <p className="text-xs font-bold tracking-[0.08em] text-(--text-secondary) uppercase">Datos generales</p>
+          <p className="text-xs font-bold tracking-[0.08em] text-(--text-secondary) uppercase">Datos de la obra</p>
 
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <Campo label="Nombre">
@@ -271,6 +312,12 @@ export function InscritoModal({ inscrito, onClose, onActualizado }: InscritoModa
                 className="w-full rounded-xl border border-(--border) bg-white px-3! py-2! text-sm text-(--text-primary) outline-none transition-colors duration-200 focus:border-[#1e63b8]/50"
               />
             </Campo>
+          </div>
+
+          <p className="pt-2! text-xs font-bold tracking-[0.08em] text-(--text-secondary) uppercase">
+            Contacto y logística
+          </p>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <Campo label="Departamento">
               <select
                 value={general.departamento}
@@ -318,7 +365,7 @@ export function InscritoModal({ inscrito, onClose, onActualizado }: InscritoModa
           {inscrito.tipo === 'CANTANTE' && (
             <>
               <p className="pt-2! text-xs font-bold tracking-[0.08em] text-(--text-secondary) uppercase">
-                Datos personales (privados)
+                Datos personales del postulante (privados)
               </p>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <Campo label="C.I.">
@@ -335,7 +382,18 @@ export function InscritoModal({ inscrito, onClose, onActualizado }: InscritoModa
                     className="w-full rounded-xl border border-(--border) bg-white px-3! py-2! text-sm text-(--text-primary) outline-none transition-colors duration-200 focus:border-[#1e63b8]/50"
                   />
                 </Campo>
-                <Campo label="Fecha de nacimiento">
+                <Campo
+                  label="Fecha de nacimiento"
+                  hint={
+                    edadTexto(cantanteInfo.fechaNacimiento || null)
+                      ? `${edadTexto(cantanteInfo.fechaNacimiento || null)}${
+                          inscrito.categoria.edadMinima != null || inscrito.categoria.edadMaxima != null
+                            ? ` · categoría exige ${inscrito.categoria.edadMinima ?? '0'}–${inscrito.categoria.edadMaxima ?? '∞'} años`
+                            : ''
+                        }`
+                      : undefined
+                  }
+                >
                   <input
                     type="date"
                     value={cantanteInfo.fechaNacimiento}
@@ -360,33 +418,97 @@ export function InscritoModal({ inscrito, onClose, onActualizado }: InscritoModa
               </div>
 
               <p className="pt-2! text-xs font-bold tracking-[0.08em] text-(--text-secondary) uppercase">
-                Carnet de identidad
+                Documentos del postulante
               </p>
               <div className="flex flex-wrap gap-3">
-                <DocLink url={inscrito.fotoCiAnversoUrl} label="Postulante — anverso" />
-                <DocLink url={inscrito.fotoCiReversoUrl} label="Postulante — reverso" />
-                <DocLink url={inscrito.adultoResponsableFotoCiAnversoUrl} label="Adulto responsable — anverso" />
-                <DocLink url={inscrito.adultoResponsableFotoCiReversoUrl} label="Adulto responsable — reverso" />
+                <DocLink url={inscrito.fotoCiAnversoUrl} label="Carnet — anverso" />
+                <DocLink url={inscrito.fotoCiReversoUrl} label="Carnet — reverso" />
+                {inscrito.categoria.nombre === 'Ñusta' && (
+                  <DocLink url={inscrito.planPromocionUrl} label="Plan de promoción (PDF)" />
+                )}
                 {!inscrito.fotoCiAnversoUrl &&
                   !inscrito.fotoCiReversoUrl &&
-                  !inscrito.adultoResponsableFotoCiAnversoUrl &&
-                  !inscrito.adultoResponsableFotoCiReversoUrl && (
-                    <span className="text-xs text-(--text-muted)">Sin fotos de carnet cargadas.</span>
+                  !(inscrito.categoria.nombre === 'Ñusta' && inscrito.planPromocionUrl) && (
+                    <span className="text-xs text-(--text-muted)">Sin documentos cargados.</span>
                   )}
               </div>
+
+              {(inscrito.categoria.requiereAdultoResponsable ||
+                adultoInfo.nombre ||
+                adultoInfo.ciNumero ||
+                inscrito.adultoResponsableFotoCiAnversoUrl) && (
+                <div className="rounded-xl border border-(--border) p-4!">
+                  <p className="text-xs font-bold tracking-[0.08em] text-(--text-secondary) uppercase">
+                    Adulto responsable (padre, madre o tutor legal)
+                  </p>
+                  <div className="mt-3! grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <Campo label="Nombre completo" className="sm:col-span-2">
+                      <input
+                        value={adultoInfo.nombre}
+                        onChange={(e) => setAdultoInfo({ ...adultoInfo, nombre: e.target.value })}
+                        className="w-full rounded-xl border border-(--border) bg-white px-3! py-2! text-sm text-(--text-primary) outline-none transition-colors duration-200 focus:border-[#1e63b8]/50"
+                      />
+                    </Campo>
+                    <Campo label="C.I.">
+                      <input
+                        value={adultoInfo.ciNumero}
+                        onChange={(e) => setAdultoInfo({ ...adultoInfo, ciNumero: e.target.value })}
+                        className="w-full rounded-xl border border-(--border) bg-white px-3! py-2! text-sm text-(--text-primary) outline-none transition-colors duration-200 focus:border-[#1e63b8]/50"
+                      />
+                    </Campo>
+                    <Campo label="Extensión C.I.">
+                      <input
+                        value={adultoInfo.ciExtension}
+                        onChange={(e) => setAdultoInfo({ ...adultoInfo, ciExtension: e.target.value })}
+                        className="w-full rounded-xl border border-(--border) bg-white px-3! py-2! text-sm text-(--text-primary) outline-none transition-colors duration-200 focus:border-[#1e63b8]/50"
+                      />
+                    </Campo>
+                    <Campo label="Celular" className="sm:col-span-2">
+                      <input
+                        value={adultoInfo.celular}
+                        onChange={(e) => setAdultoInfo({ ...adultoInfo, celular: e.target.value })}
+                        className="w-full rounded-xl border border-(--border) bg-white px-3! py-2! text-sm text-(--text-primary) outline-none transition-colors duration-200 focus:border-[#1e63b8]/50"
+                      />
+                    </Campo>
+                  </div>
+                  <p className="mt-3! text-xs">
+                    <span
+                      className={
+                        inscrito.autorizaParticipacionAdultoResponsable
+                          ? 'font-semibold text-[#2e7d46]'
+                          : 'font-semibold text-[#d52b1e]'
+                      }
+                    >
+                      {inscrito.autorizaParticipacionAdultoResponsable ? '✓' : '✕'} Autorizó la participación (Anexo 4)
+                    </span>
+                  </p>
+                  <div className="mt-2! flex flex-wrap gap-3">
+                    <DocLink url={inscrito.adultoResponsableFotoCiAnversoUrl} label="Carnet — anverso" />
+                    <DocLink url={inscrito.adultoResponsableFotoCiReversoUrl} label="Carnet — reverso" />
+                    {!inscrito.adultoResponsableFotoCiAnversoUrl && !inscrito.adultoResponsableFotoCiReversoUrl && (
+                      <span className="text-xs text-(--text-muted)">Sin fotos de carnet cargadas.</span>
+                    )}
+                  </div>
+                </div>
+              )}
 
               {inscrito.acompanantes.length > 0 && (
                 <div>
                   <p className="pt-2! text-xs font-bold tracking-[0.08em] text-(--text-secondary) uppercase">
-                    Acompañantes ({inscrito.acompanantes.length})
+                    Acompañantes musicales ({inscrito.acompanantes.length}
+                    {inscrito.categoria.acompanantesMax ? ` / máx. ${inscrito.categoria.acompanantesMax}` : ''})
                   </p>
-                  <ul className="mt-2! space-y-1 text-sm text-(--text-secondary)">
+                  <ul className="mt-2! space-y-1.5 text-sm text-(--text-secondary)">
                     {inscrito.acompanantes.map((a) => (
-                      <li key={a.id} className="flex flex-wrap items-center gap-2">
-                        <span>
-                          {a.nombre}
-                          {a.instrumento ? ` — ${a.instrumento}` : ''}
-                        </span>
+                      <li key={a.id} className="flex flex-wrap items-center gap-2 rounded-lg border border-(--border) px-3! py-2!">
+                        <span className="font-semibold text-(--text-primary)">{a.nombre}</span>
+                        {a.instrumento && <span>— {a.instrumento}</span>}
+                        {a.ciNumero && (
+                          <span className="font-mono text-xs text-(--text-muted)">
+                            C.I. {a.ciNumero}
+                            {a.ciExtension ? ` ${a.ciExtension}` : ''}
+                          </span>
+                        )}
                         <DocLink url={a.fotoCiAnversoUrl} label="carnet anverso" />
                         <DocLink url={a.fotoCiReversoUrl} label="carnet reverso" />
                       </li>
@@ -402,16 +524,26 @@ export function InscritoModal({ inscrito, onClose, onActualizado }: InscritoModa
               {inscrito.integrantes.length > 0 && (
                 <div>
                   <p className="pt-2! text-xs font-bold tracking-[0.08em] text-(--text-secondary) uppercase">
-                    Integrantes ({inscrito.integrantes.length})
+                    Integrantes ({inscrito.integrantes.length} / {inscrito.categoria.integrantesMin}–
+                    {inscrito.categoria.integrantesMax})
                   </p>
-                  <ul className="mt-2! space-y-1 text-sm text-(--text-secondary)">
+                  <ul className="mt-2! space-y-1.5 text-sm text-(--text-secondary)">
                     {inscrito.integrantes.map((i) => (
-                      <li key={i.id} className="flex flex-wrap items-center gap-2">
-                        <span>
+                      <li key={i.id} className="flex flex-wrap items-center gap-2 rounded-lg border border-(--border) px-3! py-2!">
+                        <span className="font-semibold text-(--text-primary)">
                           {i.nombre}
                           {i.nombreReferencia ? ` (${i.nombreReferencia})` : ''}
-                          {i.instrumento ? ` — ${i.instrumento}` : ''}
                         </span>
+                        {i.instrumento && <span>— {i.instrumento}</span>}
+                        {i.ciNumero && (
+                          <span className="font-mono text-xs text-(--text-muted)">
+                            C.I. {i.ciNumero}
+                            {i.ciExtension ? ` ${i.ciExtension}` : ''}
+                          </span>
+                        )}
+                        {edadTexto(i.fechaNacimiento) && (
+                          <span className="text-xs text-(--text-muted)">{edadTexto(i.fechaNacimiento)}</span>
+                        )}
                         <DocLink url={i.fotoCiAnversoUrl} label="carnet anverso" />
                         <DocLink url={i.fotoCiReversoUrl} label="carnet reverso" />
                       </li>
@@ -474,11 +606,22 @@ function DocLink({ url, label }: { url: string | null; label: string }) {
   );
 }
 
-function Campo({ label, className, children }: { label: string; className?: string; children: React.ReactNode }) {
+function Campo({
+  label,
+  className,
+  hint,
+  children,
+}: {
+  label: string;
+  className?: string;
+  hint?: string;
+  children: React.ReactNode;
+}) {
   return (
     <label className={`flex flex-col gap-1 text-xs font-semibold text-(--text-secondary) ${className ?? ''}`}>
       {label}
       {children}
+      {hint && <span className="text-[11px] font-normal text-(--text-muted)">{hint}</span>}
     </label>
   );
 }

@@ -50,4 +50,4 @@ export interface TrayectoAdmin {
   visitantesUnicos: number;
 }
 
-export type PestanaSellos = 'trayecto' | 'eventos' | 'rangos' | 'medallas';
+export type PestanaSellos = 'trayecto' | 'eventos' | 'rangos' | 'medallas' | 'reportes';

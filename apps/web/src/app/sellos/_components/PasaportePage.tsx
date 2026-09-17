@@ -7,6 +7,7 @@ import { useVisitorId } from '@/hooks/useVisitorId';
 import { useUsuario } from '@/hooks/useUsuario';
 import { fetchVisitante } from '@/lib/authVisitante';
 import { EscanerQRCliente } from './EscanerQRCliente';
+import { IniciaTuAventura } from './IniciaTuAventura';
 import { TarjetaBienvenida } from './TarjetaBienvenida';
 import { RielProgreso } from './RielProgreso';
 import { MedallasRango } from './MedallasRango';
@@ -146,7 +147,10 @@ function ColeccionSellos({ puntos }: { puntos: PuntoProgreso[] }) {
 // específico de ese trayecto (a diferencia de Bienvenida/Riel/Medallas, que
 // son generales y se pintan una sola vez en el padre).
 function RecorridoTrayecto({ progreso }: { progreso: TrayectoProgreso }) {
-  const [eventosAbiertos, setEventosAbiertos] = useState(true);
+  // Arranca cerrado: lo primero que se ve de un trayecto es su imagen y
+  // descripción (contexto), y recién al abrir aparecen los eventos y la
+  // colección de estampillas — nunca las dos cosas a la vez.
+  const [eventosAbiertos, setEventosAbiertos] = useState(false);
 
   const totalEventos = progreso.eventos.length;
   const eventosCompletados = progreso.eventos.filter((e) => e.completado).length;
@@ -167,43 +171,12 @@ function RecorridoTrayecto({ progreso }: { progreso: TrayectoProgreso }) {
         </div>
       )}
 
-      {/* La imagen del trayecto va acá, junto al título de la sección — es lo
-          primero que se ve al desplazarse por la página, así sirve para
-          ubicar de un vistazo cada trayecto en vez de perderse dentro de la
-          tarjeta colapsable de abajo. */}
-      <div className="mb-4! flex items-center justify-between gap-4!">
-        <div>
-          <h2 className="text-xl font-bold text-(--text-primary)">{progreso.nombre}</h2>
-          {progreso.visitantesUnicos !== null && (
-            <p className="mt-1! flex items-center gap-1.5 text-sm text-(--text-secondary)">
-              <Users size={14} />
-              {progreso.visitantesUnicos} {progreso.visitantesUnicos === 1 ? 'persona escaneó' : 'personas escanearon'} este recorrido
-            </p>
-          )}
-        </div>
-        {progreso.imagenUrl && (
-          <Image
-            src={progreso.imagenUrl}
-            alt={progreso.nombre}
-            width={96}
-            height={96}
-            className="h-24 w-24 shrink-0 rounded-xl object-cover"
-            unoptimized
-          />
-        )}
-      </div>
-
       <div className="glass-panel rounded-2xl! p-5!">
         <button
           onClick={() => setEventosAbiertos((v) => !v)}
           className="flex w-full items-center justify-between gap-4! text-left"
         >
-          <div className="min-w-0">
-            <p className="font-bold text-(--text-primary)">{progreso.nombre}</p>
-            {progreso.descripcion && (
-              <p className="line-clamp-2 text-sm text-(--text-secondary)">{progreso.descripcion}</p>
-            )}
-          </div>
+          <h2 className="text-xl font-bold text-(--text-primary)">{progreso.nombre}</h2>
           <div className="flex shrink-0 items-center gap-3!">
             <span className="text-sm text-(--text-secondary)">
               {eventosCompletados}/{totalEventos}
@@ -216,9 +189,38 @@ function RecorridoTrayecto({ progreso }: { progreso: TrayectoProgreso }) {
           </div>
         </button>
 
+        {/* La descripción (y el conteo de visitantes) queda siempre visible,
+            esté abierto o cerrado — es el contexto fijo del trayecto. */}
+        {(progreso.descripcion || progreso.visitantesUnicos !== null) && (
+          <div className="mt-2!">
+            {progreso.descripcion && <p className="text-sm text-(--text-secondary)">{progreso.descripcion}</p>}
+            {progreso.visitantesUnicos !== null && (
+              <p className="mt-1.5! flex items-center gap-1.5 text-sm text-(--text-secondary)">
+                <Users size={14} />
+                {progreso.visitantesUnicos} {progreso.visitantesUnicos === 1 ? 'persona escaneó' : 'personas escanearon'} este
+                recorrido
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* Al abrir: imagen (solo desktop, en mobile ocupaba demasiado
+            espacio), lista de eventos y colección de estampillas — las 3
+            juntas, en fila en desktop y apiladas en mobile (sin la imagen). */}
         {eventosAbiertos && (
-          <div className="mt-5! grid grid-cols-1 gap-6! border-t border-(--border) pt-5! md:grid-cols-[1fr_auto]">
-            {/* Columna izquierda: cada evento con sus grupos (texto + barra) */}
+          <div className="mt-5! grid grid-cols-1 gap-6! border-t border-(--border) pt-5! sm:grid-cols-[auto_1fr_auto]">
+            {progreso.imagenUrl && (
+              <Image
+                src={progreso.imagenUrl}
+                alt={progreso.nombre}
+                width={160}
+                height={160}
+                className="hidden aspect-square w-40 shrink-0 rounded-xl object-cover sm:block"
+                unoptimized
+              />
+            )}
+
+            {/* Columna de eventos: cada uno con sus grupos (texto + barra) */}
             <div className="flex flex-col gap-5!">
               {progreso.eventos.map((evento) => (
                 <div key={evento.id}>
@@ -265,8 +267,8 @@ function RecorridoTrayecto({ progreso }: { progreso: TrayectoProgreso }) {
               ))}
             </div>
 
-            {/* Columna derecha: colección de sellos de todo el trayecto */}
-            <div className="md:w-52">
+            {/* Columna de estampillas: colección completa del trayecto */}
+            <div className="sm:w-52">
               <ColeccionSellos puntos={todosLosPuntos} />
             </div>
           </div>
@@ -278,7 +280,7 @@ function RecorridoTrayecto({ progreso }: { progreso: TrayectoProgreso }) {
 
 export function PasaportePage({ trayectos }: PasaportePageProps) {
   const visitorIdAnonimo = useVisitorId();
-  const { usuario, loginConGoogle } = useUsuario();
+  const { usuario, cargando: cargandoUsuario, loginConGoogle } = useUsuario();
   // Una vez logueado, todo el pasaporte pasa a usar el id real de la cuenta
   // en vez del UUID anónimo — ver el efecto de "vincular" más abajo, que
   // fusiona el progreso que haya quedado bajo el UUID anónimo.
@@ -400,6 +402,21 @@ export function PasaportePage({ trayectos }: PasaportePageProps) {
     [visitorId],
   );
 
+  // Antes de mostrar nada del pasaporte (bienvenida/riel/medallas y las
+  // tarjetas de cada trayecto), hay que saber si hay sesión — sin login no
+  // se entra al "juego" ni en mobile ni en desktop.
+  if (cargandoUsuario) {
+    return null;
+  }
+
+  if (!usuario) {
+    return (
+      <div className="sellos-cafe mt-12!">
+        <IniciaTuAventura onLoginGoogle={() => loginConGoogle()} />
+      </div>
+    );
+  }
+
   if (cargando) {
     return (
       <div className="mt-12! rounded-2xl border border-dashed border-(--border) p-10! text-center text-(--text-muted)">
@@ -447,23 +464,25 @@ export function PasaportePage({ trayectos }: PasaportePageProps) {
 
   return (
     <div className="sellos-cafe mt-12!">
-      {/* Escanear un QR es una acción de celular en el festival — en desktop
-          este bloque (bienvenida+botón Escanear, riel, medallas, stats) no
-          tiene sentido, así que queda solo para mobile. Las tarjetas de cada
-          trayecto de más abajo sí siguen visibles en desktop. */}
-      <div className="md:hidden">
-        <div className="mb-8!">
-          <TarjetaBienvenida
-            rangos={todosLosRangos}
-            usuario={usuario}
-            onLoginGoogle={() => loginConGoogle()}
-            onEscanear={() => {
-              setErrorEscaneo(null);
-              setEscaneando(true);
-            }}
-          />
-        </div>
+      {/* La tarjeta de bienvenida (perfil de jugador) sí se ve en desktop
+          también — solo su botón "Escanear" queda oculto ahí (ver
+          TarjetaBienvenida), porque escanear un QR es una acción de celular. */}
+      <div className="mb-8!">
+        <TarjetaBienvenida
+          rangos={todosLosRangos}
+          usuario={usuario}
+          onEscanear={() => {
+            setErrorEscaneo(null);
+            setEscaneando(true);
+          }}
+        />
+      </div>
 
+      {/* Riel, medallas y estadísticas sí quedan solo para mobile — son el
+          detalle del progreso de escaneo, que en desktop no tiene con qué
+          interactuar. Las tarjetas de cada trayecto de más abajo sí siguen
+          visibles en desktop. */}
+      <div className="md:hidden">
         <div className="mb-8!">
           <RielProgreso eventos={paradasRiel} />
         </div>

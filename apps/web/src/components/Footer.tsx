@@ -27,16 +27,11 @@ function WhatsAppIcon(props: SVGProps<SVGSVGElement>) {
   );
 }
 
-// Logos de las entidades que auspician el festival. `logo: null` = todavía
-// no tenemos el archivo — se muestra un espacio reservado en su lugar.
-// Para activarlo: poner el archivo en public/images/LOGOS/ y completar la
-// ruta acá (mismo patrón que ORGANIZA más abajo).
+// Entidades que auspician el festival — solo el nombre en mayúsculas,
+// debajo del logo de la Secretaría (ver AUSPICIA en el JSX).
 const AUSPICIAN = [
-  // logoGrande: el archivo de GAMO trae harto margen transparente propio,
-  // así que con el padding normal del chip se ve chico — se le achica el
-  // padding para compensar.
-  { nombre: 'Gobierno Autónomo Municipal de Oruro', logo: '/images/LOGOS/GAMO.png' as string | null, logoGrande: true },
-  { nombre: 'Consejo Departamental de Culturas Oruro', logo: '/images/LOGOS/ConsejoDep.png' as string | null, logoGrande: false },
+  { nombre: 'Gobierno Autónomo Municipal de Oruro' },
+  { nombre: 'Consejo Departamental de Culturas Oruro' },
 ];
 
 const SOCIAL_LINKS = [
@@ -62,24 +57,12 @@ const UBICACION = {
   mapsHref: 'https://www.google.com/maps/dir/?api=1&destination=Teatro+Internacional+Oruro,+Bolivia',
 };
 
-// Chip blanco alrededor de cada logo: sin esto, un logo con fondo oscuro o
-// transparente se pierde contra el negro del footer. `compacto` reduce el
-// padding interno para logos cuyo propio archivo ya trae margen, que si no
-// se ven chicos dentro del círculo.
-function LogoChip({ children, compacto = false }: { children: React.ReactNode; compacto?: boolean }) {
+// Chip blanco alrededor del logo: sin esto, un logo con fondo oscuro o
+// transparente se pierde contra el negro del footer.
+function LogoChip({ children }: { children: React.ReactNode }) {
   return (
-    <span
-      className={`flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-(--brand-blanco) shadow-[0_0_0_1px_rgba(255,255,255,0.08)] ${compacto ? 'p-0.5!' : 'p-2!'}`}
-    >
+    <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-(--brand-blanco) p-2! shadow-[0_0_0_1px_rgba(255,255,255,0.08)]">
       {children}
-    </span>
-  );
-}
-
-function LogoPendiente() {
-  return (
-    <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full border border-dashed border-white/30 text-[9px] font-semibold tracking-wide text-white/40 uppercase">
-      Logo
     </span>
   );
 }
@@ -97,27 +80,25 @@ export function Footer() {
       <span className="pointer-events-none absolute inset-x-0 top-0 h-[3px] bg-[linear-gradient(90deg,#d52b1e_0%,#e08f1f_42%,#2e7d46_100%)]" />
 
       <div className="mx-auto flex max-w-5xl flex-col items-center gap-10">
-        
-        
-
-        {/* Auspicia — mismo modelo que Organiza: logo circular + etiqueta
-            chica arriba y nombre en negrita abajo, en fila. */}
-        <div className="flex flex-col items-center gap-6 sm:flex-row sm:flex-wrap sm:justify-center sm:gap-10">
-          {AUSPICIAN.map(({ nombre, logo, logoGrande }) => (
-            <div key={nombre} className="flex items-center gap-3">
-              {logo ? (
-                <LogoChip compacto={logoGrande}>
-                  <Image src={logo} alt={nombre} width={200} height={200} className="h-full w-full rounded-full object-contain" />
-                </LogoChip>
-              ) : (
-                <LogoPendiente />
-              )}
-              <div className="flex flex-col">
-               
-                <span className="text-sm font-semibold text-white">{nombre}</span>
-              </div>
-            </div>
-          ))}
+        {/* Auspicia — un solo logo (Secretaría) arriba, y los nombres de
+            las entidades debajo, solo en mayúsculas (sin logo por cada una). */}
+        <div className="flex flex-col items-center gap-4">
+          <LogoChip>
+            <Image
+              src="/images/secretaria_logo.png"
+              alt="Secretaría de Cultura y Turismo — Oruro"
+              width={1200}
+              height={1200}
+              className="h-full w-full rounded-full object-contain"
+            />
+          </LogoChip>
+          <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-1.5">
+            {AUSPICIAN.map(({ nombre }) => (
+              <span key={nombre} className="text-sm font-bold tracking-wide text-white uppercase">
+                {nombre}
+              </span>
+            ))}
+          </div>
         </div>
 
         <div className="h-px w-full max-w-md bg-white/10" />

@@ -2,6 +2,7 @@ import {
   AlignmentType,
   BorderStyle,
   Document,
+  Footer,
   Packer,
   Paragraph,
   Tab,
@@ -44,6 +45,12 @@ export interface AdultoResponsableInscripcion {
 }
 
 export interface DatosInscripcion {
+  // ID real de la inscripción ya creada en el backend (viene de la
+  // respuesta del POST /inscripciones) — se imprime en el pie de cada
+  // página para que el equipo del festival pueda ubicar la postulación
+  // exacta en el panel de administración a partir del documento impreso.
+  // Vacío si el docx se genera antes de que la inscripción exista todavía.
+  id: string;
   categoria: string;
   nombrePostulante: string;
   pseudonimo: string;
@@ -325,6 +332,19 @@ function bloqueFirma(): Paragraph[] {
 
 function construirAnexo1(datos: DatosInscripcion): (Paragraph | Table)[] {
   const contenido: (Paragraph | Table)[] = [...tituloAnexo(1, 'FICHA DE POSTULACIÓN', 32)];
+
+  if (datos.id) {
+    contenido.push(
+      new Paragraph({
+        alignment: AlignmentType.CENTER,
+        spacing: { after: 200 },
+        children: [
+          new TextRun({ text: 'N° DE INSCRIPCIÓN: ', bold: true, size: 18 }),
+          new TextRun({ text: datos.id, size: 18 }),
+        ],
+      }),
+    );
+  }
 
   contenido.push(encabezadoSeccion('DATOS GENERALES:'));
   contenido.push(
@@ -642,6 +662,21 @@ export async function generarInscripcionDocx(datos: DatosInscripcion) {
     contenido.push(...construirAnexo4(datos, datos.integrantes[0]));
   }
 
+  const pie = new Footer({
+    children: [
+      new Paragraph({
+        alignment: AlignmentType.CENTER,
+        children: [
+          new TextRun({
+            text: datos.id ? `N° de inscripción: ${datos.id}` : 'N° de inscripción: (pendiente)',
+            size: 16,
+            color: '595959',
+          }),
+        ],
+      }),
+    ],
+  });
+
   const documento = new Document({
     styles: {
       default: {
@@ -650,7 +685,7 @@ export async function generarInscripcionDocx(datos: DatosInscripcion) {
         },
       },
     },
-    sections: [{ properties: {}, children: contenido }],
+    sections: [{ properties: {}, footers: { default: pie }, children: contenido }],
   });
 
   const blob = await Packer.toBlob(documento);
