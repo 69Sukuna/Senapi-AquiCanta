@@ -335,6 +335,56 @@ function CampoFotoCarnet({
   );
 }
 
+function CampoArchivoPdf({
+  archivo,
+  onCambiar,
+  onQuitar,
+}: {
+  archivo: File | null;
+  onCambiar: (file: File) => void;
+  onQuitar: () => void;
+}) {
+  return (
+    <div className="md:col-span-2">
+      <label className={labelClass}>
+        Plan de promoción del festival <span className="font-normal text-(--text-muted)">(PDF, recomendado)</span>
+      </label>
+      {archivo ? (
+        <div className="flex items-center gap-3 rounded-lg border border-(--border) bg-(--bg-primary) px-4! py-3!">
+          <FileText size={18} className="text-(--brand-cafe) shrink-0" />
+          <span className="flex-1 truncate text-sm text-(--text-primary)">{archivo.name}</span>
+          <button
+            type="button"
+            onClick={onQuitar}
+            aria-label="Quitar plan de promoción"
+            className="shrink-0 text-(--text-muted) hover:text-[#d52b1e] transition-colors cursor-pointer"
+          >
+            <X size={16} />
+          </button>
+        </div>
+      ) : (
+        <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-dashed border-(--border) bg-(--bg-primary) px-4! py-3! text-sm font-semibold text-(--brand-cafe) transition-colors hover:border-(--brand-cafe)/50">
+          <Paperclip size={16} />
+          Adjuntar PDF
+          <input
+            type="file"
+            accept="application/pdf"
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) onCambiar(file);
+              e.target.value = '';
+            }}
+          />
+        </label>
+      )}
+      <p className="text-xs text-(--text-muted) mt-1.5!">
+        A ejecutar en caso de ser coronada — lo pide la convocatoria para esta categoría.
+      </p>
+    </div>
+  );
+}
+
 export default function FormularioInscripcion() {
   // Ancla para "volver arriba" — apunta al inicio de ESTE componente, no al
   // top de la página entera, porque arriba del formulario ahora hay
@@ -345,6 +395,10 @@ export default function FormularioInscripcion() {
   const [paso, setPaso] = useState(0);
   const [pasoMaximo, setPasoMaximo] = useState(0);
   const [enviado, setEnviado] = useState(false);
+  // ID real que devuelve el backend al crear la inscripción — se imprime en
+  // el docx de los anexos para que el equipo del festival pueda ubicar la
+  // postulación exacta en el panel de administración.
+  const [inscripcionId, setInscripcionId] = useState('');
 
   // Anexo 1 — Ficha de postulación
   const [categoria, setCategoria] = useState('');
@@ -385,6 +439,10 @@ export default function FormularioInscripcion() {
   const [modoFotosGrupo, setModoFotosGrupo] = useState<'grupal' | 'individual'>('grupal');
   const [fotosCarnetsGrupal, setFotosCarnetsGrupal] = useState<File[]>([]);
 
+  // Solo categoría Ñusta: PDF del "plan de promoción del festival" que la
+  // convocatoria exige, a ejecutar en caso de ser coronada.
+  const [planPromocion, setPlanPromocion] = useState<File | null>(null);
+
   // Anexo 1 (declaración de bases) + Anexo 3 (declaración voluntaria)
   const [aceptaBases, setAceptaBases] = useState(false);
   const [declaracionVoluntaria, setDeclaracionVoluntaria] = useState(false);
@@ -404,6 +462,7 @@ export default function FormularioInscripcion() {
 
   const esComposicion = categoria === 'Composición';
   const esEspecial = categoria === 'Especial';
+  const esNusta = categoria === 'Ñusta';
   // El texto oficial del Anexo 3 dice literal "(Omitir este punto para la
   // categoría: Especial)" — solo Especial, no Composición (aunque la
   // convocatoria sí permite profesionales en ambas categorías, el Anexo 3
@@ -742,6 +801,29 @@ export default function FormularioInscripcion() {
     }
   };
 
+  const subirPlanPromocionNusta = async (apiUrl: string, id: string) => {
+    if (!planPromocion) return;
+
+    const formData = new FormData();
+    formData.append('archivo', planPromocion);
+
+    try {
+      const res = await fetch(`${apiUrl}/inscripciones/cantante/${id}/plan-promocion`, {
+        method: 'POST',
+        body: formData,
+      });
+      if (!res.ok) {
+        setAvisoFotos(
+          'Tu inscripción quedó registrada, pero hubo un problema subiendo el plan de promoción. El equipo del festival te contactará para completarlo.',
+        );
+      }
+    } catch {
+      setAvisoFotos(
+        'Tu inscripción quedó registrada, pero no se pudo subir el plan de promoción por un problema de conexión. El equipo del festival te contactará para completarlo.',
+      );
+    }
+  };
+
   const enviar = async () => {
     if (!formularioCompleto || enviando) {
       setMostrarErrores(true);
@@ -832,7 +914,9 @@ export default function FormularioInscripcion() {
 
     const dataCreada = await res.json().catch(() => null);
     if (dataCreada?.id) {
+      setInscripcionId(dataCreada.id);
       await subirFotosCarnet(apiUrl, esGrupal ? 'grupo' : 'cantante', dataCreada.id, dataCreada);
+      if (esNusta) await subirPlanPromocionNusta(apiUrl, dataCreada.id);
     }
 
     setEnviado(true);
@@ -843,6 +927,7 @@ export default function FormularioInscripcion() {
 
   const descargarDocx = () => {
     generarInscripcionDocx({
+      id: inscripcionId,
       categoria,
       nombrePostulante,
       pseudonimo,
@@ -1544,6 +1629,13 @@ export default function FormularioInscripcion() {
                             fotos={integrante}
                             onCambiar={(lado, file) => actualizarIntegranteFoto(integrante.id, lado, file)}
                             onQuitar={(lado) => quitarIntegranteFoto(integrante.id, lado)}
+                          />
+                        )}
+                        {esNusta && (
+                          <CampoArchivoPdf
+                            archivo={planPromocion}
+                            onCambiar={setPlanPromocion}
+                            onQuitar={() => setPlanPromocion(null)}
                           />
                         )}
                       </div>

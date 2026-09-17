@@ -459,4 +459,124 @@ export class SellosService {
     await this.medallaOrThrow(id);
     await this.prisma.medalla.delete({ where: { id } });
   }
+
+  // ── Reportes ─────────────────────────────────────────────────────────────
+  // Solo cuentan visitantes REALES (logueados con Google) — un UUID anónimo
+  // suelto no se puede mostrar en un ranking o reporte con nombre/email, así
+  // que no hay forma de identificarlo ante el admin.
+
+  // Ranking de visitantes por cantidad total de sellos (cualquier trayecto).
+  async listarVisitantesAdmin() {
+    const [visitantes, conteos] = await Promise.all([
+      this.prisma.visitante.findMany({ orderBy: { createdAt: 'desc' } }),
+      this.prisma.escaneoPunto.groupBy({ by: ['visitorId'], _count: { _all: true } }),
+    ]);
+
+    const totalPorVisitante = new Map(conteos.map((c) => [c.visitorId, c._count._all]));
+
+    return visitantes
+      .map((v) => ({
+        id: v.id,
+        name: v.name,
+        email: v.email,
+        avatarUrl: v.avatarUrl,
+        createdAt: v.createdAt,
+        totalSellos: totalPorVisitante.get(v.id) ?? 0,
+      }))
+      .sort((a, b) => b.totalSellos - a.totalSellos);
+  }
+
+  // Base compartida por reportePorEvento/reportePorTrayecto: para cada
+  // Evento, quiénes (visitantes REALES) lo completaron — misma regla que usa
+  // `construirProgreso` (todos los puntos de al menos una instancia/grupo),
+  // pero agregada para todo el mundo en vez de un solo visitante.
+  private async completadosPorEvento() {
+    const [eventos, visitantes, escaneos] = await Promise.all([
+      this.prisma.evento.findMany({
+        orderBy: [{ trayectoId: 'asc' }, { orden: 'asc' }],
+        include: { trayecto: { select: { id: true, nombre: true } }, puntos: { select: { id: true, instancia: true } } },
+      }),
+      this.prisma.visitante.findMany({ select: { id: true } }),
+      this.prisma.escaneoPunto.findMany({ select: { visitorId: true, puntoId: true } }),
+    ]);
+
+    const idsVisitantesReales = new Set(visitantes.map((v) => v.id));
+    const visitantesPorPunto = new Map<string, Set<string>>();
+    for (const escaneo of escaneos) {
+      if (!idsVisitantesReales.has(escaneo.visitorId)) continue;
+      const set = visitantesPorPunto.get(escaneo.puntoId) ?? new Set<string>();
+      set.add(escaneo.visitorId);
+      visitantesPorPunto.set(escaneo.puntoId, set);
+    }
+
+    return eventos.map((evento) => {
+      const grupos = new Map<string, typeof evento.puntos>();
+      for (const punto of evento.puntos) {
+        const clave = punto.instancia ?? '__unico__';
+        const grupo = grupos.get(clave) ?? [];
+        grupo.push(punto);
+        grupos.set(clave, grupo);
+      }
+
+      // Un visitante completa el evento si completó AL MENOS UNO de sus
+      // grupos (intersección de quienes escanearon TODOS los puntos de ese
+      // grupo), igual que en `construirProgreso`.
+      const visitantesQueCompletaron = new Set<string>();
+      for (const puntos of grupos.values()) {
+        if (puntos.length === 0) continue;
+        let interseccion: Set<string> | null = null;
+        for (const punto of puntos) {
+          const visitantesDelPunto = visitantesPorPunto.get(punto.id) ?? new Set<string>();
+          interseccion = interseccion
+            ? new Set([...interseccion].filter((v) => visitantesDelPunto.has(v)))
+            : new Set(visitantesDelPunto);
+        }
+        interseccion?.forEach((v) => visitantesQueCompletaron.add(v));
+      }
+
+      return { evento, visitantesQueCompletaron };
+    });
+  }
+
+  async reportePorEvento() {
+    const datos = await this.completadosPorEvento();
+    return datos.map(({ evento, visitantesQueCompletaron }) => ({
+      eventoId: evento.id,
+      eventoNombre: evento.nombre,
+      trayectoNombre: evento.trayecto.nombre,
+      totalPuntos: evento.puntos.length,
+      visitantesCompletaron: visitantesQueCompletaron.size,
+    }));
+  }
+
+  // Por cada Trayecto: cuántos visitantes REALES lo completaron ENTERO — o
+  // sea, están en el set de "completó" de TODOS sus eventos (misma regla que
+  // `trayectoCompleto` en `construirProgreso`).
+  async reportePorTrayecto() {
+    const datosEventos = await this.completadosPorEvento();
+
+    const porTrayecto = new Map<string, { nombre: string; datos: typeof datosEventos }>();
+    for (const dato of datosEventos) {
+      const trayectoId = dato.evento.trayectoId;
+      const entrada = porTrayecto.get(trayectoId) ?? { nombre: dato.evento.trayecto.nombre, datos: [] };
+      entrada.datos.push(dato);
+      porTrayecto.set(trayectoId, entrada);
+    }
+
+    return Array.from(porTrayecto.entries()).map(([trayectoId, { nombre, datos }]) => {
+      let interseccion: Set<string> | null = null;
+      for (const { visitantesQueCompletaron } of datos) {
+        interseccion = interseccion
+          ? new Set([...interseccion].filter((v) => visitantesQueCompletaron.has(v)))
+          : new Set(visitantesQueCompletaron);
+      }
+
+      return {
+        trayectoId,
+        trayectoNombre: nombre,
+        totalEventos: datos.length,
+        visitantesCompletaron: interseccion?.size ?? 0,
+      };
+    });
+  }
 }

@@ -528,4 +528,41 @@ export class InscripcionesService {
     }
     return { guardadas };
   }
+
+  // PDF del "plan de promoción del festival" — solo lo pide la convocatoria
+  // para la categoría Ñusta ("a ejecutar en caso de ser coronada"). Endpoint
+  // separado de subirFotos: es un documento de otra naturaleza (no una foto
+  // de carnet), así que no tiene sentido sumarlo al DTO de objetivos de ahí.
+  async subirPlanPromocion(tipo: string, id: string, archivo: ArchivoSubido) {
+    if (tipo.toUpperCase() !== "CANTANTE") {
+      throw new BadRequestException(
+        'El plan de promoción solo aplica a postulantes individuales (tipo "cantante")',
+      );
+    }
+
+    const cantante = await this.prisma.cantante.findUnique({
+      where: { id },
+      include: { categoria: true },
+    });
+    if (!cantante) {
+      throw new NotFoundException(`Cantante ${id} no encontrado`);
+    }
+    if (cantante.categoria.nombre !== "Ñusta") {
+      throw new BadRequestException(
+        'El plan de promoción solo aplica a la categoría "Ñusta"',
+      );
+    }
+
+    const url = await this.storageService.guardarArchivo(
+      archivo.buffer,
+      archivo.originalname,
+      archivo.mimetype,
+      "documentos",
+    );
+    await this.prisma.cantante.update({
+      where: { id },
+      data: { planPromocionUrl: url },
+    });
+    return { url };
+  }
 }

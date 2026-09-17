@@ -259,7 +259,7 @@ export function InscritosExplorer() {
                   </td>
                   <td className="px-4! py-3! text-(--text-secondary)">{inscrito.categoria.nombre}</td>
                   <td className="px-4! py-3! text-(--text-secondary)">
-                    {inscrito.tipo === 'CANTANTE' ? 'Solista' : 'Grupo'}
+                    {inscrito.tipo === 'CANTANTE' ? 'Individual' : 'Grupal'}
                   </td>
                   <td className="px-4! py-3!">
                     <DepartamentoBadge departamento={inscrito.departamento} />

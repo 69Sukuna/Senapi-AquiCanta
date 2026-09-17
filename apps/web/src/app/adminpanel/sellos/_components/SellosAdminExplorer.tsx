@@ -7,6 +7,7 @@ import { TrayectoForm } from './TrayectoForm';
 import { EventosTab } from './EventosTab';
 import { RangosTab } from './RangosTab';
 import { MedallasTab } from './MedallasTab';
+import { ReportesTab } from './ReportesTab';
 import { botonPrimario, botonSecundario, Campo, inputClase } from './ui';
 import type { PestanaSellos, TrayectoAdmin } from './tipos';
 
@@ -15,6 +16,7 @@ const PESTANAS: { id: PestanaSellos; label: string }[] = [
   { id: 'eventos', label: 'Eventos' },
   { id: 'rangos', label: 'Rangos' },
   { id: 'medallas', label: 'Medallas' },
+  { id: 'reportes', label: 'Reportes' },
 ];
 
 export function SellosAdminExplorer() {
@@ -122,6 +124,10 @@ export function SellosAdminExplorer() {
           // Medallas es global — no depende de qué trayecto esté elegido
           // arriba (o de que exista alguno siquiera).
           <MedallasTab />
+        ) : pestana === 'reportes' ? (
+          // Reportes agrega TODOS los trayectos — tampoco depende del
+          // selector de arriba.
+          <ReportesTab />
         ) : trayectoActivo ? (
           <>
             {pestana === 'trayecto' && (
