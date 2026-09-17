@@ -30,8 +30,9 @@ function WhatsAppIcon(props: SVGProps<SVGSVGElement>) {
 // Entidades que auspician el festival — solo el nombre en mayúsculas,
 // debajo del logo de la Secretaría (ver AUSPICIA en el JSX).
 const AUSPICIAN = [
-  { nombre: 'Gobierno Autónomo Municipal de Oruro' },
-  { nombre: 'Consejo Departamental de Culturas Oruro' },
+  { nombre: 'GOBIERNO AUTÓNOMO DEPARTAMENTAL DE ORURO' },
+  { nombre: 'GOBIERNO AUTÓNOMO MUNICIPAL DE ORURO' },
+  { nombre: 'CONSEJO DEPARTAMENTAL DE CULTURAS ORURO' },
 ];
 
 const SOCIAL_LINKS = [
