@@ -43,8 +43,7 @@ function codigoDepartamento(label: string): DepartamentoValue | null {
   return entrada ? entrada[0] : null;
 }
 
-// TODO: pegar acá el link de Drive del PDF de la convocatoria cuando esté listo.
-const CONVOCATORIA_URL = '';
+const CONVOCATORIA_URL = 'https://drive.google.com/file/d/1wg44MLjogY9rM5OWfLyDGzTwR4MeNoDt/view?usp=drive_link';
 // TODO: pegar acá la fecha real de la preselección departamental cuando esté
 // definida (ej. "15 de octubre de 2026"). Mientras esté vacío, el modal de
 // aviso usa una frase genérica en vez de una fecha inventada.
@@ -1018,8 +1017,8 @@ export default function FormularioInscripcion() {
 
       {!enviado && !mostrarFormulario && (
         <section className="flex flex-col gap-8 mb-16!">
-          {/* Video tutorial + descarga de la convocatoria — ambos placeholder
-              hasta tener el video real y el link de Drive del PDF. */}
+          {/* Video tutorial (placeholder hasta tener el video real) + descarga
+              de la convocatoria en PDF (ya con el link de Drive). */}
           <div className="grid lg:grid-cols-[2fr_1fr] gap-4 max-w-4xl w-full mx-auto items-stretch">
             <div
               className={`${panelClass} min-h-64 flex flex-col items-center justify-center gap-3 p-6!`}
