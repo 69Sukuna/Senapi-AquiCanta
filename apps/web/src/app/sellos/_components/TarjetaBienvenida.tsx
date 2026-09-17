@@ -1,4 +1,4 @@
-import { Lock, Stamp } from 'lucide-react';
+import { LogOut, Lock, Stamp } from 'lucide-react';
 
 interface RangoProgreso {
   id: string;
@@ -10,6 +10,7 @@ interface RangoProgreso {
 interface TarjetaBienvenidaProps {
   rangos: RangoProgreso[];
   onEscanear: () => void;
+  onLogout: () => void;
   // Ya no es opcional: PasaportePage exige login antes de renderizar esta
   // tarjeta (ver IniciaTuAventura), así que siempre hay un usuario acá.
   usuario: { name: string | null };
@@ -18,7 +19,7 @@ interface TarjetaBienvenidaProps {
 // Tarjeta de "perfil de jugador" — misma identidad visual (HUD de esquinas,
 // panel oscuro, acento dorado) que IniciaTuAventura, para que loguearse y
 // entrar al pasaporte se sientan como la misma pantalla de juego.
-export function TarjetaBienvenida({ rangos, onEscanear, usuario }: TarjetaBienvenidaProps) {
+export function TarjetaBienvenida({ rangos, onEscanear, onLogout, usuario }: TarjetaBienvenidaProps) {
   const nombre = usuario.name || 'Visitante';
 
   return (
@@ -30,12 +31,23 @@ export function TarjetaBienvenida({ rangos, onEscanear, usuario }: TarjetaBienve
 
       <div className="pointer-events-none absolute -top-10 -right-10 h-40 w-40 rounded-full bg-(--accent-gold-light) opacity-[0.12] blur-3xl" />
 
-      <div className="relative">
+      <div className="relative flex items-start justify-between gap-3!">
         <span className="font-barlow inline-flex items-center gap-1.5 rounded-full border border-(--accent-gold-light)/40 px-3! py-1! text-[11px] font-bold tracking-[0.25em] text-(--accent-gold-light) uppercase">
           <Stamp size={12} />
           Coleccionista
         </span>
 
+        <button
+          type="button"
+          onClick={onLogout}
+          className="flex shrink-0 items-center gap-1! text-[11px] font-semibold tracking-wide text-(--brand-crema)/50 uppercase transition-colors duration-200 hover:text-(--brand-crema)"
+        >
+          <LogOut size={12} />
+          Cerrar sesión
+        </button>
+      </div>
+
+      <div className="relative">
         <div className="mt-3! flex flex-wrap items-center justify-between gap-3!">
           <p className="font-bakbak truncate text-2xl text-(--brand-crema) sm:text-3xl">{nombre}</p>
 

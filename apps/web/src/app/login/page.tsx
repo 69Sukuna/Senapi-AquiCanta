@@ -2,13 +2,15 @@
 
 import { Suspense, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Eye, EyeOff, Sparkles } from 'lucide-react';
+import Image from 'next/image';
+import { Eye, EyeOff, LogOut, Sparkles } from 'lucide-react';
 import { PageHero } from '@/components/PageHero';
 import { PageShell } from '@/components/PageShell';
 import { BotonLoginGoogle } from '@/components/BotonLoginGoogle';
 import { ROUTES } from '@/lib/routes';
 import { login } from '@/lib/auth';
 import { useUsuario } from '@/hooks/useUsuario';
+import type { VisitanteAutenticado } from '@/lib/authVisitante';
 
 function FormularioLogin() {
   const router = useRouter();
@@ -97,30 +99,82 @@ function SeccionLoginVisitante() {
   // Sin un `?next=` explícito (ej. entrando por el ícono de perfil del
   // navbar), el destino por defecto es Sellos — es la feature principal que
   // usa este login, en vez de volver a caer en la propia página de /login.
-  return <BotonLoginGoogle onClick={() => loginConGoogle(next ?? ROUTES.sellos)} />;
+  return (
+    <>
+      <div className="flex flex-col items-center gap-3! text-center">
+        <span className="flex h-12 w-12 items-center justify-center rounded-full bg-(--accent-gold-light)/12 text-(--accent-gold-light)">
+          <Sparkles size={22} />
+        </span>
+        <div>
+          <p className="font-bold text-(--text-primary)">Continuá con Google</p>
+          <p className="mt-0.5! text-sm text-(--text-secondary)">Es gratis y toma un segundo.</p>
+        </div>
+      </div>
+
+      <div className="mt-5!">
+        <BotonLoginGoogle onClick={() => loginConGoogle(next ?? ROUTES.sellos)} />
+      </div>
+    </>
+  );
+}
+
+// Si ya hay sesión, no tiene sentido volver a mostrar el botón de Google —
+// esto evita que alguien "reabra" el login estando ya logueado sin darse
+// cuenta, y de paso es el único lugar donde se puede cerrar sesión.
+function SesionActiva({ usuario, onLogout }: { usuario: VisitanteAutenticado; onLogout: () => void }) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const next = searchParams.get('next') || ROUTES.sellos;
+
+  return (
+    <div className="flex flex-col items-center gap-3! text-center">
+      {usuario.avatarUrl ? (
+        <Image src={usuario.avatarUrl} alt={usuario.name ?? usuario.email} width={56} height={56} className="h-14 w-14 rounded-full" unoptimized />
+      ) : (
+        <span className="flex h-14 w-14 items-center justify-center rounded-full bg-(--accent-gold-light)/12 text-(--accent-gold-light)">
+          <Sparkles size={22} />
+        </span>
+      )}
+      <div>
+        <p className="font-bold text-(--text-primary)">Ya iniciaste sesión</p>
+        <p className="mt-0.5! text-sm text-(--text-secondary)">{usuario.name || usuario.email}</p>
+      </div>
+
+      <button
+        type="button"
+        onClick={() => router.push(next)}
+        className="w-full rounded-full bg-[#1e63b8] px-5! py-2.5! text-sm font-bold text-white transition-opacity duration-200 hover:opacity-90"
+      >
+        Ir a Sellos
+      </button>
+      <button
+        type="button"
+        onClick={onLogout}
+        className="inline-flex items-center gap-1.5! text-sm font-semibold text-(--text-muted) underline underline-offset-2 transition-colors duration-200 hover:text-(--text-primary)"
+      >
+        <LogOut size={14} />
+        Cerrar sesión
+      </button>
+    </div>
+  );
 }
 
 function ContenidoLogin() {
   const [mostrarAdmin, setMostrarAdmin] = useState(false);
+  const { usuario, cargando, logout } = useUsuario();
 
   return (
     <div className="mt-10! overflow-hidden rounded-2xl border border-(--border) bg-(--bg-card) shadow-xl shadow-black/5">
       <div className="h-1.5! w-full shrink-0" style={{ background: 'linear-gradient(to right, #e30613, #fcee21, #00873e)' }} />
 
       <div className="p-6! sm:p-8!">
-        <div className="flex flex-col items-center gap-3! text-center">
-          <span className="flex h-12 w-12 items-center justify-center rounded-full bg-(--accent-gold-light)/12 text-(--accent-gold-light)">
-            <Sparkles size={22} />
-          </span>
-          <div>
-            <p className="font-bold text-(--text-primary)">Continuá con Google</p>
-            <p className="mt-0.5! text-sm text-(--text-secondary)">Es gratis y toma un segundo.</p>
-          </div>
-        </div>
-
-        <div className="mt-5!">
+        {cargando ? (
+          <div className="py-2! text-center text-sm text-(--text-muted)">Cargando...</div>
+        ) : usuario ? (
+          <SesionActiva usuario={usuario} onLogout={logout} />
+        ) : (
           <SeccionLoginVisitante />
-        </div>
+        )}
 
         <div className="my-6! flex items-center gap-3!">
           <div className="h-px flex-1 bg-(--border)" />
