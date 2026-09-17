@@ -4,7 +4,7 @@ import { ROUTES } from '@/lib/routes';
 import { CountdownTimer } from '@/components/CountdownTimer';
 
 const CONVOCATORIA_URL =
-  'https://drive.google.com/file/d/1ggcf9PPSnQ-7jc0mTFxQqr27Q5ExGJSZ/view?usp=drive_link';
+  'https://drive.google.com/file/d/1wg44MLjogY9rM5OWfLyDGzTwR4MeNoDt/view?usp=drive_link';
 const MAPS_EMBED_URL =
   'https://www.google.com/maps?q=Teatro+Internacional+Oruro,+Bolivia&output=embed';
 const MAPS_DIRECTIONS_URL =
@@ -84,7 +84,7 @@ export default function Home() {
         {/* Versión Mobile: Centrada, exactamente como el mockup */}
         <div className="relative mx-auto max-w-xl px-6 text-center md:hidden">
           <h2 className="font-bakbak uppercase text-(--brand-negro)">
-            <span className="block text-5xl! font-black">Convocatoria</span>
+            <span className="block text-[clamp(1.75rem,10vw,3rem)]! font-black">Convocatoria</span>
             <span className="mt-1! block text-xl! font-semibold">Preselecciones Departamentales Presenciales</span>
           </h2>
           <div className="font-barlow mt-4 space-y-3.5 text-sm font-medium leading-relaxed text-(--brand-cafe)">
