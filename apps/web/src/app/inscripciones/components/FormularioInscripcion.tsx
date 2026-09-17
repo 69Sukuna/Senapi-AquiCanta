@@ -306,16 +306,24 @@ function CampoFotoCarnet({
   fotos,
   onCambiar,
   onQuitar,
+  obligatorio,
+  error,
 }: {
   fotos: FotosCarnet;
   onCambiar: (lado: LadoFoto, file: File) => void;
   onQuitar: (lado: LadoFoto) => void;
+  obligatorio: boolean;
+  error?: boolean;
 }) {
   return (
     <div className="md:col-span-2">
       <label className={labelClass}>
         Foto del carnet de identidad{' '}
-        <span className="font-normal text-(--text-muted)">(recomendado)</span>
+        {obligatorio ? (
+          <span className="text-[#d52b1e]">*</span>
+        ) : (
+          <span className="font-normal text-(--text-muted)">(recomendado)</span>
+        )}
       </label>
       <div className="grid grid-cols-2 gap-3">
         <RecuadroFoto
@@ -331,6 +339,7 @@ function CampoFotoCarnet({
           onQuitar={() => onQuitar('reverso')}
         />
       </div>
+      {error && <p className="text-xs text-[#d52b1e] font-medium mt-1.5!">Faltan las fotos del carnet (anverso y reverso).</p>}
     </div>
   );
 }
@@ -463,6 +472,11 @@ export default function FormularioInscripcion() {
   const esComposicion = categoria === 'Composición';
   const esEspecial = categoria === 'Especial';
   const esNusta = categoria === 'Ñusta';
+  // Pedido explícito: la foto de carnet es obligatoria en todas las
+  // categorías menos Autóctono (grupos grandes, 8-20 integrantes, donde
+  // reunir el carnet de todos de entrada es más difícil).
+  const esAutoctono = categoria === 'Autóctono';
+  const fotosCarnetObligatorias = !esAutoctono;
   // El texto oficial del Anexo 3 dice literal "(Omitir este punto para la
   // categoría: Especial)" — solo Especial, no Composición (aunque la
   // convocatoria sí permite profesionales en ambas categorías, el Anexo 3
@@ -508,6 +522,20 @@ export default function FormularioInscripcion() {
   const duracionMaxima = categoriaInfo?.duracionMaximaMinutos ?? 5;
   const duracionExcedida = tiempo.trim() !== '' && Number(tiempo) > duracionMaxima;
 
+  // Fotos de carnet: obligatorias salvo en Autóctono (ver fotosCarnetObligatorias
+  // más arriba). Cuando el grupo eligió el modo "un solo archivo", alcanza con
+  // que haya al menos uno subido; si no, cada integrante necesita anverso+reverso.
+  const fotosIntegrantesCompletas =
+    mostrarOpcionGrupal && modoFotosGrupo === 'grupal'
+      ? fotosCarnetsGrupal.length > 0
+      : integrantes.every((i) => i.fotoCiAnverso && i.fotoCiReverso);
+  const fotosCarnetCompletas =
+    !fotosCarnetObligatorias ||
+    (fotosIntegrantesCompletas &&
+      acompanantes.every((a) => a.fotoCiAnverso && a.fotoCiReverso) &&
+      (!requiereAdultoResponsable ||
+        (adultoResponsableFotos.fotoCiAnverso && adultoResponsableFotos.fotoCiReverso)));
+
   const validaciones = [
     categoria !== '',
     nombrePostulante.trim() !== '' &&
@@ -532,7 +560,8 @@ export default function FormularioInscripcion() {
       (!requiereAdultoResponsable ||
         (adultoResponsableNombre.trim() !== '' &&
           adultoResponsableCiNumero.trim() !== '' &&
-          adultoResponsableCelular.trim() !== '')),
+          adultoResponsableCelular.trim() !== '')) &&
+      fotosCarnetCompletas,
     aceptaBases && declaracionVoluntaria && (!requiereAdultoResponsable || autorizaAdultoResponsable),
   ];
 
@@ -589,6 +618,28 @@ export default function FormularioInscripcion() {
       if (adultoResponsableNombre.trim() === '') erroresPasoActual.push('Falta el nombre del adulto responsable.');
       if (adultoResponsableCiNumero.trim() === '') erroresPasoActual.push('Falta el C.I. del adulto responsable.');
       if (adultoResponsableCelular.trim() === '') erroresPasoActual.push('Falta el celular del adulto responsable.');
+    }
+    if (fotosCarnetObligatorias) {
+      if (mostrarOpcionGrupal && modoFotosGrupo === 'grupal') {
+        if (fotosCarnetsGrupal.length === 0) {
+          erroresPasoActual.push('Falta subir el archivo con los carnets del grupo.');
+        }
+      } else {
+        integrantes.forEach((i, index) => {
+          const etiqueta = esGrupal ? `Integrante ${index + 1}` : 'El postulante';
+          if (!i.fotoCiAnverso || !i.fotoCiReverso) {
+            erroresPasoActual.push(`${etiqueta}: falta la foto del carnet (anverso y reverso).`);
+          }
+        });
+      }
+      acompanantes.forEach((a, index) => {
+        if (!a.fotoCiAnverso || !a.fotoCiReverso) {
+          erroresPasoActual.push(`Acompañante ${index + 1}: falta la foto del carnet (anverso y reverso).`);
+        }
+      });
+      if (requiereAdultoResponsable && (!adultoResponsableFotos.fotoCiAnverso || !adultoResponsableFotos.fotoCiReverso)) {
+        erroresPasoActual.push('Falta la foto del carnet del adulto responsable (anverso y reverso).');
+      }
     }
   }
   if (paso === 4) {
@@ -1433,7 +1484,14 @@ export default function FormularioInscripcion() {
                   <div className="rounded-xl border border-(--border) bg-(--bg-primary) p-5!">
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div>
-                        <h3 className="text-sm font-bold text-(--text-primary) mb-1!">Carnets del grupo</h3>
+                        <h3 className="text-sm font-bold text-(--text-primary) mb-1!">
+                          Carnets del grupo{' '}
+                          {fotosCarnetObligatorias ? (
+                            <span className="text-[#d52b1e]">*</span>
+                          ) : (
+                            <span className="font-normal text-(--text-muted)">(recomendado)</span>
+                          )}
+                        </h3>
                         <p className="text-(--text-secondary) text-sm">
                           {modoFotosGrupo === 'grupal'
                             ? 'Subí una foto o PDF con los carnets de todo el grupo (anverso y reverso) — la forma más rápida cuando hay muchos integrantes.'
@@ -1485,6 +1543,11 @@ export default function FormularioInscripcion() {
                               </li>
                             ))}
                           </ul>
+                        )}
+                        {mostrarErrores && fotosCarnetObligatorias && fotosCarnetsGrupal.length === 0 && (
+                          <p className="text-xs text-[#d52b1e] font-medium">
+                            Falta subir el archivo con los carnets del grupo.
+                          </p>
                         )}
                       </div>
                     )}
@@ -1629,6 +1692,12 @@ export default function FormularioInscripcion() {
                             fotos={integrante}
                             onCambiar={(lado, file) => actualizarIntegranteFoto(integrante.id, lado, file)}
                             onQuitar={(lado) => quitarIntegranteFoto(integrante.id, lado)}
+                            obligatorio={fotosCarnetObligatorias}
+                            error={
+                              mostrarErrores &&
+                              fotosCarnetObligatorias &&
+                              (!integrante.fotoCiAnverso || !integrante.fotoCiReverso)
+                            }
                           />
                         )}
                         {esNusta && (
@@ -1754,6 +1823,12 @@ export default function FormularioInscripcion() {
                             fotos={acompanante}
                             onCambiar={(lado, file) => actualizarAcompananteFoto(acompanante.id, lado, file)}
                             onQuitar={(lado) => quitarAcompananteFoto(acompanante.id, lado)}
+                            obligatorio={fotosCarnetObligatorias}
+                            error={
+                              mostrarErrores &&
+                              fotosCarnetObligatorias &&
+                              (!acompanante.fotoCiAnverso || !acompanante.fotoCiReverso)
+                            }
                           />
                         </div>
                       </div>
@@ -1853,6 +1928,12 @@ export default function FormularioInscripcion() {
                           fotos={adultoResponsableFotos}
                           onCambiar={actualizarAdultoResponsableFoto}
                           onQuitar={quitarAdultoResponsableFoto}
+                          obligatorio={fotosCarnetObligatorias}
+                          error={
+                            mostrarErrores &&
+                            fotosCarnetObligatorias &&
+                            (!adultoResponsableFotos.fotoCiAnverso || !adultoResponsableFotos.fotoCiReverso)
+                          }
                         />
                       </div>
                     </div>
