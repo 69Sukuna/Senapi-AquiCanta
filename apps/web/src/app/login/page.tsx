@@ -2,7 +2,7 @@
 
 import { Suspense, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, Sparkles } from 'lucide-react';
 import { PageHero } from '@/components/PageHero';
 import { PageShell } from '@/components/PageShell';
 import { BotonLoginGoogle } from '@/components/BotonLoginGoogle';
@@ -94,27 +94,52 @@ function SeccionLoginVisitante() {
   const { loginConGoogle } = useUsuario();
   const next = searchParams.get('next');
 
-  return <BotonLoginGoogle onClick={() => loginConGoogle(next ?? undefined)} />;
+  // Sin un `?next=` explícito (ej. entrando por el ícono de perfil del
+  // navbar), el destino por defecto es Sellos — es la feature principal que
+  // usa este login, en vez de volver a caer en la propia página de /login.
+  return <BotonLoginGoogle onClick={() => loginConGoogle(next ?? ROUTES.sellos)} />;
 }
 
 function ContenidoLogin() {
   const [mostrarAdmin, setMostrarAdmin] = useState(false);
 
   return (
-    <div className="mt-10! space-y-4">
-      <SeccionLoginVisitante />
+    <div className="mt-10! overflow-hidden rounded-2xl border border-(--border) bg-(--bg-card) shadow-xl shadow-black/5">
+      <div className="h-1.5! w-full shrink-0" style={{ background: 'linear-gradient(to right, #e30613, #fcee21, #00873e)' }} />
 
-      {mostrarAdmin ? (
-        <FormularioLogin />
-      ) : (
-        <button
-          type="button"
-          onClick={() => setMostrarAdmin(true)}
-          className="block w-full text-center text-sm font-semibold text-(--text-muted) underline"
-        >
-          ¿Sos del equipo organizador? Ingresá acá
-        </button>
-      )}
+      <div className="p-6! sm:p-8!">
+        <div className="flex flex-col items-center gap-3! text-center">
+          <span className="flex h-12 w-12 items-center justify-center rounded-full bg-(--accent-gold-light)/12 text-(--accent-gold-light)">
+            <Sparkles size={22} />
+          </span>
+          <div>
+            <p className="font-bold text-(--text-primary)">Continuá con Google</p>
+            <p className="mt-0.5! text-sm text-(--text-secondary)">Es gratis y toma un segundo.</p>
+          </div>
+        </div>
+
+        <div className="mt-5!">
+          <SeccionLoginVisitante />
+        </div>
+
+        <div className="my-6! flex items-center gap-3!">
+          <div className="h-px flex-1 bg-(--border)" />
+          <span className="text-xs font-semibold tracking-wide text-(--text-muted) uppercase">Equipo organizador</span>
+          <div className="h-px flex-1 bg-(--border)" />
+        </div>
+
+        {mostrarAdmin ? (
+          <FormularioLogin />
+        ) : (
+          <button
+            type="button"
+            onClick={() => setMostrarAdmin(true)}
+            className="block w-full text-center text-sm font-semibold text-(--text-secondary) underline underline-offset-2 transition-colors duration-200 hover:text-(--text-primary)"
+          >
+            Ingresar con usuario y contraseña
+          </button>
+        )}
+      </div>
     </div>
   );
 }
@@ -124,7 +149,7 @@ export default function LoginPage() {
     <PageShell maxWidth="max-w-md">
       <PageHero
         title="Iniciar sesión"
-        description="Iniciá sesión con Google para guardar tu progreso en Sellos y tus reservas en Butacas."
+        description="Guardá tu progreso en Sellos y tus reservas en Butacas con tu cuenta de Google."
       />
       <Suspense fallback={null}>
         <ContenidoLogin />

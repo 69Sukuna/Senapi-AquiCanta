@@ -51,12 +51,7 @@ export default function Home() {
               >
                 Inscríbete
               </Link>
-              <Link
-                href={ROUTES.votaciones}
-                className="font-bakbak rounded-full border border-white/70 bg-black/20 px-5! py-0.5! text-sm! text-white! backdrop-blur-xs transition-all hover:bg-white sm:px-6! sm:py-2! sm:text-lg! hover:text-black!"
-              >
-                Votaciones
-              </Link>
+  
               <a
                 href={CONVOCATORIA_URL}
                 target="_blank"
