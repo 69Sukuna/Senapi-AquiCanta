@@ -1,5 +1,4 @@
-import { PageHero } from '@/components/PageHero';
-import { PageShell } from '@/components/PageShell';
+import { AdminPage } from '../_components/AdminPage';
 import { VistasSwitchList } from './_components/VistasSwitchList';
 import type { ConfiguracionVista } from './_components/tipos';
 
@@ -19,20 +18,18 @@ export default async function AdminVistasPage() {
   const vistas = await getConfiguracionesVista();
 
   return (
-    <PageShell maxWidth="max-w-3xl">
-      <PageHero
-        eyebrow="Panel Admin"
-        title="Vistas"
-        description="Activa o desactiva secciones del sitio público sin necesidad de un deploy."
-      />
-
+    <AdminPage
+      title="Vistas"
+      description="Activa o desactiva secciones del sitio público sin necesidad de un deploy."
+      maxWidth="max-w-3xl"
+    >
       {vistas.length > 0 ? (
         <VistasSwitchList vistasIniciales={vistas} />
       ) : (
-        <div className="mt-12! rounded-2xl border border-dashed border-(--border) p-10! text-center text-(--text-muted)">
+        <div className="rounded-xl border border-dashed border-(--border) bg-white p-8! text-center text-sm text-(--text-muted)">
           No se pudieron cargar las configuraciones de vista.
         </div>
       )}
-    </PageShell>
+    </AdminPage>
   );
 }

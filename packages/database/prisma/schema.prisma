@@ -23,6 +23,10 @@ model User {
   password String
   name     String?
   role     Role    @default(USER)
+  // Solo aplica a role USER (usuario de departamento en el panel admin):
+  // limita qué inscritos puede ver y gestionar. Un ADMIN no la usa. Un USER
+  // sin departamento asignado no ve ninguna inscripción.
+  departamento Departamento?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

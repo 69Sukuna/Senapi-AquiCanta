@@ -1,14 +1,15 @@
-import { PageHero } from '@/components/PageHero';
-import { PageShell } from '@/components/PageShell';
+import { AdminPage } from '../_components/AdminPage';
+import { UsuariosExplorer } from './_components/UsuariosExplorer';
 
+// El fetch se hace en UsuariosExplorer (cliente): el endpoint es solo ADMIN y
+// el token vive en localStorage (ver lib/auth.ts).
 export default function AdminUsuariosPage() {
   return (
-    <PageShell>
-      <PageHero eyebrow="Panel Admin" title="Usuarios" description="Administra los usuarios de la plataforma." />
-
-      <div className="mt-12! rounded-2xl border border-dashed border-(--border) p-10! text-center text-(--text-muted)">
-        Esta sección está en construcción.
-      </div>
-    </PageShell>
+    <AdminPage
+      title="Usuarios"
+      description="Cuentas de acceso al panel: administradores y usuarios de departamento."
+    >
+      <UsuariosExplorer />
+    </AdminPage>
   );
 }

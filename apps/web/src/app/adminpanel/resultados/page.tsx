@@ -1,14 +1,11 @@
-import { PageHero } from '@/components/PageHero';
-import { PageShell } from '@/components/PageShell';
+import { AdminPage } from '../_components/AdminPage';
 
 export default function AdminResultadosPage() {
   return (
-    <PageShell>
-      <PageHero eyebrow="Panel Admin" title="Resultados" description="Consulta los resultados del concurso." />
-
-      <div className="mt-12! rounded-2xl border border-dashed border-(--border) p-10! text-center text-(--text-muted)">
+    <AdminPage title="Resultados" description="Consulta los resultados del concurso.">
+      <div className="rounded-xl border border-dashed border-(--border) bg-white p-8! text-center text-sm text-(--text-muted)">
         Esta sección está en construcción.
       </div>
-    </PageShell>
+    </AdminPage>
   );
 }

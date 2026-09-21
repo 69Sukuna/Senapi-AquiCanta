@@ -17,8 +17,12 @@ const prisma = new PrismaClient();
 // pisar configuración real ya editada). Lo único que debe existir siempre,
 // en cualquier entorno, es el usuario admin.
 async function main() {
-  // Usuario admin del panel — solo se crea si no existe todavía (nunca pisa
-  // un password ya cambiado por el admin). Credenciales desde .env; ver
+  // Usuario admin del panel — solo se crea si NO hay ningún admin en la base
+  // (nunca pisa un password ya cambiado). Se revisa por rol y no por el
+  // email de ADMIN_EMAIL a propósito: el admin puede cambiar su propio
+  // email/usuario desde el panel (pestaña Usuarios), y buscando por email
+  // este seed —que corre en cada arranque— crearía un segundo admin con la
+  // contraseña de las variables de entorno. Credenciales desde .env; ver
   // .env.example para los nombres de variable esperados.
   const adminEmail = process.env.ADMIN_EMAIL;
   const adminUsername = process.env.ADMIN_USERNAME;
@@ -29,9 +33,15 @@ async function main() {
     return;
   }
 
-  const adminExistente = await prisma.user.findUnique({ where: { email: adminEmail } });
-  if (adminExistente) {
-    console.log(`Usuario admin "${adminEmail}" ya existe, no se vuelve a crear.`);
+  const cantidadAdmins = await prisma.user.count({ where: { role: 'ADMIN' } });
+  if (cantidadAdmins > 0) {
+    console.log(`Ya existe ${cantidadAdmins} usuario(s) admin, no se crea otro.`);
+    return;
+  }
+
+  const emailOcupado = await prisma.user.findUnique({ where: { email: adminEmail } });
+  if (emailOcupado) {
+    console.warn(`No hay ningún admin, pero "${adminEmail}" ya existe con otro rol — no se creó el admin. Ajusta el rol a mano.`);
     return;
   }
 

@@ -17,7 +17,6 @@ export const ROUTES = {
     root: '/adminpanel',
     usuarios: '/adminpanel/usuarios',
     inscritos: '/adminpanel/inscritos',
-    categorias: '/adminpanel/categorias',
     resultados: '/adminpanel/resultados',
     vistas: '/adminpanel/vistas',
     sellos: '/adminpanel/sellos',

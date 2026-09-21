@@ -14,6 +14,7 @@ import { StorageModule } from "./storage/storage.module";
 import { ConfiguracionVistaModule } from "./configuracion-vista/configuracion-vista.module";
 import { AuthModule } from "./auth/auth.module";
 import { VisitantesModule } from "./visitantes/visitantes.module";
+import { UsuariosModule } from "./usuarios/usuarios.module";
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { VisitantesModule } from "./visitantes/visitantes.module";
     InscripcionesModule,
     SellosModule,
     ConfiguracionVistaModule,
+    UsuariosModule,
   ],
   controllers: [AppController],
   providers: [AppService, { provide: APP_GUARD, useClass: ThrottlerGuard }],
