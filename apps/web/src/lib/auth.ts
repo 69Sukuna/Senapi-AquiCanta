@@ -9,6 +9,8 @@ export interface UsuarioAutenticado {
   username: string | null;
   name: string | null;
   role: 'USER' | 'ARTIST' | 'ADMIN';
+  // Solo tiene sentido para role USER: el departamento cuyos inscritos puede ver.
+  departamento: string | null;
 }
 
 const TOKEN_KEY = 'acb_admin_token';

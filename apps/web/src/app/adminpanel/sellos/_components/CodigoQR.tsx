@@ -33,7 +33,7 @@ export function CodigoQR({ codigo }: CodigoQRProps) {
       <a
         href={dataUrl}
         download={`sello-${codigo}.png`}
-        className="text-xs font-semibold text-[#1e63b8] hover:underline"
+        className="text-xs font-semibold text-(--brand-rojo) hover:underline"
       >
         Descargar
       </a>

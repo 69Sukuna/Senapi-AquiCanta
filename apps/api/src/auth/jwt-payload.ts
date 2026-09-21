@@ -1,4 +1,4 @@
-import type { Role } from '@repo/database';
+import type { Departamento, Role } from '@repo/database';
 
 export interface JwtPayload {
   sub: string;
@@ -11,4 +11,6 @@ export interface UsuarioAutenticado {
   username: string | null;
   name: string | null;
   role: Role;
+  // Solo relevante para role USER: limita qué inscritos ve (ver InscripcionesService).
+  departamento: Departamento | null;
 }

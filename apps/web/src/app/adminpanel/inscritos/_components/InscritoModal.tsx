@@ -12,6 +12,10 @@ interface InscritoModalProps {
   inscrito: Inscrito;
   onClose: () => void;
   onActualizado: (actualizado: Inscrito) => void;
+  // true para un USER (usuario de departamento): ve todos los datos pero solo
+  // puede cambiar el estado — editar los datos es del admin (la API también
+  // lo rechaza: PATCH /inscripciones/:tipo/:id es solo ADMIN).
+  soloLectura?: boolean;
 }
 
 // Campos generales editables desde el panel — comunes a Cantante y Grupo.
@@ -100,7 +104,7 @@ const formateadorFechaHora = new Intl.DateTimeFormat('es-BO', {
   timeZone: 'America/La_Paz',
 });
 
-export function InscritoModal({ inscrito, onClose, onActualizado }: InscritoModalProps) {
+export function InscritoModal({ inscrito, onClose, onActualizado, soloLectura = false }: InscritoModalProps) {
   const [general, setGeneral] = useState<FormularioGeneral>(() => aFormularioGeneral(inscrito));
   const [cantanteInfo, setCantanteInfo] = useState<FormularioCantante>(() => aFormularioCantante(inscrito));
   const [adultoInfo, setAdultoInfo] = useState<FormularioAdulto>(() => aFormularioAdulto(inscrito));
@@ -114,6 +118,7 @@ export function InscritoModal({ inscrito, onClose, onActualizado }: InscritoModa
 
   async function guardarDatos(e: React.FormEvent) {
     e.preventDefault();
+    if (soloLectura) return;
     setGuardandoDatos(true);
     setError(null);
     setMensajeExito(null);
@@ -248,7 +253,7 @@ export function InscritoModal({ inscrito, onClose, onActualizado }: InscritoModa
               type="button"
               onClick={guardarEstado}
               disabled={guardandoEstado || estadoSeleccionado === inscrito.estado}
-              className="rounded-full bg-[#1e63b8] px-5! py-1.5! text-xs font-bold text-white transition-opacity duration-200 disabled:opacity-40"
+              className="rounded-full bg-(--brand-negro) px-5! py-1.5! text-xs font-bold text-white transition-opacity duration-200 disabled:opacity-40"
             >
               {guardandoEstado ? 'Guardando...' : 'Guardar estado'}
             </button>
@@ -258,16 +263,25 @@ export function InscritoModal({ inscrito, onClose, onActualizado }: InscritoModa
           </div>
         </div>
 
-        {/* Datos generales editables */}
+        {/* Datos generales editables (solo lectura para un USER: el fieldset
+            deshabilita todos los inputs de una; los links a documentos siguen
+            funcionando). */}
         <form onSubmit={guardarDatos} className="mt-5! space-y-4">
+          <fieldset
+            disabled={soloLectura}
+            className="min-w-0 space-y-4 border-0 p-0! [&_input:disabled]:bg-(--bg-primary) [&_select:disabled]:bg-(--bg-primary) [&_textarea:disabled]:bg-(--bg-primary)"
+          >
           <p className="text-xs font-bold tracking-[0.08em] text-(--text-secondary) uppercase">Datos de la obra</p>
+          {soloLectura && (
+            <p className="text-xs text-(--text-muted)">Solo el administrador puede editar estos datos.</p>
+          )}
 
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <Campo label="Nombre">
               <input
                 value={general.nombre}
                 onChange={(e) => setGeneral({ ...general, nombre: e.target.value })}
-                className="w-full rounded-xl border border-(--border) bg-white px-3! py-2! text-sm text-(--text-primary) outline-none transition-colors duration-200 focus:border-[#1e63b8]/50"
+                className="w-full rounded-xl border border-(--border) bg-white px-3! py-2! text-sm text-(--text-primary) outline-none transition-colors duration-200 focus:border-(--brand-rojo)/50"
                 required
               />
             </Campo>
@@ -275,35 +289,35 @@ export function InscritoModal({ inscrito, onClose, onActualizado }: InscritoModa
               <input
                 value={general.pseudonimo}
                 onChange={(e) => setGeneral({ ...general, pseudonimo: e.target.value })}
-                className="w-full rounded-xl border border-(--border) bg-white px-3! py-2! text-sm text-(--text-primary) outline-none transition-colors duration-200 focus:border-[#1e63b8]/50"
+                className="w-full rounded-xl border border-(--border) bg-white px-3! py-2! text-sm text-(--text-primary) outline-none transition-colors duration-200 focus:border-(--brand-rojo)/50"
               />
             </Campo>
             <Campo label="Título del tema">
               <input
                 value={general.tituloTema}
                 onChange={(e) => setGeneral({ ...general, tituloTema: e.target.value })}
-                className="w-full rounded-xl border border-(--border) bg-white px-3! py-2! text-sm text-(--text-primary) outline-none transition-colors duration-200 focus:border-[#1e63b8]/50"
+                className="w-full rounded-xl border border-(--border) bg-white px-3! py-2! text-sm text-(--text-primary) outline-none transition-colors duration-200 focus:border-(--brand-rojo)/50"
               />
             </Campo>
             <Campo label="Autor/compositor">
               <input
                 value={general.autorCompositor}
                 onChange={(e) => setGeneral({ ...general, autorCompositor: e.target.value })}
-                className="w-full rounded-xl border border-(--border) bg-white px-3! py-2! text-sm text-(--text-primary) outline-none transition-colors duration-200 focus:border-[#1e63b8]/50"
+                className="w-full rounded-xl border border-(--border) bg-white px-3! py-2! text-sm text-(--text-primary) outline-none transition-colors duration-200 focus:border-(--brand-rojo)/50"
               />
             </Campo>
             <Campo label="Ritmo">
               <input
                 value={general.ritmo}
                 onChange={(e) => setGeneral({ ...general, ritmo: e.target.value })}
-                className="w-full rounded-xl border border-(--border) bg-white px-3! py-2! text-sm text-(--text-primary) outline-none transition-colors duration-200 focus:border-[#1e63b8]/50"
+                className="w-full rounded-xl border border-(--border) bg-white px-3! py-2! text-sm text-(--text-primary) outline-none transition-colors duration-200 focus:border-(--brand-rojo)/50"
               />
             </Campo>
             <Campo label="Duración">
               <input
                 value={general.tiempo}
                 onChange={(e) => setGeneral({ ...general, tiempo: e.target.value })}
-                className="w-full rounded-xl border border-(--border) bg-white px-3! py-2! text-sm text-(--text-primary) outline-none transition-colors duration-200 focus:border-[#1e63b8]/50"
+                className="w-full rounded-xl border border-(--border) bg-white px-3! py-2! text-sm text-(--text-primary) outline-none transition-colors duration-200 focus:border-(--brand-rojo)/50"
               />
             </Campo>
           </div>
@@ -327,7 +341,7 @@ export function InscritoModal({ inscrito, onClose, onActualizado }: InscritoModa
               <select
                 value={general.departamento}
                 onChange={(e) => setGeneral({ ...general, departamento: e.target.value })}
-                className="w-full rounded-xl border border-(--border) bg-white px-3! py-2! text-sm text-(--text-primary) outline-none transition-colors duration-200 focus:border-[#1e63b8]/50"
+                className="w-full rounded-xl border border-(--border) bg-white px-3! py-2! text-sm text-(--text-primary) outline-none transition-colors duration-200 focus:border-(--brand-rojo)/50"
               >
                 <option value="">Sin especificar</option>
                 {Object.entries(DEPARTAMENTOS).map(([valor, info]) => (
@@ -341,14 +355,14 @@ export function InscritoModal({ inscrito, onClose, onActualizado }: InscritoModa
               <input
                 value={general.celular1}
                 onChange={(e) => setGeneral({ ...general, celular1: e.target.value })}
-                className="w-full rounded-xl border border-(--border) bg-white px-3! py-2! text-sm text-(--text-primary) outline-none transition-colors duration-200 focus:border-[#1e63b8]/50"
+                className="w-full rounded-xl border border-(--border) bg-white px-3! py-2! text-sm text-(--text-primary) outline-none transition-colors duration-200 focus:border-(--brand-rojo)/50"
               />
             </Campo>
             <Campo label="Celular alternativo">
               <input
                 value={general.celular2}
                 onChange={(e) => setGeneral({ ...general, celular2: e.target.value })}
-                className="w-full rounded-xl border border-(--border) bg-white px-3! py-2! text-sm text-(--text-primary) outline-none transition-colors duration-200 focus:border-[#1e63b8]/50"
+                className="w-full rounded-xl border border-(--border) bg-white px-3! py-2! text-sm text-(--text-primary) outline-none transition-colors duration-200 focus:border-(--brand-rojo)/50"
               />
             </Campo>
           </div>
@@ -363,14 +377,14 @@ export function InscritoModal({ inscrito, onClose, onActualizado }: InscritoModa
                   <input
                     value={cantanteInfo.ciNumero}
                     onChange={(e) => setCantanteInfo({ ...cantanteInfo, ciNumero: e.target.value })}
-                    className="w-full rounded-xl border border-(--border) bg-white px-3! py-2! text-sm text-(--text-primary) outline-none transition-colors duration-200 focus:border-[#1e63b8]/50"
+                    className="w-full rounded-xl border border-(--border) bg-white px-3! py-2! text-sm text-(--text-primary) outline-none transition-colors duration-200 focus:border-(--brand-rojo)/50"
                   />
                 </Campo>
                 <Campo label="Extensión C.I.">
                   <input
                     value={cantanteInfo.ciExtension}
                     onChange={(e) => setCantanteInfo({ ...cantanteInfo, ciExtension: e.target.value })}
-                    className="w-full rounded-xl border border-(--border) bg-white px-3! py-2! text-sm text-(--text-primary) outline-none transition-colors duration-200 focus:border-[#1e63b8]/50"
+                    className="w-full rounded-xl border border-(--border) bg-white px-3! py-2! text-sm text-(--text-primary) outline-none transition-colors duration-200 focus:border-(--brand-rojo)/50"
                   />
                 </Campo>
                 <Campo
@@ -389,21 +403,21 @@ export function InscritoModal({ inscrito, onClose, onActualizado }: InscritoModa
                     type="date"
                     value={cantanteInfo.fechaNacimiento}
                     onChange={(e) => setCantanteInfo({ ...cantanteInfo, fechaNacimiento: e.target.value })}
-                    className="w-full rounded-xl border border-(--border) bg-white px-3! py-2! text-sm text-(--text-primary) outline-none transition-colors duration-200 focus:border-[#1e63b8]/50"
+                    className="w-full rounded-xl border border-(--border) bg-white px-3! py-2! text-sm text-(--text-primary) outline-none transition-colors duration-200 focus:border-(--brand-rojo)/50"
                   />
                 </Campo>
                 <Campo label="WhatsApp">
                   <input
                     value={cantanteInfo.whatsapp}
                     onChange={(e) => setCantanteInfo({ ...cantanteInfo, whatsapp: e.target.value })}
-                    className="w-full rounded-xl border border-(--border) bg-white px-3! py-2! text-sm text-(--text-primary) outline-none transition-colors duration-200 focus:border-[#1e63b8]/50"
+                    className="w-full rounded-xl border border-(--border) bg-white px-3! py-2! text-sm text-(--text-primary) outline-none transition-colors duration-200 focus:border-(--brand-rojo)/50"
                   />
                 </Campo>
                 <Campo label="Dirección" className="sm:col-span-2">
                   <input
                     value={cantanteInfo.direccion}
                     onChange={(e) => setCantanteInfo({ ...cantanteInfo, direccion: e.target.value })}
-                    className="w-full rounded-xl border border-(--border) bg-white px-3! py-2! text-sm text-(--text-primary) outline-none transition-colors duration-200 focus:border-[#1e63b8]/50"
+                    className="w-full rounded-xl border border-(--border) bg-white px-3! py-2! text-sm text-(--text-primary) outline-none transition-colors duration-200 focus:border-(--brand-rojo)/50"
                   />
                 </Campo>
               </div>
@@ -437,28 +451,28 @@ export function InscritoModal({ inscrito, onClose, onActualizado }: InscritoModa
                       <input
                         value={adultoInfo.nombre}
                         onChange={(e) => setAdultoInfo({ ...adultoInfo, nombre: e.target.value })}
-                        className="w-full rounded-xl border border-(--border) bg-white px-3! py-2! text-sm text-(--text-primary) outline-none transition-colors duration-200 focus:border-[#1e63b8]/50"
+                        className="w-full rounded-xl border border-(--border) bg-white px-3! py-2! text-sm text-(--text-primary) outline-none transition-colors duration-200 focus:border-(--brand-rojo)/50"
                       />
                     </Campo>
                     <Campo label="C.I.">
                       <input
                         value={adultoInfo.ciNumero}
                         onChange={(e) => setAdultoInfo({ ...adultoInfo, ciNumero: e.target.value })}
-                        className="w-full rounded-xl border border-(--border) bg-white px-3! py-2! text-sm text-(--text-primary) outline-none transition-colors duration-200 focus:border-[#1e63b8]/50"
+                        className="w-full rounded-xl border border-(--border) bg-white px-3! py-2! text-sm text-(--text-primary) outline-none transition-colors duration-200 focus:border-(--brand-rojo)/50"
                       />
                     </Campo>
                     <Campo label="Extensión C.I.">
                       <input
                         value={adultoInfo.ciExtension}
                         onChange={(e) => setAdultoInfo({ ...adultoInfo, ciExtension: e.target.value })}
-                        className="w-full rounded-xl border border-(--border) bg-white px-3! py-2! text-sm text-(--text-primary) outline-none transition-colors duration-200 focus:border-[#1e63b8]/50"
+                        className="w-full rounded-xl border border-(--border) bg-white px-3! py-2! text-sm text-(--text-primary) outline-none transition-colors duration-200 focus:border-(--brand-rojo)/50"
                       />
                     </Campo>
                     <Campo label="Celular" className="sm:col-span-2">
                       <input
                         value={adultoInfo.celular}
                         onChange={(e) => setAdultoInfo({ ...adultoInfo, celular: e.target.value })}
-                        className="w-full rounded-xl border border-(--border) bg-white px-3! py-2! text-sm text-(--text-primary) outline-none transition-colors duration-200 focus:border-[#1e63b8]/50"
+                        className="w-full rounded-xl border border-(--border) bg-white px-3! py-2! text-sm text-(--text-primary) outline-none transition-colors duration-200 focus:border-(--brand-rojo)/50"
                       />
                     </Campo>
                   </div>
@@ -558,6 +572,8 @@ export function InscritoModal({ inscrito, onClose, onActualizado }: InscritoModa
             </>
           )}
 
+          </fieldset>
+
           {error && <p className="text-sm font-semibold text-[#d52b1e]">{error}</p>}
           {mensajeExito && <p className="text-sm font-semibold text-[#2e7d46]">{mensajeExito}</p>}
 
@@ -569,13 +585,15 @@ export function InscritoModal({ inscrito, onClose, onActualizado }: InscritoModa
             >
               Cerrar
             </button>
-            <button
-              type="submit"
-              disabled={guardandoDatos}
-              className="rounded-full bg-[#1e63b8] px-5! py-2! text-sm font-bold text-white transition-opacity duration-200 disabled:opacity-40"
-            >
-              {guardandoDatos ? 'Guardando...' : 'Guardar datos'}
-            </button>
+            {!soloLectura && (
+              <button
+                type="submit"
+                disabled={guardandoDatos}
+                className="rounded-full bg-(--brand-negro) px-5! py-2! text-sm font-bold text-white transition-opacity duration-200 disabled:opacity-40"
+              >
+                {guardandoDatos ? 'Guardando...' : 'Guardar datos'}
+              </button>
+            )}
           </div>
         </form>
       </div>
@@ -590,7 +608,7 @@ function DocLink({ url, label }: { url: string | null; label: string }) {
       href={url}
       target="_blank"
       rel="noreferrer"
-      className="rounded-full border border-(--border) px-3! py-1! text-xs font-semibold text-[#1e63b8] transition-colors duration-200 hover:border-[#1e63b8]/40"
+      className="rounded-full border border-(--border) px-3! py-1! text-xs font-semibold text-(--brand-rojo) transition-colors duration-200 hover:border-(--brand-rojo)/40"
     >
       {label}
     </a>

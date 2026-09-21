@@ -214,7 +214,7 @@ function FormRango({ eventosDisponibles, valoresIniciales, onGuardar, onCancelar
               <label
                 key={evento.id}
                 className={`flex cursor-pointer items-center gap-2 rounded-full border px-3! py-1.5! text-xs font-semibold transition-colors duration-200 ${
-                  eventoIds.includes(evento.id) ? 'border-[#1e63b8] text-[#1e63b8]' : 'border-(--border) text-(--text-secondary)'
+                  eventoIds.includes(evento.id) ? 'border-(--brand-rojo) text-(--brand-rojo)' : 'border-(--border) text-(--text-secondary)'
                 }`}
               >
                 <input type="checkbox" checked={eventoIds.includes(evento.id)} onChange={() => alternarEvento(evento.id)} className="h-3.5 w-3.5" />

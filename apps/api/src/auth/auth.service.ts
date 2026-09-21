@@ -34,6 +34,7 @@ export class AuthService {
       username: usuario.username,
       name: usuario.name,
       role: usuario.role,
+      departamento: usuario.departamento,
     };
 
     return { accessToken, usuario: usuarioAutenticado };

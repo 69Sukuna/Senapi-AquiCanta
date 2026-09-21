@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { DepartamentoBadge } from '@/components/DepartamentoBadge';
 import { ORDEN_ESTADOS, ESTADOS_INSCRIPCION, type EstadoInscripcion } from '@/lib/estadoInscripcion';
 import { fetchAdmin } from '@/lib/auth';
+import { useUsuarioAdmin } from '../../_components/UsuarioAdminContext';
 import { EstadoBadge } from './EstadoBadge';
 import { InscritoModal } from './InscritoModal';
 import type { Inscrito } from './tipos';
@@ -23,6 +24,10 @@ const formateadorFecha = new Intl.DateTimeFormat('es-BO', {
 });
 
 export function InscritosExplorer() {
+  const usuarioActual = useUsuarioAdmin();
+  // Un USER (usuario de departamento) ve todo de su departamento pero solo
+  // puede cambiar el estado — la API filtra y valida lo mismo del lado servidor.
+  const soloLectura = usuarioActual.role !== 'ADMIN';
   const [inscritos, setInscritos] = useState<Inscrito[]>([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState(false);
@@ -105,12 +110,12 @@ export function InscritosExplorer() {
   }
 
   if (cargando) {
-    return <p className="mt-10! text-(--text-muted)">Cargando inscritos...</p>;
+    return <p className="text-(--text-muted)">Cargando inscritos...</p>;
   }
 
   if (error) {
     return (
-      <div className="mt-10! rounded-2xl border border-dashed border-(--border) p-10! text-center text-(--text-muted)">
+      <div className="rounded-2xl border border-dashed border-(--border) p-10! text-center text-(--text-muted)">
         No se pudieron cargar los inscritos.
       </div>
     );
@@ -118,8 +123,15 @@ export function InscritosExplorer() {
 
   return (
     <div>
+      {usuarioActual.role === 'USER' && !usuarioActual.departamento && (
+        <p className="mb-4! rounded-xl border border-[#d52b1e]/30 bg-[#d52b1e]/5 p-3! text-sm text-(--text-primary)">
+          Tu cuenta todavía no tiene un departamento asignado, así que no ves ninguna inscripción. Pídele al
+          administrador que te asigne uno.
+        </p>
+      )}
+
       {/* Búsqueda + filtros */}
-      <div className="mt-10! flex flex-col gap-4">
+      <div className="flex flex-col gap-3 rounded-xl border border-(--border) bg-white p-4!">
         <div className="relative">
           <span aria-hidden="true" className="pointer-events-none absolute top-1/2 left-4! -translate-y-1/2 text-(--text-muted)">
             🔍
@@ -129,7 +141,7 @@ export function InscritosExplorer() {
             value={busqueda}
             onChange={(e) => setBusqueda(e.target.value)}
             placeholder="Buscar por nombre o ID..."
-            className="w-full rounded-full border border-(--border) bg-white py-3! pr-5! pl-11! text-(--text-primary) placeholder-(--text-muted) outline-none transition-colors duration-200 focus:border-[#1e63b8]/50"
+            className="w-full rounded-full border border-(--border) bg-(--bg-primary) py-2! pr-5! pl-11! text-(--text-primary) placeholder-(--text-muted) outline-none transition-colors duration-200 focus:border-(--brand-rojo)/50"
           />
         </div>
 
@@ -145,10 +157,10 @@ export function InscritosExplorer() {
               key={opcion.id}
               type="button"
               onClick={() => setFiltroTipo(opcion.id)}
-              className={`rounded-full border px-4! py-1.5! text-xs font-bold uppercase tracking-[0.08em] transition-colors duration-200 ${
+              className={`rounded-full border px-3! py-1! text-[11px] font-bold uppercase tracking-[0.06em] transition-colors duration-200 ${
                 filtroTipo === opcion.id
-                  ? 'border-transparent bg-[#1e63b8] text-white'
-                  : 'border-(--border) text-(--text-secondary) hover:border-[#1e63b8]/40 hover:text-(--text-primary)'
+                  ? 'border-transparent bg-(--brand-negro) text-white'
+                  : 'border-(--border) text-(--text-secondary) hover:border-(--brand-rojo)/40 hover:text-(--text-primary)'
               }`}
             >
               {opcion.label}
@@ -160,10 +172,10 @@ export function InscritosExplorer() {
           <button
             type="button"
             onClick={() => setFiltroEstado('TODOS')}
-            className={`rounded-full border px-4! py-1.5! text-xs font-bold uppercase tracking-[0.08em] transition-colors duration-200 ${
+            className={`rounded-full border px-3! py-1! text-[11px] font-bold uppercase tracking-[0.06em] transition-colors duration-200 ${
               filtroEstado === 'TODOS'
-                ? 'border-transparent bg-[#1e63b8] text-white'
-                : 'border-(--border) text-(--text-secondary) hover:border-[#1e63b8]/40 hover:text-(--text-primary)'
+                ? 'border-transparent bg-(--brand-negro) text-white'
+                : 'border-(--border) text-(--text-secondary) hover:border-(--brand-rojo)/40 hover:text-(--text-primary)'
             }`}
           >
             Todos los estados
@@ -173,10 +185,10 @@ export function InscritosExplorer() {
               key={estado}
               type="button"
               onClick={() => setFiltroEstado(estado)}
-              className={`rounded-full border px-4! py-1.5! text-xs font-bold uppercase tracking-[0.08em] transition-colors duration-200 ${
+              className={`rounded-full border px-3! py-1! text-[11px] font-bold uppercase tracking-[0.06em] transition-colors duration-200 ${
                 filtroEstado === estado
-                  ? 'border-transparent bg-[#1e63b8] text-white'
-                  : 'border-(--border) text-(--text-secondary) hover:border-[#1e63b8]/40 hover:text-(--text-primary)'
+                  ? 'border-transparent bg-(--brand-negro) text-white'
+                  : 'border-(--border) text-(--text-secondary) hover:border-(--brand-rojo)/40 hover:text-(--text-primary)'
               }`}
             >
               {ESTADOS_INSCRIPCION[estado].label}
@@ -189,10 +201,10 @@ export function InscritosExplorer() {
             <button
               type="button"
               onClick={() => setFiltroCategoria(null)}
-              className={`rounded-full border px-4! py-1.5! text-xs font-bold uppercase tracking-[0.08em] transition-colors duration-200 ${
+              className={`rounded-full border px-3! py-1! text-[11px] font-bold uppercase tracking-[0.06em] transition-colors duration-200 ${
                 filtroCategoria === null
-                  ? 'border-transparent bg-[#1e63b8] text-white'
-                  : 'border-(--border) text-(--text-secondary) hover:border-[#1e63b8]/40 hover:text-(--text-primary)'
+                  ? 'border-transparent bg-(--brand-negro) text-white'
+                  : 'border-(--border) text-(--text-secondary) hover:border-(--brand-rojo)/40 hover:text-(--text-primary)'
               }`}
             >
               Todas las categorías
@@ -202,10 +214,10 @@ export function InscritosExplorer() {
                 key={categoria.id}
                 type="button"
                 onClick={() => setFiltroCategoria(categoria.id)}
-                className={`rounded-full border px-4! py-1.5! text-xs font-bold uppercase tracking-[0.08em] transition-colors duration-200 ${
+                className={`rounded-full border px-3! py-1! text-[11px] font-bold uppercase tracking-[0.06em] transition-colors duration-200 ${
                   filtroCategoria === categoria.id
-                    ? 'border-transparent bg-[#1e63b8] text-white'
-                    : 'border-(--border) text-(--text-secondary) hover:border-[#1e63b8]/40 hover:text-(--text-primary)'
+                    ? 'border-transparent bg-(--brand-negro) text-white'
+                    : 'border-(--border) text-(--text-secondary) hover:border-(--brand-rojo)/40 hover:text-(--text-primary)'
                 }`}
               >
                 {categoria.nombre}
@@ -275,7 +287,7 @@ export function InscritosExplorer() {
                         e.stopPropagation();
                         setSeleccionado(inscrito);
                       }}
-                      className="rounded-full border border-(--border) px-3! py-1! text-xs font-bold text-(--text-secondary) transition-colors duration-200 hover:border-[#1e63b8]/40 hover:text-(--text-primary)"
+                      className="rounded-full border border-(--border) px-3! py-1! text-xs font-bold text-(--text-secondary) transition-colors duration-200 hover:border-(--brand-rojo)/40 hover:text-(--text-primary)"
                     >
                       Ver
                     </button>
@@ -292,7 +304,12 @@ export function InscritosExplorer() {
       )}
 
       {seleccionado && (
-        <InscritoModal inscrito={seleccionado} onClose={() => setSeleccionado(null)} onActualizado={onActualizado} />
+        <InscritoModal
+          inscrito={seleccionado}
+          onClose={() => setSeleccionado(null)}
+          onActualizado={onActualizado}
+          soloLectura={soloLectura}
+        />
       )}
     </div>
   );

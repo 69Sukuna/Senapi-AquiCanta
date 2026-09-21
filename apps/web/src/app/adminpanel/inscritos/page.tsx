@@ -1,5 +1,4 @@
-import { PageHero } from '@/components/PageHero';
-import { PageShell } from '@/components/PageShell';
+import { AdminPage } from '../_components/AdminPage';
 import { InscritosExplorer } from './_components/InscritosExplorer';
 
 // El fetch se hace en InscritosExplorer (cliente), no acá: la lista es un
@@ -7,14 +6,8 @@ import { InscritosExplorer } from './_components/InscritosExplorer';
 // al que un componente servidor no tiene acceso (ver lib/auth.ts).
 export default function AdminInscritosPage() {
   return (
-    <PageShell>
-      <PageHero
-        eyebrow="Panel Admin"
-        title="Inscritos"
-        description="Revisa, filtra y gestiona las postulaciones recibidas — cantantes y grupos."
-      />
-
+    <AdminPage title="Inscritos" description="Revisa, filtra y gestiona las postulaciones — cantantes y grupos.">
       <InscritosExplorer />
-    </PageShell>
+    </AdminPage>
   );
 }

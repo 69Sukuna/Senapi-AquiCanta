@@ -28,12 +28,14 @@ function FormularioLogin() {
 
     try {
       const usuario = await login(identificador, password);
-      if (usuario.role !== 'ADMIN') {
+      if (usuario.role !== 'ADMIN' && usuario.role !== 'USER') {
         setError('Esta cuenta no tiene acceso al panel de administración.');
         setCargando(false);
         return;
       }
-      const destino = searchParams.get('next') || ROUTES.admin.root;
+      // Un USER (usuario de departamento) solo tiene la pantalla de Inscritos.
+      const porDefecto = usuario.role === 'ADMIN' ? ROUTES.admin.root : ROUTES.admin.inscritos;
+      const destino = searchParams.get('next') || porDefecto;
       router.replace(destino);
     } catch {
       setError('Usuario o contraseña incorrectos.');

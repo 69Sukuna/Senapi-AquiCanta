@@ -1,10 +1,10 @@
 // Estilos compartidos por las 4 pestañas de administración de Sellos — evita
 // repetir las mismas clases de Tailwind (inputs, botones) en cada archivo.
 export const inputClase =
-  'w-full rounded-xl border border-(--border) bg-white px-3! py-2! text-sm text-(--text-primary) outline-none transition-colors duration-200 focus:border-[#1e63b8]/50';
+  'w-full rounded-xl border border-(--border) bg-white px-3! py-2! text-sm text-(--text-primary) outline-none transition-colors duration-200 focus:border-(--brand-rojo)/50';
 
 export const botonPrimario =
-  'rounded-full bg-[#1e63b8] px-5! py-2! text-sm font-bold text-white transition-opacity duration-200 disabled:opacity-40';
+  'rounded-full bg-(--brand-negro) px-5! py-2! text-sm font-bold text-white transition-opacity duration-200 disabled:opacity-40';
 
 export const botonSecundario =
   'w-fit rounded-full border border-(--border) px-5! py-2! text-sm font-bold text-(--text-secondary) transition-colors duration-200 hover:text-(--text-primary)';

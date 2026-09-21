@@ -8,6 +8,7 @@ import { EstadoInscripcion } from "@repo/database";
 import { PrismaService } from "../prisma/prisma.service";
 import { CrearInscripcionDto } from "./dto/crear-inscripcion.dto";
 import { edadEnFecha } from "./edad.util";
+import type { AlcanceInscripciones } from "./alcance-inscripciones";
 import {
   LadoFotoCi,
   ObjetivoFotoDto,
@@ -253,14 +254,21 @@ export class InscripcionesService {
     });
   }
 
-  async listarPendientes(estado?: EstadoInscripcion) {
+  async listarPendientes(
+    estado: EstadoInscripcion | undefined,
+    alcance: AlcanceInscripciones,
+  ) {
+    // Sin alcance (p. ej. un USER sin departamento asignado) no ve nada.
+    if (!alcance) return [];
+
+    const where = { ...(estado && { estado }), ...alcance };
     const [cantantes, grupos] = await Promise.all([
       this.prisma.cantante.findMany({
-        where: estado ? { estado } : undefined,
+        where,
         include: { categoria: true, acompanantes: true },
       }),
       this.prisma.grupo.findMany({
-        where: estado ? { estado } : undefined,
+        where,
         include: { categoria: true, integrantes: true },
       }),
     ]);
@@ -276,14 +284,18 @@ export class InscripcionesService {
     return items.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
   }
 
-  async obtenerUno(tipo: string, id: string) {
+  async obtenerUno(tipo: string, id: string, alcance: AlcanceInscripciones) {
     const tipoNormalizado = tipo.toUpperCase();
 
     if (tipoNormalizado === "CANTANTE") {
-      const cantante = await this.prisma.cantante.findUnique({
-        where: { id },
-        include: { categoria: true, acompanantes: true },
-      });
+      // findFirst con el alcance en el where: una inscripción de otro
+      // departamento responde 404, igual que si no existiera.
+      const cantante = alcance
+        ? await this.prisma.cantante.findFirst({
+            where: { id, ...alcance },
+            include: { categoria: true, acompanantes: true },
+          })
+        : null;
       if (!cantante) {
         throw new NotFoundException(`Cantante ${id} no encontrado`);
       }
@@ -291,10 +303,12 @@ export class InscripcionesService {
     }
 
     if (tipoNormalizado === "GRUPO") {
-      const grupo = await this.prisma.grupo.findUnique({
-        where: { id },
-        include: { categoria: true, integrantes: true },
-      });
+      const grupo = alcance
+        ? await this.prisma.grupo.findFirst({
+            where: { id, ...alcance },
+            include: { categoria: true, integrantes: true },
+          })
+        : null;
       if (!grupo) {
         throw new NotFoundException(`Grupo ${id} no encontrado`);
       }
@@ -338,14 +352,19 @@ export class InscripcionesService {
     );
   }
 
-  async actualizarEstado(tipo: string, id: string, estado: EstadoInscripcion) {
+  async actualizarEstado(
+    tipo: string,
+    id: string,
+    estado: EstadoInscripcion,
+    alcance: AlcanceInscripciones,
+  ) {
     const tipoNormalizado = tipo.toUpperCase();
 
     if (tipoNormalizado === "CANTANTE") {
-      return this.actualizarEstadoCantante(id, estado);
+      return this.actualizarEstadoCantante(id, estado, alcance);
     }
     if (tipoNormalizado === "GRUPO") {
-      return this.actualizarEstadoGrupo(id, estado);
+      return this.actualizarEstadoGrupo(id, estado, alcance);
     }
     throw new BadRequestException(
       `Tipo de inscripción inválido: "${tipo}" (use CANTANTE o GRUPO)`,
@@ -355,8 +374,11 @@ export class InscripcionesService {
   private async actualizarEstadoCantante(
     id: string,
     estado: EstadoInscripcion,
+    alcance: AlcanceInscripciones,
   ) {
-    const cantante = await this.prisma.cantante.findUnique({ where: { id } });
+    const cantante = alcance
+      ? await this.prisma.cantante.findFirst({ where: { id, ...alcance } })
+      : null;
     if (!cantante) {
       throw new NotFoundException(`Cantante ${id} no encontrado`);
     }
@@ -367,8 +389,14 @@ export class InscripcionesService {
     });
   }
 
-  private async actualizarEstadoGrupo(id: string, estado: EstadoInscripcion) {
-    const grupo = await this.prisma.grupo.findUnique({ where: { id } });
+  private async actualizarEstadoGrupo(
+    id: string,
+    estado: EstadoInscripcion,
+    alcance: AlcanceInscripciones,
+  ) {
+    const grupo = alcance
+      ? await this.prisma.grupo.findFirst({ where: { id, ...alcance } })
+      : null;
     if (!grupo) {
       throw new NotFoundException(`Grupo ${id} no encontrado`);
     }

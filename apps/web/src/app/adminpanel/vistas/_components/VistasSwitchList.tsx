@@ -50,7 +50,7 @@ export function VistasSwitchList({ vistasIniciales }: VistasSwitchListProps) {
   }
 
   return (
-    <div className="mt-10! space-y-3">
+    <div className="space-y-3">
       {error && <p className="text-sm font-semibold text-[#d52b1e]">{error}</p>}
 
       {vistas.map((vista) => (

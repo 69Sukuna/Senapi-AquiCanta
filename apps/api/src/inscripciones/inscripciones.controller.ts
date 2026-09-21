@@ -39,6 +39,9 @@ import { ActualizarInscripcionDto } from "./dto/actualizar-inscripcion.dto";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { RolesGuard } from "../auth/guards/roles.guard";
 import { Roles } from "../auth/decorators/roles.decorator";
+import { CurrentUser } from "../auth/decorators/current-user.decorator";
+import type { UsuarioAutenticado } from "../auth/jwt-payload";
+import { alcanceDe } from "./alcance-inscripciones";
 
 @ApiTags("Inscripciones")
 @Controller("inscripciones")
@@ -55,26 +58,36 @@ export class InscripcionesController {
 
   @Get()
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN)
+  @Roles(Role.ADMIN, Role.USER)
   @ApiBearerAuth()
   @ApiOperation({
     summary:
-      "Listar postulaciones (cantantes y grupos) — panel de administración",
+      "Listar postulaciones (cantantes y grupos) — panel de administración. Un USER solo recibe las de su departamento",
   })
-  listar(@Query("estado") estado?: EstadoInscripcion) {
-    return this.inscripcionesService.listarPendientes(estado);
+  listar(
+    @CurrentUser() usuario: UsuarioAutenticado,
+    @Query("estado") estado?: EstadoInscripcion,
+  ) {
+    return this.inscripcionesService.listarPendientes(
+      estado,
+      alcanceDe(usuario),
+    );
   }
 
   @Get(":tipo/:id")
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN)
+  @Roles(Role.ADMIN, Role.USER)
   @ApiBearerAuth()
   @ApiOperation({
     summary:
-      "Obtener el detalle completo de una postulación — panel de administración",
+      "Obtener el detalle completo de una postulación — panel de administración (un USER solo las de su departamento)",
   })
-  obtenerUno(@Param("tipo") tipo: string, @Param("id") id: string) {
-    return this.inscripcionesService.obtenerUno(tipo, id);
+  obtenerUno(
+    @CurrentUser() usuario: UsuarioAutenticado,
+    @Param("tipo") tipo: string,
+    @Param("id") id: string,
+  ) {
+    return this.inscripcionesService.obtenerUno(tipo, id, alcanceDe(usuario));
   }
 
   @Patch(":tipo/:id")
@@ -94,18 +107,24 @@ export class InscripcionesController {
 
   @Patch(":tipo/:id/estado")
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN)
+  @Roles(Role.ADMIN, Role.USER)
   @ApiBearerAuth()
   @ApiOperation({
     summary:
-      "Cambiar el estado de una postulación (sin confirmar / preselección / participante final / rechazado)",
+      "Cambiar el estado de una postulación (sin confirmar / preselección / participante final / rechazado). Un USER solo en las de su departamento",
   })
   actualizarEstado(
+    @CurrentUser() usuario: UsuarioAutenticado,
     @Param("tipo") tipo: string,
     @Param("id") id: string,
     @Body() dto: ActualizarEstadoDto,
   ) {
-    return this.inscripcionesService.actualizarEstado(tipo, id, dto.estado);
+    return this.inscripcionesService.actualizarEstado(
+      tipo,
+      id,
+      dto.estado,
+      alcanceDe(usuario),
+    );
   }
 
   @Post(":tipo/:id/fotos")

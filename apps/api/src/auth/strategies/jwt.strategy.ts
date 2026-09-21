@@ -25,6 +25,13 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     if (!usuario) {
       throw new UnauthorizedException('El usuario de este token ya no existe');
     }
-    return { id: usuario.id, email: usuario.email, username: usuario.username, name: usuario.name, role: usuario.role };
+    return {
+      id: usuario.id,
+      email: usuario.email,
+      username: usuario.username,
+      name: usuario.name,
+      role: usuario.role,
+      departamento: usuario.departamento,
+    };
   }
 }

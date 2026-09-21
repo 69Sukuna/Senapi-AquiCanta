@@ -1,16 +1,10 @@
-import { PageHero } from '@/components/PageHero';
-import { PageShell } from '@/components/PageShell';
+import { AdminPage } from '../_components/AdminPage';
 import { SellosAdminExplorer } from './_components/SellosAdminExplorer';
 
 export default function AdminSellosPage() {
   return (
-    <PageShell>
-      <PageHero
-        eyebrow="Panel Admin"
-        title="Sellos"
-        description="Trayectos, eventos, puntos de escaneo, rangos y medallas del recorrido de sellos."
-      />
+    <AdminPage title="Sellos" description="Trayectos, eventos, puntos de escaneo, rangos y medallas.">
       <SellosAdminExplorer />
-    </PageShell>
+    </AdminPage>
   );
 }

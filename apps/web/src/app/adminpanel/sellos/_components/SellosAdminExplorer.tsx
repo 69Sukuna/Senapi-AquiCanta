@@ -57,17 +57,17 @@ export function SellosAdminExplorer() {
   }
 
   if (error) {
-    return <div className="mt-10! rounded-2xl border border-dashed border-(--border) p-10! text-center text-(--text-muted)">{error}</div>;
+    return <div className="rounded-2xl border border-dashed border-(--border) p-10! text-center text-(--text-muted)">{error}</div>;
   }
 
   if (!trayectos) {
-    return <div className="mt-10! text-center text-(--text-muted)">Cargando...</div>;
+    return <div className="text-center text-(--text-muted)">Cargando...</div>;
   }
 
   const trayectoActivo = trayectos.find((t) => t.id === trayectoId) ?? null;
 
   return (
-    <div className="mt-10!">
+    <div>
       <div className="flex flex-wrap items-center gap-3">
         {trayectos.length > 0 && (
           <select
@@ -103,15 +103,23 @@ export function SellosAdminExplorer() {
       )}
 
       <div className="mt-6!">
-        <div className="flex gap-1 border-b border-(--border)">
+        {/* En celular las 5 pestañas se reparten el ancho (flex-1) con texto
+            chico para que entren SIEMPRE completas — con solo scroll,
+            "Reportes" quedaba cortada y no se notaba que había más. El
+            overflow-x-auto queda de red de seguridad para pantallas
+            extremadamente angostas. */}
+        <div className="flex overflow-x-auto border-b border-(--border) scrollbar-none sm:gap-1">
           {PESTANAS.map((p) => (
             <button
               key={p.id}
               type="button"
-              onClick={() => setPestana(p.id)}
-              className={`px-4! py-2.5! text-sm font-bold transition-colors duration-200 ${
+              onClick={(e) => {
+                setPestana(p.id);
+                e.currentTarget.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' });
+              }}
+              className={`min-w-fit flex-1 whitespace-nowrap px-1! py-2.5! text-[11px] font-bold transition-colors duration-200 min-[380px]:text-xs sm:flex-none sm:px-4! sm:text-sm ${
                 pestana === p.id
-                  ? 'border-b-2 border-[#1e63b8] text-[#1e63b8]'
+                  ? 'border-b-2 border-(--brand-rojo) text-(--brand-rojo)'
                   : 'border-b-2 border-transparent text-(--text-secondary) hover:text-(--text-primary)'
               }`}
             >
@@ -142,7 +150,7 @@ export function SellosAdminExplorer() {
           </>
         ) : (
           !creandoTrayecto && (
-            <div className="mt-10! rounded-2xl border border-dashed border-(--border) p-10! text-center text-(--text-muted)">
+            <div className="rounded-2xl border border-dashed border-(--border) p-10! text-center text-(--text-muted)">
               Todavía no hay ningún trayecto. Crea el primero con &quot;+ Nuevo trayecto&quot;.
             </div>
           )
