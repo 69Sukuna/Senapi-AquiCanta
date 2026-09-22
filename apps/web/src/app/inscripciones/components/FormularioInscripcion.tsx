@@ -44,6 +44,10 @@ function codigoDepartamento(label: string): DepartamentoValue | null {
 }
 
 const CONVOCATORIA_URL = 'https://drive.google.com/file/d/1wg44MLjogY9rM5OWfLyDGzTwR4MeNoDt/view?usp=drive_link';
+// export?format=docx en vez del link de /edit: Google Docs responde ese
+// endpoint con Content-Disposition: attachment, así que el navegador lo
+// descarga directo como .docx en vez de abrir el editor.
+const ANEXOS_URL = 'https://docs.google.com/document/d/1umO8N4OgF0Bv9MQSxHTSXMszDrJUEUu3/export?format=docx';
 // TODO: pegar acá la fecha real de la preselección departamental cuando esté
 // definida (ej. "15 de octubre de 2026"). Mientras esté vacío, el modal de
 // aviso usa una frase genérica en vez de una fecha inventada.
@@ -1060,8 +1064,9 @@ export default function FormularioInscripcion() {
                   oficial — para quien prefiera postular en físico, a mano,
                   sin usar este formulario digital. */}
               <a
-                href="/documentos/Convocatoria-y-Anexos-2026.docx"
-                download
+                href={ANEXOS_URL}
+                target="_blank"
+                rel="noreferrer"
                 className={`${panelClass} flex flex-1 flex-col items-center justify-center gap-3 p-6! text-center transition-all duration-300 hover:-translate-y-0.5 cursor-pointer`}
               >
                 <TelonDecor />
