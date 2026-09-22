@@ -69,6 +69,10 @@ export interface DatosInscripcion {
 }
 
 const FESTIVAL = 'XXXIII Festival Nacional de la Canción Boliviana “Aquí… Canta Bolivia”';
+// El "Señores: Comité Organizador / ..." del Anexo 2 y 3 originales, a
+// diferencia del de Anexo 1 y 4, no lleva "XXXIII" — se usa tal cual en esos
+// dos encabezados; el resto del texto (cuerpo de las cartas) sí lo lleva.
+const FESTIVAL_SIN_NUMERO = 'Festival Nacional de la Canción Boliviana “Aquí… Canta Bolivia”';
 const TAB_MEDIO = 4800;
 
 // Igual a las tres columnas de categorías del Anexo 1 original (tabla real, no texto).
@@ -503,7 +507,7 @@ function construirAnexo2(
   contenido.push(parrafo(`Oruro, ${fechaLarga()}`, { align: AlignmentType.RIGHT, after: 240 }));
   contenido.push(parrafo('Señores:', { bold: true, after: 0 }));
   contenido.push(parrafo('Comité Organizador', { after: 0 }));
-  contenido.push(parrafo(FESTIVAL, { after: 0 }));
+  contenido.push(parrafo(FESTIVAL_SIN_NUMERO, { after: 0 }));
   contenido.push(parrafo('Presente:', { bold: true, after: 200 }));
   contenido.push(
     new Paragraph({
@@ -547,7 +551,7 @@ function construirAnexo3(
   contenido.push(parrafo(`Oruro, ${fechaLarga()}`, { align: AlignmentType.RIGHT, after: 240 }));
   contenido.push(parrafo('Señores:', { bold: true, after: 0 }));
   contenido.push(parrafo('Comité Organizador', { after: 0 }));
-  contenido.push(parrafo(FESTIVAL, { after: 0 }));
+  contenido.push(parrafo(FESTIVAL_SIN_NUMERO, { after: 0 }));
   contenido.push(parrafo('Presente:', { bold: true, after: 240 }));
 
   // El texto oficial del Anexo 3 dice literal "(Omitir este punto para la
@@ -563,7 +567,7 @@ function construirAnexo3(
   if (!esExentoProfesional) {
     contenido.push(
       parrafo(
-        `Declaro, de manera voluntaria, que no fui ni actualmente soy miembro de una agrupación musical profesional, por lo cual solicito que se considere mi postulación al ${FESTIVAL}.`,
+        `Declaro, de manera voluntaria que no fui, ni actualmente soy miembro de una agrupación musical profesional, por lo cual solicito que se considere mi postulación al ${FESTIVAL}.`,
         { after: 160 },
       ),
     );
