@@ -352,6 +352,30 @@ export class InscripcionesService {
     );
   }
 
+  // Borrado definitivo desde el panel (solo ADMIN). Integrantes, acompañantes
+  // y canciones adicionales de Ñusta se van en cascada (onDelete: Cascade).
+  // Las fotos/PDFs ya subidos al storage no se borran: StorageService no
+  // tiene operación de borrado todavía.
+  async eliminar(tipo: string, id: string) {
+    const tipoNormalizado = tipo.toUpperCase();
+
+    if (tipoNormalizado === "CANTANTE") {
+      const cantante = await this.prisma.cantante.findUnique({ where: { id } });
+      if (!cantante) throw new NotFoundException(`Cantante ${id} no encontrado`);
+      await this.prisma.cantante.delete({ where: { id } });
+      return { id, tipo: "CANTANTE" };
+    }
+    if (tipoNormalizado === "GRUPO") {
+      const grupo = await this.prisma.grupo.findUnique({ where: { id } });
+      if (!grupo) throw new NotFoundException(`Grupo ${id} no encontrado`);
+      await this.prisma.grupo.delete({ where: { id } });
+      return { id, tipo: "GRUPO" };
+    }
+    throw new BadRequestException(
+      `Tipo de inscripción inválido: "${tipo}" (use CANTANTE o GRUPO)`,
+    );
+  }
+
   async actualizarEstado(
     tipo: string,
     id: string,
@@ -592,5 +616,41 @@ export class InscripcionesService {
       data: { planPromocionUrl: url },
     });
     return { url };
+  }
+
+  // Consulta pública de /verifica-tu-inscripcion: solo responde si el C.I.
+  // figura en alguna postulación (como solista, integrante de grupo o
+  // acompañante) y si fue rechazada — a propósito no devuelve nombre,
+  // categoría ni ningún otro dato, para no filtrar información personal.
+  async verificar(ciNumero: string) {
+    const ci = { equals: ciNumero.trim(), mode: "insensitive" as const };
+
+    const [cantantes, acompanantes, integrantes] = await Promise.all([
+      this.prisma.cantante.findMany({
+        where: { ciNumero: ci },
+        select: { estado: true },
+      }),
+      this.prisma.acompanante.findMany({
+        where: { ciNumero: ci },
+        select: { cantante: { select: { estado: true } } },
+      }),
+      this.prisma.grupoIntegrante.findMany({
+        where: { ciNumero: ci },
+        select: { grupo: { select: { estado: true } } },
+      }),
+    ]);
+
+    const estados = [
+      ...cantantes.map((c) => c.estado),
+      ...acompanantes.map((a) => a.cantante.estado),
+      ...integrantes.map((i) => i.grupo.estado),
+    ];
+
+    if (estados.length === 0) return { estado: "NO_INSCRITO" as const };
+    // Con varias postulaciones, basta una vigente para contar como inscrito.
+    const todasRechazadas = estados.every(
+      (e) => e === EstadoInscripcion.RECHAZADO,
+    );
+    return { estado: todasRechazadas ? ("RECHAZADO" as const) : ("INSCRITO" as const) };
   }
 }

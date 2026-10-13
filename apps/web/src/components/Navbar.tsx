@@ -11,6 +11,8 @@ import {
   Mic,
   Users,
   FileText,
+  SearchCheck,
+  CalendarDays,
   Armchair,
   Glasses,
   Vote,
@@ -28,9 +30,11 @@ const LINKS_IZQUIERDA = [
   { label: 'Categorías', href: ROUTES.categorias, icon: LayoutGrid },
   FEATURE_FLAGS.participantes && { label: 'Participantes', href: ROUTES.participante, icon: Mic },
   { label: 'Inscripciones', href: ROUTES.inscripciones, icon: FileText },
+  { label: 'Verifica tu inscripción', href: ROUTES.verificaInscripcion, icon: SearchCheck },
 ].filter(Boolean) as { label: string; href: string; icon: typeof Home }[];
 
 const LINKS_DERECHA = [
+  { label: 'Cronograma', href: ROUTES.cronograma, icon: CalendarDays },
   FEATURE_FLAGS.butacas && { label: 'Butacas', href: ROUTES.butacas, icon: Armchair },
   { label: 'Realidad Virtual', href: ROUTES.realidadVirtual, icon: Glasses },
   FEATURE_FLAGS.votaciones && { label: 'Votaciones', href: ROUTES.votaciones, icon: Vote },
@@ -44,7 +48,7 @@ function NavLink({ label, href, activo }: { label: string; href: string; activo:
   return (
     <Link
       href={href}
-      className={`font-barlow rounded-full px-4! py-2! text-sm font-semibold whitespace-nowrap transition-colors duration-200 ${
+      className={`font-barlow rounded-full px-1.5! py-2! text-xs lg:px-4! lg:text-sm font-semibold whitespace-nowrap transition-colors duration-200 ${
         activo ? 'bg-white/10 text-white!' : 'text-white/70! hover:bg-white/5 hover:text-white!'
       }`}
     >

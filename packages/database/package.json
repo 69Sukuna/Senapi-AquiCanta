@@ -17,6 +17,8 @@
     "db:deploy": "dotenv -e ../../.env -- prisma migrate deploy",
     "db:seed": "dotenv -e ../../.env -- bun prisma/seed.ts",
     "db:studio": "dotenv -e ../../.env -- prisma studio",
+    "db:seed-dev": "dotenv -e ../../.env -- bun prisma/seed-dev-inscritos.ts",
+    "db:reset-admin": "dotenv -e ../../.env -- bun prisma/reset-admin-password.ts",
     "check-types": "tsc --noEmit"
   },
   "dependencies": {

@@ -66,6 +66,15 @@ export interface DatosInscripcion {
   adultoResponsable: AdultoResponsableInscripcion | null;
   aceptaBases: boolean;
   declaracionVoluntaria: boolean;
+  // Solo Ñusta: canciones 2 a 7 del repertorio (la 1 es tituloTema/autor/...).
+  cancionesAdicionales?: CancionAdicionalInscripcion[];
+}
+
+export interface CancionAdicionalInscripcion {
+  tituloTema: string;
+  autorCompositor: string;
+  ritmo: string;
+  tiempo: string;
 }
 
 const FESTIVAL = 'XXXIII Festival Nacional de la Canción Boliviana “Aquí… Canta Bolivia”';
@@ -361,6 +370,13 @@ function construirAnexo1(datos: DatosInscripcion): (Paragraph | Table)[] {
   );
   contenido.push(campoConTab('TÍTULO DEL TEMA', datos.tituloTema, 'AUTOR / COMPOSITOR', datos.autorCompositor));
   contenido.push(campoConTab('RITMO', datos.ritmo, 'TIEMPO', datos.tiempo ? `${datos.tiempo} minutos` : '—'));
+  (datos.cancionesAdicionales ?? []).forEach((cancion, index) => {
+    contenido.push(new Paragraph({ spacing: { after: 60 } }));
+    contenido.push(
+      campoConTab(`TEMA ${index + 2}`, cancion.tituloTema, 'AUTOR / COMPOSITOR', cancion.autorCompositor),
+    );
+    contenido.push(campoConTab('RITMO', cancion.ritmo, 'TIEMPO', cancion.tiempo ? `${cancion.tiempo} minutos` : '—'));
+  });
   contenido.push(new Paragraph({ spacing: { after: 120 } }));
 
   contenido.push(

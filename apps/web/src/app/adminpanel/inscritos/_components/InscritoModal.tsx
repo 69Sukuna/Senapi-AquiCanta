@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
-import { DEPARTAMENTOS } from '@/lib/departamentos';
+import { useEffect, useState } from 'react';
+import { DEPARTAMENTOS, getDepartamentoInfo } from '@/lib/departamentos';
+import { generarInscripcionDocx, type CancionAdicionalInscripcion } from '@/lib/generarInscripcionDocx';
 import { ORDEN_ESTADOS, ESTADOS_INSCRIPCION, type EstadoInscripcion } from '@/lib/estadoInscripcion';
 import { fetchAdmin } from '@/lib/auth';
 import { edadEnFecha } from '@/lib/edad';
@@ -12,6 +13,7 @@ interface InscritoModalProps {
   inscrito: Inscrito;
   onClose: () => void;
   onActualizado: (actualizado: Inscrito) => void;
+  onEliminado: (inscrito: Inscrito) => void;
   // true para un USER (usuario de departamento): ve todos los datos pero solo
   // puede cambiar el estado — editar los datos es del admin (la API también
   // lo rechaza: PATCH /inscripciones/:tipo/:id es solo ADMIN).
@@ -104,7 +106,85 @@ const formateadorFechaHora = new Intl.DateTimeFormat('es-BO', {
   timeZone: 'America/La_Paz',
 });
 
-export function InscritoModal({ inscrito, onClose, onActualizado, soloLectura = false }: InscritoModalProps) {
+// Arma los datos del Anexo 1–4 (el mismo docx que descarga el postulante al
+// inscribirse) a partir de lo guardado en la base. En un Cantante los datos
+// personales del solista están en el propio registro, así que se lo pasa
+// como único "integrante" — igual que hace el formulario.
+async function descargarFichaInscripcion(inscrito: Inscrito) {
+  let cancionesAdicionales: CancionAdicionalInscripcion[] | undefined;
+  if (inscrito.tipo === 'CANTANTE' && inscrito.categoria.nombre === 'Ñusta') {
+    const res = await fetchAdmin(`/lista-niusta/${inscrito.id}`);
+    if (!res.ok) throw new Error('No se pudieron cargar las canciones adicionales');
+    cancionesAdicionales = await res.json();
+  }
+
+  const integrantes =
+    inscrito.tipo === 'CANTANTE'
+      ? [
+          {
+            nombre: inscrito.nombre,
+            ciNumero: inscrito.ciNumero ?? '',
+            ciExtension: inscrito.ciExtension ?? '',
+            fechaNacimiento: inscrito.fechaNacimiento ?? '',
+            whatsapp: inscrito.whatsapp ?? '',
+            direccion: inscrito.direccion ?? '',
+            instrumento: '',
+          },
+        ]
+      : inscrito.integrantes.map((i) => ({
+          nombre: i.nombre,
+          ciNumero: i.ciNumero ?? '',
+          ciExtension: i.ciExtension ?? '',
+          fechaNacimiento: i.fechaNacimiento ?? '',
+          whatsapp: i.whatsapp ?? '',
+          direccion: i.direccion ?? '',
+          instrumento: i.instrumento ?? '',
+        }));
+
+  await generarInscripcionDocx({
+    id: inscrito.id,
+    categoria: inscrito.categoria.nombre,
+    nombrePostulante: inscrito.nombre,
+    pseudonimo: inscrito.pseudonimo ?? '',
+    tituloTema: inscrito.tituloTema ?? '',
+    autorCompositor: inscrito.autorCompositor ?? '',
+    ritmo: inscrito.ritmo ?? '',
+    tiempo: inscrito.tiempo ?? '',
+    departamento: getDepartamentoInfo(inscrito.departamento)?.label ?? '',
+    celular1: inscrito.celular1 ?? '',
+    celular2: inscrito.celular2 ?? '',
+    integrantes,
+    acompanantes:
+      inscrito.tipo === 'CANTANTE'
+        ? inscrito.acompanantes.map((a) => ({
+            nombre: a.nombre,
+            ciNumero: a.ciNumero ?? '',
+            ciExtension: a.ciExtension ?? '',
+            instrumento: a.instrumento ?? '',
+          }))
+        : [],
+    adultoResponsable:
+      inscrito.tipo === 'CANTANTE' && inscrito.adultoResponsableNombre
+        ? {
+            nombre: inscrito.adultoResponsableNombre,
+            ciNumero: inscrito.adultoResponsableCiNumero ?? '',
+            ciExtension: inscrito.adultoResponsableCiExtension ?? '',
+            celular: inscrito.adultoResponsableCelular ?? '',
+          }
+        : null,
+    aceptaBases: inscrito.aceptaBases,
+    declaracionVoluntaria: inscrito.declaracionVoluntaria,
+    cancionesAdicionales,
+  });
+}
+
+export function InscritoModal({
+  inscrito,
+  onClose,
+  onActualizado,
+  onEliminado,
+  soloLectura = false,
+}: InscritoModalProps) {
   const [general, setGeneral] = useState<FormularioGeneral>(() => aFormularioGeneral(inscrito));
   const [cantanteInfo, setCantanteInfo] = useState<FormularioCantante>(() => aFormularioCantante(inscrito));
   const [adultoInfo, setAdultoInfo] = useState<FormularioAdulto>(() => aFormularioAdulto(inscrito));
@@ -113,6 +193,9 @@ export function InscritoModal({ inscrito, onClose, onActualizado, soloLectura = 
   const [guardandoEstado, setGuardandoEstado] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [mensajeExito, setMensajeExito] = useState<string | null>(null);
+  const [descargandoFicha, setDescargandoFicha] = useState(false);
+  const [confirmandoEliminar, setConfirmandoEliminar] = useState(false);
+  const [eliminando, setEliminando] = useState(false);
 
   const rutaTipo = inscrito.tipo === 'CANTANTE' ? 'cantante' : 'grupo';
 
@@ -161,6 +244,32 @@ export function InscritoModal({ inscrito, onClose, onActualizado, soloLectura = 
       setError('No se pudieron guardar los cambios. Intenta de nuevo.');
     } finally {
       setGuardandoDatos(false);
+    }
+  }
+
+  async function descargarFicha() {
+    setDescargandoFicha(true);
+    setError(null);
+    try {
+      await descargarFichaInscripcion(inscrito);
+    } catch {
+      setError('No se pudo generar la ficha de inscripción. Intenta de nuevo.');
+    } finally {
+      setDescargandoFicha(false);
+    }
+  }
+
+  async function eliminar() {
+    setEliminando(true);
+    setError(null);
+    try {
+      const res = await fetchAdmin(`/inscripciones/${rutaTipo}/${inscrito.id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('No se pudo eliminar');
+      onEliminado(inscrito);
+    } catch {
+      setError('No se pudo eliminar la inscripción. Intenta de nuevo.');
+      setEliminando(false);
+      setConfirmandoEliminar(false);
     }
   }
 
@@ -221,6 +330,57 @@ export function InscritoModal({ inscrito, onClose, onActualizado, soloLectura = 
             {inscrito.declaracionVoluntaria ? '✓' : '✕'} Declaración voluntaria (Anexo 3)
           </span>
         </div>
+
+        <div className="mt-4! flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={descargarFicha}
+            disabled={descargandoFicha}
+            className="rounded-full border border-(--border) px-4! py-1.5! text-xs font-bold text-(--text-primary) transition-colors duration-200 hover:border-(--brand-rojo)/40 disabled:opacity-40"
+          >
+            {descargandoFicha ? 'Generando...' : '⬇ Descargar ficha de inscripción'}
+          </button>
+          {!soloLectura && !confirmandoEliminar && (
+            <button
+              type="button"
+              onClick={() => setConfirmandoEliminar(true)}
+              className="rounded-full border border-[#d52b1e]/40 px-4! py-1.5! text-xs font-bold text-[#d52b1e] transition-colors duration-200 hover:bg-[#d52b1e]/5"
+            >
+              Eliminar inscripción
+            </button>
+          )}
+        </div>
+
+        {/* Confirmación en dos pasos: borrar es definitivo (se van también
+            integrantes, acompañantes y canciones de Ñusta). */}
+        {confirmandoEliminar && (
+          <div role="alertdialog" className="mt-3! rounded-xl border border-[#d52b1e]/30 bg-[#d52b1e]/5 p-4!">
+            <p className="text-sm font-bold text-[#d52b1e]">¿Eliminar la inscripción de “{inscrito.nombre}”?</p>
+            <p className="mt-1! text-xs text-(--text-secondary)">
+              Se borrará definitivamente junto con
+              {inscrito.tipo === 'GRUPO' ? ' sus integrantes' : ' sus acompañantes y canciones adicionales'}. Esta acción
+              no se puede deshacer.
+            </p>
+            <div className="mt-3! flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={eliminar}
+                disabled={eliminando}
+                className="rounded-full bg-[#d52b1e] px-4! py-1.5! text-xs font-bold text-white transition-opacity duration-200 disabled:opacity-40"
+              >
+                {eliminando ? 'Eliminando...' : 'Sí, eliminar definitivamente'}
+              </button>
+              <button
+                type="button"
+                onClick={() => setConfirmandoEliminar(false)}
+                disabled={eliminando}
+                className="rounded-full border border-(--border) px-4! py-1.5! text-xs font-bold text-(--text-secondary) transition-colors duration-200 hover:text-(--text-primary)"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Estado — único campo que decide qué se ve públicamente */}
         <div className="mt-5! rounded-xl border border-(--border) p-4!">
@@ -332,6 +492,10 @@ export function InscritoModal({ inscrito, onClose, onActualizado, soloLectura = 
               <span className="text-xs text-(--text-muted)">No envió video ni foto.</span>
             )}
           </div>
+
+          {inscrito.tipo === 'CANTANTE' && inscrito.categoria.nombre === 'Ñusta' && (
+            <RepertorioNusta cantanteId={inscrito.id} principal={general} />
+          )}
 
           <p className="pt-2! text-xs font-bold tracking-[0.08em] text-(--text-secondary) uppercase">
             Contacto y logística
@@ -597,6 +761,78 @@ export function InscritoModal({ inscrito, onClose, onActualizado, soloLectura = 
           </div>
         </form>
       </div>
+    </div>
+  );
+}
+
+// Respuesta de GET /lista-niusta/:cantanteId — canciones 2 a 7 de una Ñusta.
+interface CancionNiusta {
+  id: string;
+  orden: number;
+  tituloTema: string;
+  autorCompositor: string;
+  ritmo: string;
+  tiempo: string;
+}
+
+// Repertorio completo de una postulante Ñusta: la canción 1 son los "Datos de
+// la obra" de arriba (editables) y las 2 a 7 vienen de su propio endpoint —
+// esas son de solo lectura, tal cual las envió la postulante.
+function RepertorioNusta({ cantanteId, principal }: { cantanteId: string; principal: FormularioGeneral }) {
+  const [canciones, setCanciones] = useState<CancionNiusta[] | null>(null);
+  const [error, setError] = useState(false);
+
+  useEffect(() => {
+    let cancelado = false;
+    fetchAdmin(`/lista-niusta/${cantanteId}`)
+      .then((res) => (res.ok ? res.json() : Promise.reject(new Error(String(res.status)))))
+      .then((data: CancionNiusta[]) => {
+        if (!cancelado) setCanciones(data);
+      })
+      .catch(() => {
+        if (!cancelado) setError(true);
+      });
+    return () => {
+      cancelado = true;
+    };
+  }, [cantanteId]);
+
+  const todas = [
+    {
+      id: 'principal',
+      orden: 1,
+      tituloTema: principal.tituloTema,
+      autorCompositor: principal.autorCompositor,
+      ritmo: principal.ritmo,
+      tiempo: principal.tiempo,
+    },
+    ...(canciones ?? []),
+  ];
+
+  return (
+    <div>
+      <p className="pt-2! text-xs font-bold tracking-[0.08em] text-(--text-secondary) uppercase">
+        Repertorio Ñusta{canciones ? ` (${todas.length} de 7 canciones)` : ''}
+      </p>
+      <ol className="mt-2! space-y-1.5 text-sm text-(--text-secondary)">
+        {todas.map((c) => (
+          <li key={c.id} className="flex flex-wrap items-center gap-x-2 gap-y-1 rounded-lg border border-(--border) px-3! py-2!">
+            <span className="font-mono text-xs text-(--text-muted)">{c.orden}.</span>
+            <span className="font-semibold text-(--text-primary)">{c.tituloTema || '—'}</span>
+            {c.autorCompositor && <span>— {c.autorCompositor}</span>}
+            {c.ritmo && <span className="text-xs text-(--text-muted)">{c.ritmo}</span>}
+            {c.tiempo && <span className="text-xs text-(--text-muted)">· {c.tiempo} min</span>}
+            {c.orden === 1 && <span className="text-[11px] text-(--text-muted)">(canción principal)</span>}
+          </li>
+        ))}
+      </ol>
+      {canciones === null && !error && <p className="mt-2! text-xs text-(--text-muted)">Cargando canciones adicionales...</p>}
+      {canciones?.length === 0 && (
+        <p className="mt-2! text-xs text-(--text-muted)">No registró canciones adicionales.</p>
+      )}
+      {error && (
+        <p className="mt-2! text-xs font-semibold text-[#d52b1e]">No se pudieron cargar las canciones adicionales.</p>
+      )}
     </div>
   );
 }

@@ -5,6 +5,8 @@ export const ROUTES = {
   categorias: '/categorias',
   participante: '/participante',
   inscripciones: '/inscripciones',
+  verificaInscripcion: '/verifica-tu-inscripcion',
+  cronograma: '/cronograma',
   butacas: '/butacas',
   realidadVirtual: '/realidad-virtual',
   votaciones: '/votaciones',

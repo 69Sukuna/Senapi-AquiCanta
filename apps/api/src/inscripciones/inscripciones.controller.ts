@@ -23,7 +23,9 @@ const MIME_TYPES_PERMITIDOS = [
 import {
   Body,
   Controller,
+  Delete,
   Get,
+  HttpCode,
   Param,
   Patch,
   Post,
@@ -36,6 +38,8 @@ import { InscripcionesService } from "./inscripciones.service";
 import { CrearInscripcionDto } from "./dto/crear-inscripcion.dto";
 import { ActualizarEstadoDto } from "./dto/actualizar-estado.dto";
 import { ActualizarInscripcionDto } from "./dto/actualizar-inscripcion.dto";
+import { VerificarInscripcionDto } from "./dto/verificar-inscripcion.dto";
+import { Throttle } from "@nestjs/throttler";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { RolesGuard } from "../auth/guards/roles.guard";
 import { Roles } from "../auth/decorators/roles.decorator";
@@ -54,6 +58,19 @@ export class InscripcionesController {
   })
   crear(@Body() dto: CrearInscripcionDto) {
     return this.inscripcionesService.crear(dto);
+  }
+
+  // POST (no GET con query) para que el C.I. no quede en la URL ni en logs
+  // de acceso; límite bajo para que no se pueda barrer carnets por fuerza bruta.
+  @Post("verificar")
+  @HttpCode(200)
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
+  @ApiOperation({
+    summary:
+      "Verificar si un C.I. tiene una postulación (inscrito / rechazado / no inscrito), sin exponer otros datos",
+  })
+  verificar(@Body() dto: VerificarInscripcionDto) {
+    return this.inscripcionesService.verificar(dto.ciNumero);
   }
 
   @Get()
@@ -103,6 +120,18 @@ export class InscripcionesController {
     @Body() dto: ActualizarInscripcionDto,
   ) {
     return this.inscripcionesService.actualizar(tipo, id, dto);
+  }
+
+  @Delete(":tipo/:id")
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary:
+      "Eliminar definitivamente una postulación (con sus integrantes, acompañantes y canciones de Ñusta) — solo ADMIN",
+  })
+  eliminar(@Param("tipo") tipo: string, @Param("id") id: string) {
+    return this.inscripcionesService.eliminar(tipo, id);
   }
 
   @Patch(":tipo/:id/estado")

@@ -175,7 +175,30 @@ model Cantante {
   // Músicos de acompañamiento (categorías individuales que lo permiten).
   acompanantes Acompanante[]
 
+  // Solo categoría Ñusta: canciones 2 a 7 (la 1 es tituloTema/autorCompositor/
+  // ritmo/tiempo de arriba). Relación inversa — no agrega columnas a cantantes.
+  listaNiusta ListaNiusta[]
+
   @@map("cantantes")
+}
+
+// Canciones adicionales de una postulante Ñusta: la convocatoria le permite
+// presentar de 1 a 7 temas, y la primera ya vive en Cantante. Se guardan en
+// su propia tabla para no tocar la estructura existente de la inscripción.
+model ListaNiusta {
+  id              String   @id @default(uuid())
+  cantanteId      String
+  cantante        Cantante @relation(fields: [cantanteId], references: [id], onDelete: Cascade)
+  // Posición en el repertorio: 2..7 (la canción 1 es la de Cantante).
+  orden           Int
+  tituloTema      String
+  autorCompositor String
+  ritmo           String
+  tiempo          String // duración en minutos, mismo formato que Cantante.tiempo
+  createdAt       DateTime @default(now())
+
+  @@unique([cantanteId, orden])
+  @@map("lista_niusta")
 }
 
 model Acompanante {

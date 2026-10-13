@@ -192,6 +192,22 @@ function crearAcompanante(): Acompanante {
   return { id: crearId(), nombre: '', ciNumero: '', ciExtension: '', instrumento: '', ...crearFotosCarnetVacias() };
 }
 
+// Solo Ñusta: canciones 2 a 7 del repertorio (la 1 es la de "Datos de la
+// obra"). Se envían aparte a POST /lista-niusta después de crear la inscripción.
+const MAX_CANCIONES_EXTRA_NUSTA = 6;
+
+interface CancionExtra {
+  id: string;
+  tituloTema: string;
+  autorCompositor: string;
+  ritmo: string;
+  tiempo: string;
+}
+
+function crearCancionExtra(): CancionExtra {
+  return { id: crearId(), tituloTema: '', autorCompositor: '', ritmo: '', tiempo: '' };
+}
+
 // El WhatsApp/celular solo debe contener dígitos.
 const soloDigitos = (valor: string) => valor.replace(/\D/g, '');
 // El complemento del carnet (ej. 1A) es alfanumérico.
@@ -224,7 +240,7 @@ function Campo({
   label: string;
   required?: boolean;
   children: React.ReactNode;
-  hint?: string;
+  hint?: React.ReactNode;
   // Cuando hay error, resalta cualquier input/select/textarea dentro del
   // campo con borde rojo y muestra el mensaje en vez del hint.
   error?: string;
@@ -420,6 +436,7 @@ export default function FormularioInscripcion() {
   const [autorCompositor, setAutorCompositor] = useState('');
   const [ritmo, setRitmo] = useState('');
   const [tiempo, setTiempo] = useState('');
+  const [cancionesExtra, setCancionesExtra] = useState<CancionExtra[]>([]);
   const [departamento, setDepartamento] = useState('');
   const [celular1, setCelular1] = useState('');
   const [celular2, setCelular2] = useState('');
@@ -524,6 +541,15 @@ export default function FormularioInscripcion() {
           : null;
   const duracionMaxima = categoriaInfo?.duracionMaximaMinutos ?? 5;
   const duracionExcedida = tiempo.trim() !== '' && Number(tiempo) > duracionMaxima;
+  const cancionExtraExcedida = (c: CancionExtra) => c.tiempo.trim() !== '' && Number(c.tiempo) > duracionMaxima;
+  const cancionesExtraValidas = cancionesExtra.every(
+    (c) =>
+      c.tituloTema.trim() !== '' &&
+      c.autorCompositor.trim() !== '' &&
+      c.ritmo.trim() !== '' &&
+      c.tiempo.trim() !== '' &&
+      !cancionExtraExcedida(c),
+  );
 
   // Fotos de carnet: obligatorias salvo en Autóctono (ver fotosCarnetObligatorias
   // más arriba). Cuando el grupo eligió el modo "un solo archivo", alcanza con
@@ -547,7 +573,8 @@ export default function FormularioInscripcion() {
       ritmo.trim() !== '' &&
       tiempo.trim() !== '' &&
       !duracionExcedida &&
-      (!esComposicion || pseudonimo.trim() !== ''),
+      (!esComposicion || pseudonimo.trim() !== '') &&
+      (!esNusta || cancionesExtraValidas),
     departamento !== '' && celular1.trim() !== '',
     integrantes.length >= integrantesMin &&
       integrantes.length <= integrantesMax &&
@@ -590,6 +617,17 @@ export default function FormularioInscripcion() {
     if (ritmo.trim() === '') erroresPasoActual.push('Falta el ritmo.');
     if (tiempo.trim() === '') erroresPasoActual.push('Falta la duración.');
     else if (duracionExcedida) erroresPasoActual.push(`La duración no puede superar los ${duracionMaxima} minutos.`);
+    if (esNusta) {
+      cancionesExtra.forEach((c, index) => {
+        const etiqueta = `Canción ${index + 2}`;
+        if (c.tituloTema.trim() === '') erroresPasoActual.push(`${etiqueta}: falta el título del tema.`);
+        if (c.autorCompositor.trim() === '') erroresPasoActual.push(`${etiqueta}: falta el autor / compositor.`);
+        if (c.ritmo.trim() === '') erroresPasoActual.push(`${etiqueta}: falta el ritmo.`);
+        if (c.tiempo.trim() === '') erroresPasoActual.push(`${etiqueta}: falta la duración.`);
+        else if (cancionExtraExcedida(c))
+          erroresPasoActual.push(`${etiqueta}: la duración no puede superar los ${duracionMaxima} minutos.`);
+      });
+    }
   }
   if (paso === 2) {
     if (departamento === '') erroresPasoActual.push('Selecciona un departamento.');
@@ -723,6 +761,19 @@ export default function FormularioInscripcion() {
 
   const quitarAcompanante = (id: string) => {
     setAcompanantes((prev) => prev.filter((a) => a.id !== id));
+  };
+
+  const actualizarCancionExtra = (id: string, campo: keyof Omit<CancionExtra, 'id'>, valor: string) => {
+    setCancionesExtra((prev) => prev.map((c) => (c.id === id ? { ...c, [campo]: valor } : c)));
+  };
+
+  const agregarCancionExtra = () => {
+    if (cancionesExtra.length >= MAX_CANCIONES_EXTRA_NUSTA) return;
+    setCancionesExtra((prev) => [...prev, crearCancionExtra()]);
+  };
+
+  const quitarCancionExtra = (id: string) => {
+    setCancionesExtra((prev) => prev.filter((c) => c.id !== id));
   };
 
   // Actualiza el anverso/reverso de la foto de una persona dentro de una
@@ -878,6 +929,35 @@ export default function FormularioInscripcion() {
     }
   };
 
+  const subirListaNiusta = async (apiUrl: string, id: string) => {
+    if (cancionesExtra.length === 0) return;
+
+    try {
+      const res = await fetch(`${apiUrl}/lista-niusta`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          cantanteId: id,
+          canciones: cancionesExtra.map(({ tituloTema, autorCompositor, ritmo, tiempo }) => ({
+            tituloTema,
+            autorCompositor,
+            ritmo,
+            tiempo,
+          })),
+        }),
+      });
+      if (!res.ok) {
+        setAvisoFotos(
+          'Tu inscripción quedó registrada, pero hubo un problema guardando tus canciones adicionales. El equipo del festival te contactará para completarlas.',
+        );
+      }
+    } catch {
+      setAvisoFotos(
+        'Tu inscripción quedó registrada, pero no se pudieron guardar tus canciones adicionales por un problema de conexión. El equipo del festival te contactará para completarlas.',
+      );
+    }
+  };
+
   const enviar = async () => {
     if (!formularioCompleto || enviando) {
       setMostrarErrores(true);
@@ -970,7 +1050,10 @@ export default function FormularioInscripcion() {
     if (dataCreada?.id) {
       setInscripcionId(dataCreada.id);
       await subirFotosCarnet(apiUrl, esGrupal ? 'grupo' : 'cantante', dataCreada.id, dataCreada);
-      if (esNusta) await subirPlanPromocionNusta(apiUrl, dataCreada.id);
+      if (esNusta) {
+        await subirPlanPromocionNusta(apiUrl, dataCreada.id);
+        await subirListaNiusta(apiUrl, dataCreada.id);
+      }
     }
 
     setEnviado(true);
@@ -1004,6 +1087,7 @@ export default function FormularioInscripcion() {
             celular: adultoResponsableCelular,
           }
         : null,
+      cancionesAdicionales: esNusta ? cancionesExtra : undefined,
     });
   };
 
@@ -1308,14 +1392,19 @@ export default function FormularioInscripcion() {
                   <Campo
                     label="Nombre"
                     required
-                    hint="Nombre del solista o de la agrupación."
+                    hint={
+                      <>
+                        Nombre de solista: Juan Pérez
+                        <br />
+                        Nombre de la agrupación: Kjarkas
+                      </>
+                    }
                     error={mostrarErrores && nombrePostulante.trim() === '' ? 'Completa este campo.' : undefined}
                   >
                     <input
                       className={inputClass}
                       value={nombrePostulante}
                       onChange={(e) => setNombrePostulante(soloNombre(e.target.value))}
-                      placeholder="Ej: LOS KJARKAS"
                     />
                   </Campo>
                   {esComposicion && (
@@ -1329,7 +1418,7 @@ export default function FormularioInscripcion() {
                         className={inputClass}
                         value={pseudonimo}
                         onChange={(e) => setPseudonimo(e.target.value)}
-                        placeholder="Tu pseudónimo artístico"
+                        placeholder="Ej: Quirqui"
                       />
                     </Campo>
                   )}
@@ -1342,7 +1431,7 @@ export default function FormularioInscripcion() {
                       className={inputClass}
                       value={tituloTema}
                       onChange={(e) => setTituloTema(e.target.value)}
-                      placeholder="Ej: Illimani"
+                      placeholder="Ej: Viva mi patria Bolivia"
                     />
                   </Campo>
                   <Campo
@@ -1354,7 +1443,7 @@ export default function FormularioInscripcion() {
                       className={inputClass}
                       value={autorCompositor}
                       onChange={(e) => setAutorCompositor(soloNombre(e.target.value))}
-                      placeholder="NOMBRE DEL AUTOR O COMPOSITOR"
+                      placeholder="Ej: Apolinar Camacho"
                     />
                   </Campo>
                   <Campo
@@ -1391,6 +1480,107 @@ export default function FormularioInscripcion() {
                     />
                   </Campo>
                 </div>
+
+                {esNusta && (
+                  <div className="flex flex-col gap-4 pt-2! border-t border-(--border)">
+                    <div className="flex flex-wrap items-end justify-between gap-3 pt-4!">
+                      <div>
+                        <h3 className="text-base font-bold text-(--text-primary) mb-1!">Canciones adicionales</h3>
+                        <p className="text-(--text-secondary) text-sm">
+                          Opcional: la categoría Ñusta permite presentar hasta {MAX_CANCIONES_EXTRA_NUSTA + 1} canciones.
+                          La de arriba es la canción 1; aquí puedes agregar hasta {MAX_CANCIONES_EXTRA_NUSTA} más.
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={agregarCancionExtra}
+                        disabled={cancionesExtra.length >= MAX_CANCIONES_EXTRA_NUSTA}
+                        className="inline-flex items-center gap-1.5 text-sm font-semibold text-(--brand-cafe) hover:text-(--brand-negro) disabled:text-(--text-muted) disabled:cursor-not-allowed transition-colors cursor-pointer"
+                      >
+                        <Plus size={16} /> Agregar canción
+                      </button>
+                    </div>
+
+                    {cancionesExtra.map((cancion, index) => (
+                      <div key={cancion.id} className="rounded-xl border border-(--border) bg-(--bg-primary) p-5!">
+                        <div className="flex items-center justify-between mb-4!">
+                          <span className="text-sm font-bold text-(--text-secondary)">Canción {index + 2}</span>
+                          <button
+                            type="button"
+                            onClick={() => quitarCancionExtra(cancion.id)}
+                            className="text-(--text-muted) hover:text-[#d52b1e] transition-colors cursor-pointer"
+                            aria-label={`Quitar canción ${index + 2}`}
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                        <div className="grid md:grid-cols-2 gap-4">
+                          <Campo
+                            label="Título del tema"
+                            required
+                            error={mostrarErrores && cancion.tituloTema.trim() === '' ? 'Completa este campo.' : undefined}
+                          >
+                            <input
+                              className={inputClass}
+                              value={cancion.tituloTema}
+                              onChange={(e) => actualizarCancionExtra(cancion.id, 'tituloTema', e.target.value)}
+                              placeholder="Ej: Viva mi patria Bolivia"
+                            />
+                          </Campo>
+                          <Campo
+                            label="Autor / Compositor"
+                            required
+                            error={
+                              mostrarErrores && cancion.autorCompositor.trim() === '' ? 'Completa este campo.' : undefined
+                            }
+                          >
+                            <input
+                              className={inputClass}
+                              value={cancion.autorCompositor}
+                              onChange={(e) =>
+                                actualizarCancionExtra(cancion.id, 'autorCompositor', soloNombre(e.target.value))
+                              }
+                              placeholder="Ej: Apolinar Camacho"
+                            />
+                          </Campo>
+                          <Campo
+                            label="Ritmo"
+                            required
+                            error={mostrarErrores && cancion.ritmo.trim() === '' ? 'Completa este campo.' : undefined}
+                          >
+                            <input
+                              className={inputClass}
+                              value={cancion.ritmo}
+                              onChange={(e) => actualizarCancionExtra(cancion.id, 'ritmo', e.target.value)}
+                              placeholder="Ej: Huayño, Cueca, Morenada..."
+                            />
+                          </Campo>
+                          <Campo
+                            label={`Duración (máximo ${duracionMaxima} min)`}
+                            required
+                            error={
+                              mostrarErrores && cancion.tiempo.trim() === ''
+                                ? 'Completa este campo.'
+                                : cancionExtraExcedida(cancion)
+                                  ? `Esta categoría exige máximo ${duracionMaxima} minutos.`
+                                  : undefined
+                            }
+                          >
+                            <input
+                              type="number"
+                              min={0}
+                              step={0.5}
+                              className={inputClass}
+                              value={cancion.tiempo}
+                              onChange={(e) => actualizarCancionExtra(cancion.id, 'tiempo', e.target.value)}
+                              placeholder="Ej: 3.5"
+                            />
+                          </Campo>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 
@@ -1995,6 +2185,26 @@ export default function FormularioInscripcion() {
                       <dd className="text-(--text-primary) font-medium">{tiempo ? `${tiempo} min` : '—'}</dd>
                     </div>
                   </dl>
+
+                  {esNusta && cancionesExtra.length > 0 && (
+                    <>
+                      <h4 className="text-xs font-semibold tracking-widest text-(--text-muted) uppercase mb-2!">
+                        Canciones adicionales
+                      </h4>
+                      <ol className="flex flex-col gap-1.5 text-sm mb-5!">
+                        {cancionesExtra.map((c, index) => (
+                          <li key={c.id} className="text-(--text-primary)">
+                            <span className="text-(--text-muted)">{index + 2}.</span>{' '}
+                            <span className="font-medium">{c.tituloTema || '—'}</span>
+                            <span className="text-(--text-secondary)">
+                              {' '}
+                              — {c.autorCompositor || '—'} · {c.ritmo || '—'} · {c.tiempo ? `${c.tiempo} min` : '—'}
+                            </span>
+                          </li>
+                        ))}
+                      </ol>
+                    </>
+                  )}
 
                   <h4 className="text-xs font-semibold tracking-widest text-(--text-muted) uppercase mb-2!">
                     Datos del postulante

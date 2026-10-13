@@ -2,12 +2,17 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { DepartamentoBadge } from '@/components/DepartamentoBadge';
+import { DEPARTAMENTOS, getDepartamentoInfo } from '@/lib/departamentos';
 import { ORDEN_ESTADOS, ESTADOS_INSCRIPCION, type EstadoInscripcion } from '@/lib/estadoInscripcion';
 import { fetchAdmin } from '@/lib/auth';
 import { useUsuarioAdmin } from '../../_components/UsuarioAdminContext';
 import { EstadoBadge } from './EstadoBadge';
 import { InscritoModal } from './InscritoModal';
+import { exportarInscritosDocx, type CancionNiustaExport } from './exportarInscritosDocx';
 import type { Inscrito } from './tipos';
+
+// Valor del filtro para inscritos sin departamento cargado (null en la base).
+const SIN_DEPARTAMENTO = 'SIN_DEPARTAMENTO';
 
 type FiltroTipo = 'TODOS' | 'CANTANTE' | 'GRUPO';
 type FiltroEstado = 'TODOS' | EstadoInscripcion;
@@ -35,6 +40,9 @@ export function InscritosExplorer() {
   const [filtroTipo, setFiltroTipo] = useState<FiltroTipo>('TODOS');
   const [filtroEstado, setFiltroEstado] = useState<FiltroEstado>('TODOS');
   const [filtroCategoria, setFiltroCategoria] = useState<string | null>(null);
+  const [filtroDepartamento, setFiltroDepartamento] = useState<string | null>(null);
+  const [exportando, setExportando] = useState(false);
+  const [errorExportar, setErrorExportar] = useState(false);
   const [columnaOrden, setColumnaOrden] = useState<Columna>('fecha');
   const [direccionOrden, setDireccionOrden] = useState<Direccion>('desc');
   const [seleccionado, setSeleccionado] = useState<Inscrito | null>(null);
@@ -63,6 +71,18 @@ export function InscritosExplorer() {
     return Array.from(mapa, ([id, nombre]) => ({ id, nombre })).sort((a, b) => a.nombre.localeCompare(b.nombre));
   }, [inscritos]);
 
+  // Solo los departamentos que aparecen en los datos, en el orden de
+  // lib/departamentos.ts (un USER de departamento ve uno solo, y ahí el
+  // filtro no tiene sentido — se oculta más abajo).
+  const departamentos = useMemo(() => {
+    const presentes = new Set(inscritos.map((inscrito) => inscrito.departamento ?? SIN_DEPARTAMENTO));
+    const opciones: { id: string; label: string }[] = Object.entries(DEPARTAMENTOS)
+      .filter(([valor]) => presentes.has(valor))
+      .map(([valor, info]) => ({ id: valor, label: info.label }));
+    if (presentes.has(SIN_DEPARTAMENTO)) opciones.push({ id: SIN_DEPARTAMENTO, label: 'Sin departamento' });
+    return opciones;
+  }, [inscritos]);
+
   const filtrados = useMemo(() => {
     const query = busqueda.trim().toLowerCase();
 
@@ -70,9 +90,11 @@ export function InscritosExplorer() {
       const coincideTipo = filtroTipo === 'TODOS' || inscrito.tipo === filtroTipo;
       const coincideEstado = filtroEstado === 'TODOS' || inscrito.estado === filtroEstado;
       const coincideCategoria = !filtroCategoria || inscrito.categoriaId === filtroCategoria;
+      const coincideDepartamento =
+        !filtroDepartamento || (inscrito.departamento ?? SIN_DEPARTAMENTO) === filtroDepartamento;
       const coincideBusqueda =
         !query || inscrito.nombre.toLowerCase().includes(query) || inscrito.id.toLowerCase().includes(query);
-      return coincideTipo && coincideEstado && coincideCategoria && coincideBusqueda;
+      return coincideTipo && coincideEstado && coincideCategoria && coincideDepartamento && coincideBusqueda;
     });
 
     const factor = direccionOrden === 'asc' ? 1 : -1;
@@ -91,7 +113,45 @@ export function InscritosExplorer() {
     });
 
     return resultado;
-  }, [inscritos, busqueda, filtroTipo, filtroEstado, filtroCategoria, columnaOrden, direccionOrden]);
+  }, [inscritos, busqueda, filtroTipo, filtroEstado, filtroCategoria, filtroDepartamento, columnaOrden, direccionOrden]);
+
+  async function exportarWord() {
+    // Resumen de lo que está filtrado, para imprimirlo en el encabezado del docx.
+    const filtros: string[] = [];
+    if (filtroTipo !== 'TODOS') filtros.push(filtroTipo === 'CANTANTE' ? 'Solistas' : 'Grupos');
+    if (filtroEstado !== 'TODOS') filtros.push(`Estado: ${ESTADOS_INSCRIPCION[filtroEstado].label}`);
+    if (filtroCategoria) {
+      filtros.push(`Categoría: ${categorias.find((c) => c.id === filtroCategoria)?.nombre ?? ''}`);
+    }
+    if (filtroDepartamento) {
+      filtros.push(
+        `Departamento: ${
+          filtroDepartamento === SIN_DEPARTAMENTO ? 'Sin departamento' : getDepartamentoInfo(filtroDepartamento)?.label
+        }`,
+      );
+    }
+    if (busqueda.trim()) filtros.push(`Búsqueda: "${busqueda.trim()}"`);
+
+    setExportando(true);
+    setErrorExportar(false);
+    try {
+      // Las canciones 2..7 de las Ñustas viven en su propio endpoint — se
+      // traen todas de una vez, solo si la lista exportada incluye alguna.
+      const cancionesNiusta = new Map<string, CancionNiustaExport[]>();
+      if (filtrados.some((x) => x.categoria.nombre === 'Ñusta')) {
+        const res = await fetchAdmin('/lista-niusta');
+        if (!res.ok) throw new Error('No se pudieron cargar las canciones de Ñusta');
+        for (const cancion of (await res.json()) as CancionNiustaExport[]) {
+          cancionesNiusta.set(cancion.cantanteId, [...(cancionesNiusta.get(cancion.cantanteId) ?? []), cancion]);
+        }
+      }
+      await exportarInscritosDocx(filtrados, filtros, cancionesNiusta);
+    } catch {
+      setErrorExportar(true);
+    } finally {
+      setExportando(false);
+    }
+  }
 
   function alternarOrden(columna: Columna) {
     if (columna === columnaOrden) {
@@ -107,6 +167,11 @@ export function InscritosExplorer() {
       lista.map((item) => (item.tipo === actualizado.tipo && item.id === actualizado.id ? actualizado : item)),
     );
     setSeleccionado(actualizado);
+  }
+
+  function onEliminado(eliminado: Inscrito) {
+    setInscritos((lista) => lista.filter((item) => !(item.tipo === eliminado.tipo && item.id === eliminado.id)));
+    setSeleccionado(null);
   }
 
   if (cargando) {
@@ -225,11 +290,57 @@ export function InscritosExplorer() {
             ))}
           </div>
         )}
+
+        {departamentos.length > 1 && (
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => setFiltroDepartamento(null)}
+              className={`rounded-full border px-3! py-1! text-[11px] font-bold uppercase tracking-[0.06em] transition-colors duration-200 ${
+                filtroDepartamento === null
+                  ? 'border-transparent bg-(--brand-negro) text-white'
+                  : 'border-(--border) text-(--text-secondary) hover:border-(--brand-rojo)/40 hover:text-(--text-primary)'
+              }`}
+            >
+              Todos los departamentos
+            </button>
+            {departamentos.map((departamento) => (
+              <button
+                key={departamento.id}
+                type="button"
+                onClick={() => setFiltroDepartamento(departamento.id)}
+                className={`rounded-full border px-3! py-1! text-[11px] font-bold uppercase tracking-[0.06em] transition-colors duration-200 ${
+                  filtroDepartamento === departamento.id
+                    ? 'border-transparent bg-(--brand-negro) text-white'
+                    : 'border-(--border) text-(--text-secondary) hover:border-(--brand-rojo)/40 hover:text-(--text-primary)'
+                }`}
+              >
+                {departamento.label}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
-      <p className="mt-4! text-sm text-(--text-muted)">
-        {filtrados.length} {filtrados.length === 1 ? 'resultado' : 'resultados'} de {inscritos.length} inscritos
-      </p>
+      <div className="mt-4! flex flex-wrap items-center justify-between gap-3">
+        <p className="text-sm text-(--text-muted)">
+          {filtrados.length} {filtrados.length === 1 ? 'resultado' : 'resultados'} de {inscritos.length} inscritos
+        </p>
+        <button
+          type="button"
+          onClick={exportarWord}
+          disabled={exportando || filtrados.length === 0}
+          title="Descarga un Word con la lista tal como se ve, con los filtros y el orden actuales"
+          className="rounded-full bg-(--brand-negro) px-5! py-2! text-xs font-bold text-white transition-opacity duration-200 disabled:opacity-40"
+        >
+          {exportando ? 'Generando...' : `Exportar a Word (${filtrados.length})`}
+        </button>
+      </div>
+      {errorExportar && (
+        <p className="mt-2! text-right text-sm font-semibold text-[#d52b1e]">
+          No se pudo generar el Word. Intenta de nuevo.
+        </p>
+      )}
 
       {/* Tabla */}
       {filtrados.length > 0 ? (
@@ -308,6 +419,7 @@ export function InscritosExplorer() {
           inscrito={seleccionado}
           onClose={() => setSeleccionado(null)}
           onActualizado={onActualizado}
+          onEliminado={onEliminado}
           soloLectura={soloLectura}
         />
       )}
