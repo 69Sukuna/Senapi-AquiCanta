@@ -7,6 +7,6 @@
 export const FEATURE_FLAGS = {
   participantes: false,
   jurado: false,
-  butacas: false,
+  butacas: true,
   votaciones: false,
 } as const;

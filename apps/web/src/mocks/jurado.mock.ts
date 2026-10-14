@@ -1,45 +1,49 @@
 import type { CategoriaConcurso, CriterioEvaluacionDefinicion, JuezPerfil } from '@/types';
 
-// Retratos reales (no avatares generados) como "standin" fotográfico de
-// cada juez ficticio — mismo criterio ya usado en apps/web/public/images/participantes/
-// para los participantes de ejemplo (ver comentario en packages/database/prisma/seed.ts).
-// Se sirven como archivos locales en apps/web/public/images/jurado/ en vez de
-// hotlinkear a un servicio externo.
+// Avatar de iniciales en vez de una foto real — mismo criterio que
+// fotoPlaceholder() en packages/database/prisma/seed.ts. Antes estos jueces
+// ficticios usaban fotos de banco de imágenes de personas reales como
+// "standin"; se saca a propósito para no mezclar fotos de desconocidos con
+// nombres inventados en el software que se registra ante SENAPI.
+function avatarIniciales(nombre: string) {
+  return `https://ui-avatars.com/api/?name=${encodeURIComponent(nombre)}&background=534741&color=fdf6ec&size=400&bold=true`;
+}
+
 export const JURADO_TITULARES: JuezPerfil[] = [
   {
     id: 'jurado-01',
     nombre: 'Elizabeth Rey',
     especialidad: 'Técnica vocal y dirección coral',
     esPortavoz: true,
-    fotoUrl: '/images/jurado/elizabeth-rey.jpg',
+    fotoUrl: avatarIniciales('Elizabeth Rey'),
   },
   {
     id: 'jurado-02',
     nombre: 'Ramiro Gutiérrez',
     especialidad: 'Composición y folklore boliviano',
     esPortavoz: false,
-    fotoUrl: '/images/jurado/ramiro-gutierrez.jpg',
+    fotoUrl: avatarIniciales('Ramiro Gutiérrez'),
   },
   {
     id: 'jurado-03',
     nombre: 'Fabiola Áñez',
     especialidad: 'Interpretación y producción musical',
     esPortavoz: false,
-    fotoUrl: '/images/jurado/fabiola-anez.jpg',
+    fotoUrl: avatarIniciales('Fabiola Áñez'),
   },
   {
     id: 'jurado-04',
     nombre: 'Hugo Mamani',
     especialidad: 'Instrumentación andina',
     esPortavoz: false,
-    fotoUrl: '/images/jurado/hugo-mamani.jpg',
+    fotoUrl: avatarIniciales('Hugo Mamani'),
   },
   {
     id: 'jurado-05',
     nombre: 'Carla Suárez',
     especialidad: 'Educación musical y dominio escénico',
     esPortavoz: false,
-    fotoUrl: '/images/jurado/carla-suarez.jpg',
+    fotoUrl: avatarIniciales('Carla Suárez'),
   },
 ];
 
