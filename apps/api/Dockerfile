@@ -37,6 +37,10 @@ COPY --from=installer /app/node_modules ./node_modules
 COPY --from=installer /app/apps/api/dist ./apps/api/dist
 COPY --from=installer /app/apps/api/package.json ./apps/api/package.json
 
+# Carpeta de fotos cuando no hay Cloudinary (storage en disco local); el usuario
+# no-root necesita poder escribir ahí.
+RUN mkdir -p /app/uploads && chown nestjs:nodejs /app/uploads
+
 # El runner es node:22-alpine (no oven/bun), pero prisma/seed.ts es TypeScript
 # y siempre se corrió con `bun prisma/seed.ts` — en vez de compilarlo aparte,
 # se copia el binario de bun desde installer (mismo Alpine/musl, probado que
