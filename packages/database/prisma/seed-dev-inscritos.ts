@@ -88,7 +88,7 @@ async function main() {
   for (const datos of CATEGORIAS) {
     const categoria = await prisma.categoria.upsert({
       where: { nombre: datos.nombre },
-      update: {},
+      update: datos, // deja las reglas reales aunque la categoría ya existiera con valores por defecto
       create: datos,
     });
     if (datos.nombre === 'Ñusta') continue;
