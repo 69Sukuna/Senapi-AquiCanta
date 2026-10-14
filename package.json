@@ -21,6 +21,7 @@
     "db:studio": "turbo db:studio",
     "docker:up": "docker compose up -d",
     "docker:down": "docker compose down",
+    "docker:seed-dev": "docker compose exec api sh -c \"cd /app && bun packages/database/prisma/seed-dev-inscritos.ts\"",
     "docker:logs": "docker compose logs -f"
   },
   "devDependencies": {

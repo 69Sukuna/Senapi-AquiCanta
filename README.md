@@ -590,3 +590,15 @@ Ocurre si no se ha creado el archivo `.env` en la raíz o la base de datos en Do
 <div align="center">
   <sub>Desarrollado con ❤️ para <strong>Aqui Canta Bolivia</strong>.</sub>
 </div>
+
+## Prueba local con Docker (sin configurar nada)
+
+```bash
+git clone <repo> && cd Senapi-AquiCanta
+docker compose up -d --build     # postgres + api + web + adminer
+docker compose exec api sh -c "cd /app && bun packages/database/prisma/seed-dev-inscritos.ts"   # opcional: 24 inscritos de prueba
+```
+
+- Web: http://localhost:3000 — API/Swagger: http://localhost:4000/docs — Adminer: http://localhost:8080
+- Admin por defecto: `admin@aquicantabolivia.com` / `AquiCanta2026!` (migraciones y admin se crean solos al arrancar).
+- Sin credenciales de Cloudinary las fotos se guardan en disco local. El login con Google requiere un OAuth client propio en `.env` (ver `.env.example`).

@@ -1,3 +1,5 @@
+# Uso local: `docker compose up -d --build` funciona sin .env (los valores por
+# defecto de abajo son SOLO para prueba local; en un entorno real defínelos en .env).
 services:
   # 1. Base de datos PostgreSQL
   postgres:
@@ -45,11 +47,11 @@ services:
       NODE_ENV: production
       PORT: 4000
       DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-aquicantabolivia}?schema=public
-      JWT_SECRET: ${JWT_SECRET:?falta JWT_SECRET en .env}
+      JWT_SECRET: ${JWT_SECRET:-secreto-solo-para-prueba-local-cambiar-en-produccion}
       ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@aquicantabolivia.com}
       ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
-      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?falta ADMIN_PASSWORD en .env}
-      VISITOR_JWT_SECRET: ${VISITOR_JWT_SECRET:?falta VISITOR_JWT_SECRET en .env}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-AquiCanta2026!}
+      VISITOR_JWT_SECRET: ${VISITOR_JWT_SECRET:-otro-secreto-solo-para-prueba-local-distinto-del-admin}
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-placeholder}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-placeholder}
